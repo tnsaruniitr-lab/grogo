@@ -6,21 +6,17 @@ import {
   appointmentsTable,
 } from "@workspace/db";
 import { eq, and, desc, isNull, count, SQL } from "drizzle-orm";
-import { z } from "zod";
+import {
+  ListLeadsQueryParams,
+  GetLeadParams,
+  UpdateLeadParams,
+  UpdateLeadBody,
+} from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-const listQuerySchema = z.object({
-  clientId: z.coerce.number().int().positive().optional(),
-  status: z.string().optional(),
-  source: z.string().optional(),
-  language: z.string().optional(),
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(25),
-});
-
 router.get("/leads", async (req: Request, res: Response) => {
-  const parsed = listQuerySchema.safeParse(req.query);
+  const parsed = ListLeadsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid query parameters" });
     return;
@@ -57,10 +53,7 @@ router.get("/leads", async (req: Request, res: Response) => {
       .orderBy(desc(leadsTable.createdAt))
       .limit(limit)
       .offset(offset),
-    db
-      .select({ count: count() })
-      .from(leadsTable)
-      .where(where),
+    db.select({ count: count() }).from(leadsTable).where(where),
   ]);
 
   res.json({
@@ -72,11 +65,13 @@ router.get("/leads", async (req: Request, res: Response) => {
 });
 
 router.get("/leads/:id", async (req: Request, res: Response) => {
-  const id = parseInt(String(req.params.id), 10);
-  if (isNaN(id)) {
+  const params = GetLeadParams.safeParse(req.params);
+  if (!params.success) {
     res.status(400).json({ error: "Invalid lead id" });
     return;
   }
+
+  const { id } = params.data;
 
   const leads = await db
     .select()
@@ -105,24 +100,20 @@ router.get("/leads/:id", async (req: Request, res: Response) => {
   res.json({ lead: leads[0], conversations, appointments });
 });
 
-const updateLeadSchema = z.object({
-  status: z.string().optional(),
-  notes: z.string().optional(),
-  name: z.string().optional(),
-});
-
 router.patch("/leads/:id", async (req: Request, res: Response) => {
-  const id = parseInt(String(req.params.id), 10);
-  if (isNaN(id)) {
+  const params = UpdateLeadParams.safeParse(req.params);
+  if (!params.success) {
     res.status(400).json({ error: "Invalid lead id" });
     return;
   }
 
-  const parsed = updateLeadSchema.safeParse(req.body);
-  if (!parsed.success) {
+  const body = UpdateLeadBody.safeParse(req.body);
+  if (!body.success) {
     res.status(400).json({ error: "Invalid request body" });
     return;
   }
+
+  const { id } = params.data;
 
   const existing = await db
     .select({ id: leadsTable.id })
@@ -137,7 +128,7 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
 
   const updated = await db
     .update(leadsTable)
-    .set({ ...parsed.data, updatedAt: new Date() })
+    .set({ ...body.data, updatedAt: new Date() })
     .where(eq(leadsTable.id, id))
     .returning();
 

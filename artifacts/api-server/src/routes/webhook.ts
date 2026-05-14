@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import twilio from "twilio";
 import { db } from "@workspace/db";
 import {
   clientsTable,
@@ -11,28 +12,39 @@ import { eq, and } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN ?? "";
+
+function validateTwilioSignature(req: Request): boolean {
+  // In sandbox/dev mode without an auth token, skip validation
+  if (!TWILIO_AUTH_TOKEN) {
+    return true;
+  }
+  const signature = req.headers["x-twilio-signature"] as string | undefined;
+  if (!signature) return false;
+
+  const protocol = req.headers["x-forwarded-proto"] ?? req.protocol;
+  const host = req.headers["host"] ?? "";
+  const url = `${protocol}://${host}${req.originalUrl}`;
+
+  return twilio.validateRequest(TWILIO_AUTH_TOKEN, signature, url, req.body as Record<string, string>);
+}
+
 router.post("/webhook/twilio", async (req: Request, res: Response) => {
   const twimlEmpty = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
 
+  // Security: validate Twilio signature
+  if (!validateTwilioSignature(req)) {
+    req.log.warn("Invalid Twilio signature — rejecting request");
+    res.status(403).json({ error: "Invalid Twilio signature" });
+    return;
+  }
+
   try {
-    const {
-      MessageSid,
-      From,
-      To,
-      Body,
-      WaId,
-      ProfileName,
-    } = req.body as {
-      MessageSid?: string;
-      From?: string;
-      To?: string;
-      Body?: string;
-      WaId?: string;
-      ProfileName?: string;
-    };
+    const body = req.body as Record<string, string>;
+    const { MessageSid, From, To, Body, ProfileName } = body;
 
     if (!MessageSid || !From || !To || Body === undefined) {
-      req.log.warn({ body: req.body }, "Twilio webhook missing required fields");
+      req.log.warn({ body }, "Twilio webhook missing required fields");
       res.status(200).type("text/xml").send(twimlEmpty);
       return;
     }
@@ -103,14 +115,15 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
         leadId,
         twilioMessageSid: MessageSid,
         direction: "inbound",
-        rawPayload: req.body as Record<string, unknown>,
+        rawPayload: body,
       })
       .returning({ id: messageEventsTable.id });
 
     const messageEventId = eventInserted[0].id;
 
-    // Store conversation message
+    // Store conversation message (client-scoped)
     await db.insert(conversationsTable).values({
+      clientId: client.id,
       leadId,
       direction: "inbound",
       body: Body,

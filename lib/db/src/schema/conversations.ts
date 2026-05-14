@@ -1,6 +1,7 @@
 import { pgTable, serial, integer, text, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { clientsTable } from "./clients";
 import { leadsTable } from "./leads";
 
 export const conversationDirectionEnum = ["inbound", "outbound"] as const;
@@ -10,6 +11,9 @@ export const conversationsTable = pgTable(
   "conversations",
   {
     id: serial("id").primaryKey(),
+    clientId: integer("client_id")
+      .notNull()
+      .references(() => clientsTable.id),
     leadId: integer("lead_id")
       .notNull()
       .references(() => leadsTable.id),
@@ -22,6 +26,7 @@ export const conversationsTable = pgTable(
   },
   (table) => [
     index("conversations_lead_created_idx").on(table.leadId, table.createdAt),
+    index("conversations_client_idx").on(table.clientId),
   ],
 );
 

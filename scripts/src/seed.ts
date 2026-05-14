@@ -71,7 +71,16 @@ async function seed() {
       priority: 8,
       question: "Was ist die Demenz-WG von Dosteli?",
       answer:
-        "Unsere Demenz-WG ist eine kleine, familiäre Wohngemeinschaft für Menschen mit Demenz. Maximal 8 Bewohner leben zusammen und werden rund um die Uhr von unserem geschulten Team betreut. Die WG ist kultursensibel gestaltet – türkische und arabische Speisen, Sprache und Traditionen werden berücksichtigt.",
+        "Unsere Demenz-WG ist eine kleine, familiäre Wohngemeinschaft für Menschen mit Demenz. Maximal 8 Bewohner leben zusammen und werden rund um die Uhr von unserem geschulten Team betreut. Die Einrichtung ist kultursensibel gestaltet – türkische und arabische Speisen, Sprache und Traditionen sind selbstverständlicher Teil des Alltags.",
+    },
+    {
+      clientId,
+      category: "demenz_wg",
+      language: "de",
+      priority: 7,
+      question: "Wie viele Plätze hat die Demenz-WG und wo ist sie?",
+      answer:
+        "Unsere Demenz-WG bietet Platz für maximal 8 Bewohner in einer familiären Atmosphäre. Für genaue Standortinformationen und aktuelle Verfügbarkeit sprechen Sie uns direkt an – wir informieren Sie gerne im persönlichen Gespräch.",
     },
     {
       clientId,
@@ -158,12 +167,39 @@ async function seed() {
     },
     {
       clientId,
+      category: "demenz_wg",
+      language: "tr",
+      priority: 8,
+      question: "Dosteli'nin Demans Konutu (WG) nedir?",
+      answer:
+        "Demans Konutumuz, demans hastası bireyler için küçük ve ailevi bir yaşam topluluğudur. En fazla 8 sakin bir arada yaşar ve 24 saat boyunca eğitimli ekibimiz tarafından bakılır. Tesis, kültüre duyarlı bir şekilde tasarlanmıştır – Türk ve Arap yemekleri, dil ve gelenekler günlük yaşamın doğal bir parçasıdır.",
+    },
+    {
+      clientId,
+      category: "demenz_wg",
+      language: "tr",
+      priority: 7,
+      question: "Demans Konutu'nda kaç yer var ve nerede bulunuyor?",
+      answer:
+        "Demans Konutumuz, ailevi bir ortamda en fazla 8 sakine yer sunmaktadır. Kesin konum bilgisi ve mevcut kapasite için lütfen bizimle doğrudan iletişime geçin – sizi kişisel görüşmeyle bilgilendirmekten memnuniyet duyarız.",
+    },
+    {
+      clientId,
       category: "language_culture",
       language: "tr",
       priority: 9,
       question: "Bakıcılar Türkçe biliyor mu?",
       answer:
         "Evet – ekibimiz Türkçe, Arapça ve Almanca konuşan anadil düzeyinde çalışanlardan oluşmaktadır. Kültüre duyarlı bakım bizim için şu anlama gelir: aynı dil, aynı değerler, tanıdık bir ortam.",
+    },
+    {
+      clientId,
+      category: "regions",
+      language: "tr",
+      priority: 7,
+      question: "Dosteli hangi şehir ve bölgelerde hizmet veriyor?",
+      answer:
+        "Dosteli şu anda Almanya genelinde faaliyet göstermektedir. Bulunduğunuz bölgeye ilişkin kesin bilgi için lütfen bizimle doğrudan iletişime geçin – bölgenizde hizmet verip vermediğimizi öğrenmenize yardımcı oluruz.",
     },
     {
       clientId,
@@ -192,11 +228,29 @@ async function seed() {
       answer:
         "İlk değerlendirme için yeterli olan bilgiler: bakıma ihtiyaç duyan kişinin adı, yaşadığı şehir, ihtiyaç duyulan destek türü (örn. demans, evde bakım, 24 saat), kendiniz için mi yoksa bir yakınınız için mi sorduğunuz ve tercih ettiğiniz iletişim zamanı.",
     },
+    {
+      clientId,
+      category: "gdpr_boundary",
+      language: "tr",
+      priority: 10,
+      question: "Bota hangi tıbbi bilgileri paylaşmalıyım?",
+      answer:
+        "Tıbbi ayrıntılar, tanılar veya ilaç planları yalnızca bakım ekibimizle yapılacak kişisel görüşmelerde ele alınmaktadır. Sohbet sırasında, ihtiyaç duyulan destek hakkında genel bilgi vermek yeterlidir.",
+    },
+    {
+      clientId,
+      category: "jobs",
+      language: "tr",
+      priority: 5,
+      question: "Dosteli bakım elemanı arıyor mu?",
+      answer:
+        "Evet, gönülden çalışan ve özellikle Türkçe veya Arapça bilen bakım elemanlarını düzenli olarak arıyoruz. Web sitemizin 'Jobs' bölümünü inceleyebilir ya da doğrudan bize sorabilirsiniz.",
+    },
   ];
 
   await db.insert(companyKnowledgeTable).values(knowledge);
 
-  console.log(`Seeded ${knowledge.length} knowledge entries for client '${clientId}'.`);
+  console.log(`Seeded ${knowledge.length} knowledge entries for client id=${clientId}.`);
   console.log("Seed complete.");
   process.exit(0);
 }

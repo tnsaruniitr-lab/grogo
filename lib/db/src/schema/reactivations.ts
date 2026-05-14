@@ -1,12 +1,16 @@
 import { pgTable, serial, integer, text, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { clientsTable } from "./clients";
 import { leadsTable } from "./leads";
 
 export const reactivationsTable = pgTable(
   "reactivations",
   {
     id: serial("id").primaryKey(),
+    clientId: integer("client_id")
+      .notNull()
+      .references(() => clientsTable.id),
     leadId: integer("lead_id")
       .notNull()
       .references(() => leadsTable.id),
@@ -17,6 +21,7 @@ export const reactivationsTable = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    index("reactivations_client_idx").on(table.clientId),
     index("reactivations_lead_idx").on(table.leadId),
     index("reactivations_scheduled_idx").on(table.scheduledAt),
   ],
