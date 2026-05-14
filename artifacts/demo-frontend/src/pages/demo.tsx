@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DemoNav } from "@/components/layout/demo-nav";
+import { getDemoT } from "@/lib/demo-i18n";
 import {
   MessageCircle,
   CheckCircle2,
@@ -25,15 +26,8 @@ interface BrandingConfig {
   city?: string | null;
   phone?: string | null;
   websiteUrl?: string | null;
+  demoLanguage?: string | null;
 }
-
-const BOT_DEMO_MESSAGES = [
-  { from: "bot", text: "Hallo! Ich bin der KI-Assistent. Wie kann ich Ihnen heute helfen?" },
-  { from: "user", text: "Ich suche Pflege für meinen Vater, er braucht Hilfe beim Alltag." },
-  { from: "bot", text: "Gerne helfe ich Ihnen dabei. Wie alt ist Ihr Vater und in welcher Stadt wohnt er?" },
-  { from: "user", text: "Er ist 78 Jahre alt, wohnt in München." },
-  { from: "bot", text: "Wunderbar! Ich kann gerne einen kostenlosen Beratungstermin für Sie vereinbaren. Wann passt es Ihnen?" },
-];
 
 export default function DemoPage() {
   const params = useParams<{ slug: string }>();
@@ -55,15 +49,16 @@ export default function DemoPage() {
         setBranding(data);
         applyTheme(data);
       })
-      .catch(() => setError("Demo nicht gefunden."))
+      .catch(() => setError("not found"))
       .finally(() => setLoading(false));
   }, [slug]);
 
   useEffect(() => {
     if (!branding) return;
+    setVisibleMessages(0);
     const timer = setInterval(() => {
       setVisibleMessages((v) => {
-        if (v >= BOT_DEMO_MESSAGES.length) { clearInterval(timer); return v; }
+        if (v >= 5) { clearInterval(timer); return v; }
         return v + 1;
       });
     }, 900);
@@ -72,6 +67,7 @@ export default function DemoPage() {
 
   const primary = branding?.primaryColor ?? "#A8C334";
   const secondary = branding?.secondaryColor ?? "#1a3a1a";
+  const t = getDemoT(branding?.demoLanguage);
 
   if (loading) {
     return (
@@ -84,9 +80,9 @@ export default function DemoPage() {
   if (error || !branding) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
-        <p className="text-2xl font-bold text-muted-foreground">Demo nicht gefunden</p>
-        <p className="text-muted-foreground">Dieser Demo-Link ist ungültig oder wurde gelöscht.</p>
-        <Button variant="outline" onClick={() => window.history.back()}>Zurück</Button>
+        <p className="text-2xl font-bold text-muted-foreground">{t.notFound.title}</p>
+        <p className="text-muted-foreground">{t.notFound.desc}</p>
+        <Button variant="outline" onClick={() => window.history.back()}>{t.notFound.back}</Button>
       </div>
     );
   }
@@ -108,15 +104,15 @@ export default function DemoPage() {
               transition={{ duration: 0.6 }}
             >
               <Badge className="mb-4 bg-white/20 text-white border-white/30 hover:bg-white/30">
-                KI-gestützte Pflege-Kommunikation
+                {t.badge}
               </Badge>
               <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 text-white drop-shadow-sm">
-                {branding.heroHeadline || branding.tagline || `${branding.companyName} — jetzt mit KI-WhatsApp-Bot`}
+                {branding.heroHeadline || branding.tagline || `${branding.companyName} — KI-WhatsApp-Bot`}
               </h1>
               <p className="text-xl font-medium mb-10 text-white/90 max-w-lg">
                 {branding.tagline && branding.heroHeadline
                   ? branding.tagline
-                  : "Qualifizieren Sie Leads automatisch, buchen Sie Rückrufe und antworten Sie in Deutsch und Türkisch — rund um die Uhr."}
+                  : t.defaultSubtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -125,28 +121,27 @@ export default function DemoPage() {
                   style={{ backgroundColor: secondary, color: "white" }}
                   onClick={() => document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })}
                 >
-                  <MessageCircle className="h-5 w-5" /> Live-Demo ansehen
+                  <MessageCircle className="h-5 w-5" /> {t.ctaPrimary}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   className="bg-transparent border-white text-white hover:bg-white/10 text-lg h-14 px-8 rounded-full"
                 >
-                  Beratungsgespräch
+                  {t.ctaSecondary}
                 </Button>
               </div>
 
               <div className="mt-10 flex flex-wrap gap-4">
-                {[
-                  { icon: CheckCircle2, label: "Automatische Lead-Qualifizierung" },
-                  { icon: Heart, label: "Deutsch & Türkisch" },
-                  { icon: Users, label: "Rückruf-Buchung" },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-2 bg-black/10 px-3 py-2 rounded-lg backdrop-blur-sm border border-white/20">
-                    <Icon className="h-4 w-4 text-white" />
-                    <span className="text-white text-sm font-medium">{label}</span>
-                  </div>
-                ))}
+                {t.features.map((label, i) => {
+                  const Icon = [CheckCircle2, Heart, Users][i] ?? CheckCircle2;
+                  return (
+                    <div key={label} className="flex items-center gap-2 bg-black/10 px-3 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+                      <Icon className="h-4 w-4 text-white" />
+                      <span className="text-white text-sm font-medium">{label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
 
@@ -176,12 +171,12 @@ export default function DemoPage() {
                       </div>
                       <div>
                         <p className="text-white text-sm font-semibold leading-tight">{branding.companyName}</p>
-                        <p className="text-white/60 text-xs">KI-Assistent · Online</p>
+                        <p className="text-white/60 text-xs">{t.botStatus}</p>
                       </div>
                     </div>
 
                     <div className="p-3 space-y-2 min-h-[360px]">
-                      {BOT_DEMO_MESSAGES.slice(0, visibleMessages).map((msg, i) => (
+                      {t.botMessages.slice(0, visibleMessages).map((msg, i) => (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, y: 8 }}
@@ -202,7 +197,7 @@ export default function DemoPage() {
                           </div>
                         </motion.div>
                       ))}
-                      {visibleMessages < BOT_DEMO_MESSAGES.length && (
+                      {visibleMessages < t.botMessages.length && (
                         <div className="flex justify-start">
                           <div className="bg-white rounded-2xl px-3 py-2 text-xs text-muted-foreground flex gap-1">
                             <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
@@ -223,23 +218,19 @@ export default function DemoPage() {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
           <h2 className="text-3xl font-bold text-foreground mb-4">
-            Wie der Bot für {branding.companyName} arbeitet
+            {t.howTitle(branding.companyName)}
           </h2>
           <p className="text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Eingehende WhatsApp-Nachrichten werden automatisch qualifiziert — auf Deutsch und Türkisch — ohne dass Ihr Team eingreifen muss.
+            {t.howSubtitle}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { step: "1", title: "Nachricht empfangen", desc: "Jemand schreibt auf WhatsApp an Ihre Pflegedienstnummer." },
-              { step: "2", title: "KI qualifiziert", desc: "Sprache erkannt, Bedarf erfasst, passende Antwort auf Basis Ihres Wissens generiert." },
-              { step: "3", title: "Termin gebucht", desc: "Rückruf automatisch eingeplant — Ihr Team findet den Lead fertig qualifiziert im Dashboard." },
-            ].map(({ step, title, desc }) => (
-              <div key={step} className="rounded-xl border border-border p-6 text-left">
+            {t.steps.map(({ step, title, desc }: { step?: string; title: string; desc: string }, i) => (
+              <div key={i} className="rounded-xl border border-border p-6 text-left">
                 <div
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-lg mb-4"
                   style={{ backgroundColor: primary }}
                 >
-                  {step}
+                  {i + 1}
                 </div>
                 <h3 className="font-bold text-foreground mb-2">{title}</h3>
                 <p className="text-sm text-muted-foreground">{desc}</p>
@@ -252,10 +243,10 @@ export default function DemoPage() {
       <section className="py-16" style={{ backgroundColor: secondary }}>
         <div className="container mx-auto px-4 md:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Bereit für {branding.companyName}?
+            {t.ctaTitle(branding.companyName)}
           </h2>
           <p className="text-white/80 mb-8 max-w-xl mx-auto">
-            Wir richten den Bot in 24 Stunden ein — inklusive Ihrem Wissen, Ihrer Sprache, Ihrem Branding.
+            {t.ctaSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -263,7 +254,7 @@ export default function DemoPage() {
               className="text-lg h-14 px-8 rounded-full gap-2"
               style={{ backgroundColor: primary, color: "white" }}
             >
-              <MessageCircle className="h-5 w-5" /> Jetzt Demo anfragen
+              <MessageCircle className="h-5 w-5" /> {t.ctaButton}
             </Button>
             {branding.websiteUrl && (
               <Button
@@ -306,10 +297,6 @@ export default function DemoPage() {
 
 function applyTheme(branding: BrandingConfig) {
   const root = document.documentElement;
-  if (branding.primaryColor) {
-    root.style.setProperty("--branded-primary", branding.primaryColor);
-  }
-  if (branding.secondaryColor) {
-    root.style.setProperty("--branded-secondary", branding.secondaryColor);
-  }
+  if (branding.primaryColor) root.style.setProperty("--branded-primary", branding.primaryColor);
+  if (branding.secondaryColor) root.style.setProperty("--branded-secondary", branding.secondaryColor);
 }

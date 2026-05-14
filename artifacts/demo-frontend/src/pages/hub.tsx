@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,6 +19,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Plus,
   Globe,
   LayoutDashboard,
@@ -28,13 +35,12 @@ import {
   Sparkles,
   Loader2,
   Upload,
-  ExternalLink,
   Users,
   PhoneCall,
   Settings,
-  ArrowRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
 
 interface BrandingConfig {
   clientId?: number;
@@ -48,6 +54,7 @@ interface BrandingConfig {
   city?: string | null;
   phone?: string | null;
   websiteUrl?: string | null;
+  demoLanguage?: string | null;
 }
 
 interface DemoClient {
@@ -80,7 +87,7 @@ export default function HubPage() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
-        toast({ title: "Demo gelöscht" });
+        toast({ title: "Demo deleted" });
       },
     },
   });
@@ -103,35 +110,32 @@ export default function HubPage() {
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="text-xs text-white/40 hover:text-white/70 transition-colors">
-            Dosteli intern ↗
+            Dosteli Internal ↗
           </Link>
           <Button
             size="sm"
             className="gap-1.5 bg-[#A8C334] hover:bg-[#95ae2a] text-[#1a3a1a] font-bold text-xs h-8"
             onClick={() => setShowCreate(true)}
           >
-            <Plus className="h-3.5 w-3.5" /> Neue Demo
+            <Plus className="h-3.5 w-3.5" /> New Demo
           </Button>
         </div>
       </header>
 
       <div className="px-6 md:px-10 py-10 max-w-7xl mx-auto">
-        {/* Headline */}
         <div className="mb-10">
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Alle Demos</h1>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">All Demos</h1>
           <p className="text-white/50 mt-1.5 text-sm">
-            Erstelle gebrandete WhatsApp-Bot-Demos für Interessenten — ein Link, ihr Look.
+            Create branded WhatsApp bot demos for prospects — one link, their look.
           </p>
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-6 w-6 animate-spin text-white/30" />
           </div>
         )}
 
-        {/* Empty state */}
         {!isLoading && clients.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -141,20 +145,19 @@ export default function HubPage() {
             <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-5">
               <Globe className="h-7 w-7 text-white/20" />
             </div>
-            <p className="text-white font-semibold text-lg mb-1">Noch keine Demos</p>
+            <p className="text-white font-semibold text-lg mb-1">No demos yet</p>
             <p className="text-white/40 text-sm mb-6 max-w-xs">
-              Erstelle deine erste Demo — gib einfach die Website des Interessenten ein.
+              Create your first demo — just enter the prospect's website URL.
             </p>
             <Button
               className="gap-2 bg-[#A8C334] hover:bg-[#95ae2a] text-[#1a3a1a] font-bold"
               onClick={() => setShowCreate(true)}
             >
-              <Plus className="h-4 w-4" /> Erste Demo erstellen
+              <Plus className="h-4 w-4" /> Create First Demo
             </Button>
           </motion.div>
         )}
 
-        {/* Brand cards grid */}
         {!isLoading && clients.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence>
@@ -171,7 +174,7 @@ export default function HubPage() {
                     copied={copiedSlug === client.slug}
                     onCopy={() => copyLink(client.slug)}
                     onDelete={() => {
-                      if (confirm(`Demo "${client.branding.companyName}" wirklich löschen?`)) {
+                      if (confirm(`Delete demo "${client.branding.companyName}"?`)) {
                         deleteMutation.mutate({ id: client.id });
                       }
                     }}
@@ -208,6 +211,7 @@ function BrandCard({
 }) {
   const primary = client.branding.primaryColor ?? "#A8C334";
   const secondary = client.branding.secondaryColor ?? "#1a3a1a";
+  const langOption = LANG_OPTIONS.find((l) => l.value === client.branding.demoLanguage);
 
   const { data: stats } = useGetDashboardStats(
     { clientId: client.id },
@@ -215,7 +219,7 @@ function BrandCard({
   );
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#1a1d26] flex flex-col hover:border-white/20 transition-colors group">
+    <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#1a1d26] flex flex-col hover:border-white/20 transition-colors">
       {/* Color header */}
       <div className="h-20 relative flex items-end p-4" style={{ backgroundColor: primary }}>
         {client.branding.logoUrl ? (
@@ -233,8 +237,13 @@ function BrandCard({
             {client.branding.companyName.slice(0, 2).toUpperCase()}
           </div>
         )}
-        <div className="absolute top-3 right-3 bg-black/20 backdrop-blur-sm rounded-full px-2 py-0.5 text-white text-[10px] font-bold">
-          /{client.slug}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+          {langOption && (
+            <span className="text-sm" title={langOption.label}>{langOption.flag}</span>
+          )}
+          <div className="bg-black/20 backdrop-blur-sm rounded-full px-2 py-0.5 text-white text-[10px] font-bold">
+            /{client.slug}
+          </div>
         </div>
       </div>
 
@@ -247,31 +256,25 @@ function BrandCard({
           )}
         </div>
 
-        {/* Stats chips */}
         <div className="flex gap-2">
           <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2.5 py-1.5">
             <Users className="h-3.5 w-3.5 text-white/40" />
-            <span className="text-white text-xs font-bold">
-              {stats?.totalLeads ?? "—"}
-            </span>
+            <span className="text-white text-xs font-bold">{stats?.totalLeads ?? "—"}</span>
             <span className="text-white/30 text-[10px]">Leads</span>
           </div>
           <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2.5 py-1.5">
             <PhoneCall className="h-3.5 w-3.5 text-white/40" />
-            <span className="text-white text-xs font-bold">
-              {stats?.newLeads ?? "—"}
-            </span>
-            <span className="text-white/30 text-[10px]">Neu</span>
+            <span className="text-white text-xs font-bold">{stats?.newLeads ?? "—"}</span>
+            <span className="text-white/30 text-[10px]">New</span>
           </div>
-          {stats?.callbackBooked ? (
+          {(stats?.callbackBooked ?? 0) > 0 && (
             <div className="flex items-center gap-1.5 bg-[#A8C334]/10 rounded-lg px-2.5 py-1.5">
-              <span className="text-[#A8C334] text-xs font-bold">{stats.callbackBooked}</span>
-              <span className="text-[#A8C334]/60 text-[10px]">Rückrufe</span>
+              <span className="text-[#A8C334] text-xs font-bold">{stats!.callbackBooked}</span>
+              <span className="text-[#A8C334]/60 text-[10px]">Callbacks</span>
             </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Action buttons */}
         <div className="flex flex-wrap gap-2 mt-auto pt-2 border-t border-white/5">
           <Link
             href={`/demo/${client.slug}`}
@@ -290,14 +293,14 @@ function BrandCard({
             <button
               onClick={onCopy}
               className="flex items-center gap-1 text-[11px] font-semibold text-white/40 hover:text-white/70 transition-colors"
-              title="Link kopieren"
+              title="Copy link"
             >
               {copied ? <CheckCheck className="h-3.5 w-3.5 text-[#A8C334]" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
             <button
               onClick={onDelete}
               className="text-white/20 hover:text-red-400 transition-colors"
-              title="Demo löschen"
+              title="Delete demo"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -335,6 +338,7 @@ function CreateDemoDialog({
     phone: "",
     websiteUrl: "",
     heroHeadline: "",
+    demoLanguage: "de",
   });
 
   const update = (key: keyof BrandingConfig, value: string) => {
@@ -355,9 +359,9 @@ function CreateDemoDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      if (!res.ok) { toast({ title: "Extraktion fehlgeschlagen", variant: "destructive" }); return; }
+      if (!res.ok) { toast({ title: "Extraction failed", variant: "destructive" }); return; }
       const data: BrandingConfig = await res.json();
-      setBranding({
+      setBranding((prev) => ({
         companyName: data.companyName ?? "",
         slug: data.slug ?? "",
         tagline: data.tagline ?? "",
@@ -368,11 +372,12 @@ function CreateDemoDialog({
         phone: data.phone ?? "",
         websiteUrl: data.websiteUrl ?? url,
         heroHeadline: data.heroHeadline ?? "",
-      });
+        demoLanguage: prev.demoLanguage ?? "de",
+      }));
       if (data.logoUrl) setLogoPreview(data.logoUrl);
-      toast({ title: `${data.companyName} erkannt` });
+      toast({ title: `${data.companyName} detected` });
     } catch {
-      toast({ title: "Verbindung fehlgeschlagen", variant: "destructive" });
+      toast({ title: "Connection failed", variant: "destructive" });
     } finally {
       setExtracting(false);
     }
@@ -396,7 +401,7 @@ function CreateDemoDialog({
 
   const create = async () => {
     if (!branding.companyName || !branding.slug) {
-      toast({ title: "Name und Slug erforderlich", variant: "destructive" });
+      toast({ title: "Name and slug are required", variant: "destructive" });
       return;
     }
     setCreating(true);
@@ -413,11 +418,11 @@ function CreateDemoDialog({
       });
       if (!res.ok) {
         const err = await res.json();
-        toast({ title: err.error ?? "Fehler", variant: "destructive" });
+        toast({ title: err.error ?? "Error creating demo", variant: "destructive" });
         return;
       }
       const created = await res.json();
-      toast({ title: `Demo "${created.name}" erstellt!`, description: `/demo/${created.slug}` });
+      toast({ title: `Demo "${created.name}" created!`, description: `/demo/${created.slug}` });
       onCreated();
       reset();
     } finally { setCreating(false); }
@@ -425,7 +430,7 @@ function CreateDemoDialog({
 
   const reset = () => {
     setWebsiteUrl("");
-    setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "" });
+    setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "", demoLanguage: "de" });
     setLogoFile(null);
     setLogoPreview(null);
   };
@@ -434,25 +439,25 @@ function CreateDemoDialog({
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); reset(); } }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Neue Demo erstellen</DialogTitle>
+          <DialogTitle>Create New Demo</DialogTitle>
           <DialogDescription>
-            Gib die Website des Interessenten ein — wir extrahieren Logo, Farben und Namen automatisch.
+            Enter the prospect's website — we'll automatically extract their logo, colors, and name.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 mt-2">
           <div className="space-y-2">
-            <Label>Website-Adresse</Label>
+            <Label>Website URL</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="z.B. pflegedienst-muenchen.de"
+                placeholder="e.g. care-service-munich.de"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && extract()}
               />
               <Button onClick={extract} disabled={extracting || !websiteUrl} className="shrink-0 gap-1.5">
                 {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Extrahieren
+                Extract
               </Button>
             </div>
           </div>
@@ -461,8 +466,8 @@ function CreateDemoDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
-              <Label>Unternehmensname *</Label>
-              <Input value={branding.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Pflegedienst München GmbH" />
+              <Label>Company Name *</Label>
+              <Input value={branding.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Munich Care Service GmbH" />
             </div>
             <div className="space-y-2">
               <Label>Slug *</Label>
@@ -472,18 +477,18 @@ function CreateDemoDialog({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Stadt</Label>
-              <Input value={branding.city ?? ""} onChange={(e) => update("city", e.target.value)} placeholder="München" />
+              <Label>City</Label>
+              <Input value={branding.city ?? ""} onChange={(e) => update("city", e.target.value)} placeholder="Munich" />
             </div>
             <div className="space-y-2">
-              <Label>Primärfarbe</Label>
+              <Label>Primary Color</Label>
               <div className="flex gap-2 items-center">
                 <input type="color" value={branding.primaryColor || "#A8C334"} onChange={(e) => update("primaryColor", e.target.value)} className="h-10 w-14 rounded border border-input cursor-pointer" />
                 <Input value={branding.primaryColor ?? ""} onChange={(e) => update("primaryColor", e.target.value)} className="font-mono text-sm" placeholder="#A8C334" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Sekundärfarbe</Label>
+              <Label>Secondary Color</Label>
               <div className="flex gap-2 items-center">
                 <input type="color" value={branding.secondaryColor || "#1a3a1a"} onChange={(e) => update("secondaryColor", e.target.value)} className="h-10 w-14 rounded border border-input cursor-pointer" />
                 <Input value={branding.secondaryColor ?? ""} onChange={(e) => update("secondaryColor", e.target.value)} className="font-mono text-sm" placeholder="#1a3a1a" />
@@ -491,15 +496,30 @@ function CreateDemoDialog({
             </div>
             <div className="col-span-2 space-y-2">
               <Label>Tagline</Label>
-              <Input value={branding.tagline ?? ""} onChange={(e) => update("tagline", e.target.value)} placeholder="Professionelle Pflege mit Herz" />
+              <Input value={branding.tagline ?? ""} onChange={(e) => update("tagline", e.target.value)} placeholder="Professional Care with Heart" />
             </div>
             <div className="col-span-2 space-y-2">
-              <Label>Hero-Überschrift</Label>
-              <Input value={branding.heroHeadline ?? ""} onChange={(e) => update("heroHeadline", e.target.value)} placeholder="Pflege, der Sie vertrauen können." />
+              <Label>Hero Headline</Label>
+              <Input value={branding.heroHeadline ?? ""} onChange={(e) => update("heroHeadline", e.target.value)} placeholder="Care you can trust." />
             </div>
             <div className="space-y-2">
-              <Label>Telefon</Label>
+              <Label>Phone</Label>
               <Input value={branding.phone ?? ""} onChange={(e) => update("phone", e.target.value)} placeholder="+49 89 12345678" />
+            </div>
+            <div className="space-y-2">
+              <Label>Demo Language</Label>
+              <Select value={branding.demoLanguage ?? "de"} onValueChange={(v) => update("demoLanguage", v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANG_OPTIONS.map((l) => (
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.flag} {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -535,19 +555,26 @@ function CreateDemoDialog({
               <div className="flex items-center gap-3">
                 {logoPreview && <img src={logoPreview} alt="" className="h-9 w-9 rounded object-contain bg-white p-0.5" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
                 <div>
-                  <p className="font-extrabold" style={{ color: branding.primaryColor }}>{branding.companyName || "Name"}</p>
+                  <p className="font-extrabold" style={{ color: branding.primaryColor }}>{branding.companyName || "Company Name"}</p>
                   {branding.tagline && <p className="text-xs text-muted-foreground">{branding.tagline}</p>}
                 </div>
-                <div className="ml-auto text-xs font-bold px-2 py-1 rounded-full text-white" style={{ backgroundColor: branding.primaryColor }}>/demo/{branding.slug || "slug"}</div>
+                <div className="ml-auto flex items-center gap-2">
+                  {LANG_OPTIONS.find((l) => l.value === branding.demoLanguage) && (
+                    <span className="text-base">{LANG_OPTIONS.find((l) => l.value === branding.demoLanguage)!.flag}</span>
+                  )}
+                  <div className="text-xs font-bold px-2 py-1 rounded-full text-white" style={{ backgroundColor: branding.primaryColor }}>
+                    /demo/{branding.slug || "slug"}
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => { onClose(); reset(); }}>Abbrechen</Button>
+            <Button variant="outline" onClick={() => { onClose(); reset(); }}>Cancel</Button>
             <Button onClick={create} disabled={creating || uploading || !branding.companyName} className="gap-2">
               {(creating || uploading) && <Loader2 className="h-4 w-4 animate-spin" />}
-              Demo erstellen
+              Create Demo
             </Button>
           </div>
         </div>

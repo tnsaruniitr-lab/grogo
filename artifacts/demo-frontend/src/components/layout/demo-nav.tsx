@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Globe, ArrowLeft } from "lucide-react";
+import { getDemoT } from "@/lib/demo-i18n";
 
 interface DemoNavBranding {
   companyName: string;
@@ -8,12 +9,14 @@ interface DemoNavBranding {
   primaryColor?: string | null;
   secondaryColor?: string | null;
   logoUrl?: string | null;
+  demoLanguage?: string | null;
 }
 
 export function DemoNav({ branding }: { branding: DemoNavBranding }) {
   const [location] = useLocation();
   const base = `/demo/${branding.slug}`;
   const secondary = branding.secondaryColor ?? "#1a3a1a";
+  const t = getDemoT(branding.demoLanguage);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b" style={{ backgroundColor: secondary }}>
@@ -41,7 +44,7 @@ export function DemoNav({ branding }: { branding: DemoNavBranding }) {
               location === base ? "text-white" : "text-white/60 hover:text-white"
             )}
           >
-            <Globe className="h-3.5 w-3.5" /> Übersicht
+            <Globe className="h-3.5 w-3.5" /> {t.nav.overview}
           </Link>
           <Link
             href={`${base}/dashboard`}
@@ -50,13 +53,13 @@ export function DemoNav({ branding }: { branding: DemoNavBranding }) {
               location === `${base}/dashboard` ? "text-white" : "text-white/60 hover:text-white"
             )}
           >
-            <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
+            <LayoutDashboard className="h-3.5 w-3.5" /> {t.nav.dashboard}
           </Link>
           <Link
-            href="/admin"
+            href="/"
             className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors ml-2 border-l border-white/20 pl-4"
           >
-            <ArrowLeft className="h-3 w-3" /> Admin
+            <ArrowLeft className="h-3 w-3" /> {t.nav.back}
           </Link>
         </div>
       </div>

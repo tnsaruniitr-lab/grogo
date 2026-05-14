@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "wouter";
 import { DemoNav } from "@/components/layout/demo-nav";
+import { getDemoT } from "@/lib/demo-i18n";
 import {
   useGetDashboardStats,
   getGetDashboardStatsQueryKey,
@@ -13,7 +14,7 @@ import {
 import type { LeadDetail } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, tr, enUS } from "date-fns/locale";
 import {
   Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall, Loader2,
 } from "lucide-react";
@@ -35,6 +36,13 @@ interface BrandingConfig {
   secondaryColor?: string | null;
   logoUrl?: string | null;
   city?: string | null;
+  demoLanguage?: string | null;
+}
+
+function getDateLocale(lang?: string | null) {
+  if (lang === "tr") return tr;
+  if (lang === "en") return enUS;
+  return de;
 }
 
 export default function DemoDashboardPage() {
@@ -53,6 +61,8 @@ export default function DemoDashboardPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  const t = getDemoT(branding?.demoLanguage);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -64,8 +74,8 @@ export default function DemoDashboardPage() {
   if (error || !branding) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
-        <p className="text-2xl font-bold text-muted-foreground">Demo nicht gefunden</p>
-        <Button variant="outline" onClick={() => window.history.back()}>Zurück</Button>
+        <p className="text-2xl font-bold text-muted-foreground">{t.notFound.title}</p>
+        <Button variant="outline" onClick={() => window.history.back()}>{t.notFound.back}</Button>
       </div>
     );
   }
@@ -77,6 +87,8 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
   const clientId = branding.clientId;
   const primary = branding.primaryColor ?? "#A8C334";
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const t = getDemoT(branding.demoLanguage);
+  const dateLocale = getDateLocale(branding.demoLanguage);
 
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats(
     { clientId },
@@ -99,28 +111,28 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
               <div>
                 <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: branding.secondaryColor ?? "#1a3a1a" }}>
-                  {branding.companyName} — Dashboard
+                  {branding.companyName} — {t.nav.dashboard}
                 </h1>
                 <p className="text-muted-foreground flex items-center gap-2 mt-2 font-medium">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: primary }} />
                     <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: primary }} />
                   </span>
-                  Live-Aktualisierung alle 10 Sek.
+                  {t.liveUpdate}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard title="Gesamt-Leads" value={stats?.totalLeads} loading={statsLoading} icon={<Users className="h-6 w-6" />} primary={primary} />
-              <StatCard title="Neu" value={stats?.newLeads} loading={statsLoading} icon={<PhoneCall className="h-6 w-6" />} primary={primary} highlight />
-              <StatCard title="Rückrufe" value={stats?.callbackBooked} loading={statsLoading} icon={<Calendar className="h-6 w-6" />} primary={primary} />
-              <StatCard title="Heute gebucht" value={stats?.bookedToday} loading={statsLoading} icon={<MessageSquare className="h-6 w-6" />} primary={primary} />
+              <StatCard title={t.stats.totalLeads} value={stats?.totalLeads} loading={statsLoading} icon={<Users className="h-6 w-6" />} primary={primary} />
+              <StatCard title={t.stats.newLeads} value={stats?.newLeads} loading={statsLoading} icon={<PhoneCall className="h-6 w-6" />} primary={primary} highlight />
+              <StatCard title={t.stats.callbacks} value={stats?.callbackBooked} loading={statsLoading} icon={<Calendar className="h-6 w-6" />} primary={primary} />
+              <StatCard title={t.stats.bookedToday} value={stats?.bookedToday} loading={statsLoading} icon={<MessageSquare className="h-6 w-6" />} primary={primary} />
             </div>
 
             <Card className="border shadow-sm overflow-hidden rounded-xl">
               <CardHeader className="border-b bg-card pb-4">
-                <CardTitle className="text-lg font-bold">Aktuelle Leads</CardTitle>
+                <CardTitle className="text-lg font-bold">{t.leads}</CardTitle>
               </CardHeader>
               <div className="bg-card">
                 {leadsLoading ? (
@@ -132,12 +144,12 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                     <table className="w-full text-sm text-left">
                       <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold tracking-wider">
                         <tr>
-                          <th className="px-6 py-4">Kontakt</th>
-                          <th className="px-6 py-4">Sprache</th>
-                          <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">Quelle</th>
-                          <th className="px-6 py-4">Letzte Aktivität</th>
-                          <th className="px-6 py-4 text-right">Details</th>
+                          <th className="px-6 py-4">{t.table.contact}</th>
+                          <th className="px-6 py-4">{t.table.language}</th>
+                          <th className="px-6 py-4">{t.table.status}</th>
+                          <th className="px-6 py-4">{t.table.source}</th>
+                          <th className="px-6 py-4">{t.table.lastActivity}</th>
+                          <th className="px-6 py-4 text-right">{t.table.details}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y border-t">
@@ -152,7 +164,7 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                           >
                             <td className="px-6 py-4">
                               <div className="font-bold text-base" style={{ color: branding.secondaryColor ?? "#1a3a1a" }}>
-                                {lead.name || "Unbekannt"}
+                                {lead.name || t.detail.unknownContact}
                               </div>
                               <div className="text-muted-foreground font-medium mt-1">{maskPhone(lead.phone)}</div>
                             </td>
@@ -160,15 +172,15 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                               <span className="text-2xl">{getLanguageFlag(lead.language)}</span>
                             </td>
                             <td className="px-6 py-4">
-                              <StatusBadge status={lead.status} />
+                              <StatusBadge status={lead.status} labels={t.statusLabels} />
                             </td>
                             <td className="px-6 py-4">
                               <Badge variant="outline" className="font-semibold text-xs bg-white">{lead.source}</Badge>
                             </td>
                             <td className="px-6 py-4 text-muted-foreground font-medium text-xs">
                               {lead.lastContactAt
-                                ? formatDistanceToNow(new Date(lead.lastContactAt), { addSuffix: true, locale: de })
-                                : "Nie"}
+                                ? formatDistanceToNow(new Date(lead.lastContactAt), { addSuffix: true, locale: dateLocale })
+                                : t.table.never}
                             </td>
                             <td className="px-6 py-4 text-right">
                               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{ color: primary }}>
@@ -182,10 +194,8 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                             <td colSpan={6} className="px-6 py-16 text-center">
                               <div className="flex flex-col items-center justify-center text-muted-foreground">
                                 <Users className="h-12 w-12 opacity-20 mb-4" />
-                                <span className="text-lg font-medium">Noch keine Leads vorhanden</span>
-                                <p className="text-sm mt-2 max-w-xs">
-                                  Sobald der Bot aktiviert ist und WhatsApp-Nachrichten eingehend sind, erscheinen die Leads hier.
-                                </p>
+                                <span className="text-lg font-medium">{t.noLeads.title}</span>
+                                <p className="text-sm mt-2 max-w-xs">{t.noLeads.desc}</p>
                               </div>
                             </td>
                           </tr>
@@ -220,6 +230,7 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                   leadId={selectedLeadId}
                   clientId={clientId}
                   primaryColor={primary}
+                  branding={branding}
                   onClose={() => setSelectedLeadId(null)}
                 />
               </motion.div>
@@ -235,14 +246,17 @@ function LeadDetailPanel({
   leadId,
   clientId,
   primaryColor,
+  branding,
   onClose,
 }: {
   leadId: number;
   clientId: number;
   primaryColor: string;
+  branding: BrandingConfig;
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
+  const t = getDemoT(branding.demoLanguage);
   const { data: detail, isLoading } = useGetLead(
     leadId,
     { clientId },
@@ -284,10 +298,10 @@ function LeadDetailPanel({
     <>
       <div className="flex items-center justify-between p-4 border-b bg-card z-10 sticky top-0">
         <h3 className="font-bold text-lg flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: primaryColor + "33", color: primaryColor }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor + "33", color: primaryColor }}>
             <User className="h-5 w-5" />
           </div>
-          {lead.name || "Unbekannter Lead"}
+          {lead.name || t.detail.unknownLead}
         </h3>
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-muted">
           <X className="h-5 w-5" />
@@ -298,23 +312,19 @@ function LeadDetailPanel({
         <div className="bg-card p-5 space-y-5 border-b shadow-sm">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-muted-foreground block text-xs font-bold uppercase tracking-wider mb-1.5">Telefon</span>
+              <span className="text-muted-foreground block text-xs font-bold uppercase tracking-wider mb-1.5">{t.detail.phone}</span>
               <span className="font-semibold text-sm">{lead.phone}</span>
             </div>
             <div>
-              <span className="text-muted-foreground block text-xs font-bold uppercase tracking-wider mb-1.5">Status</span>
+              <span className="text-muted-foreground block text-xs font-bold uppercase tracking-wider mb-1.5">{t.detail.status}</span>
               <Select value={lead.status} onValueChange={(val) => updateLead.mutate({ id: leadId, data: { status: val }, params: { clientId } })}>
                 <SelectTrigger className="h-9 text-xs font-bold shadow-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">Neu</SelectItem>
-                  <SelectItem value="qualified">Qualifiziert</SelectItem>
-                  <SelectItem value="callback_booked">Rückruf gebucht</SelectItem>
-                  <SelectItem value="escalated">Eskaliert</SelectItem>
-                  <SelectItem value="needs_human">Braucht Beratung</SelectItem>
-                  <SelectItem value="converted">Gewonnen</SelectItem>
-                  <SelectItem value="archived">Archiviert</SelectItem>
+                  {Object.entries(t.selectStatus).map(([val, label]) => (
+                    <SelectItem key={val} value={val}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -323,10 +333,10 @@ function LeadDetailPanel({
           {appointments.length > 0 && (
             <div className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: primaryColor + "15", borderColor: primaryColor + "40", borderWidth: 1 }}>
               <h4 className="text-xs font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: primaryColor }}>
-                <Calendar className="h-4 w-4" /> Rückruf geplant
+                <Calendar className="h-4 w-4" /> {t.detail.callbackPlanned}
               </h4>
-              <div className="text-sm font-bold">{appointments[0].preferredTime || "Zeitpunkt flexibel"}</div>
-              <div className="text-xs font-medium opacity-70 mt-1">Ergebnis: {appointments[0].outcome}</div>
+              <div className="text-sm font-bold">{appointments[0].preferredTime || t.detail.flexible}</div>
+              <div className="text-xs font-medium opacity-70 mt-1">{t.detail.outcome}: {appointments[0].outcome}</div>
             </div>
           )}
 
@@ -334,7 +344,7 @@ function LeadDetailPanel({
             <div className="bg-muted/50 p-4 rounded-xl text-sm flex gap-3 border shadow-sm">
               <FileText className="h-5 w-5 shrink-0 mt-0.5" style={{ color: primaryColor }} />
               <div>
-                <span className="font-bold block mb-1">KI-Zusammenfassung</span>
+                <span className="font-bold block mb-1">{t.detail.aiSummary}</span>
                 <span className="text-muted-foreground font-medium leading-relaxed">{lead.conversationSummary}</span>
               </div>
             </div>
@@ -353,7 +363,7 @@ function LeadDetailPanel({
           {conversations.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground font-medium flex-col gap-3">
               <MessageSquare className="h-10 w-10 opacity-20" />
-              Noch keine Nachrichten
+              {t.detail.noMessages}
             </div>
           ) : (
             conversations.map((msg) => {
@@ -427,20 +437,21 @@ function StatCard({ title, value, loading, icon, primary, highlight }: StatCardP
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { color: string; label: string }> = {
-    new: { color: "bg-blue-100 text-blue-800 border-blue-200", label: "Neu" },
-    qualified: { color: "bg-indigo-100 text-indigo-800 border-indigo-200", label: "Qualifiziert" },
-    callback_booked: { color: "bg-green-100 text-green-800 border-green-300", label: "Rückruf" },
-    escalated: { color: "bg-red-100 text-red-800 border-red-200", label: "Eskaliert" },
-    needs_human: { color: "bg-orange-100 text-orange-800 border-orange-200", label: "Beratung" },
-    converted: { color: "bg-emerald-100 text-emerald-800 border-emerald-300", label: "Gewonnen" },
-    archived: { color: "bg-slate-200 text-slate-800 border-slate-300", label: "Archiviert" },
+function StatusBadge({ status, labels }: { status: string; labels: Record<string, string> }) {
+  const colors: Record<string, string> = {
+    new: "bg-blue-100 text-blue-800 border-blue-200",
+    qualified: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    callback_booked: "bg-green-100 text-green-800 border-green-300",
+    escalated: "bg-red-100 text-red-800 border-red-200",
+    needs_human: "bg-orange-100 text-orange-800 border-orange-200",
+    converted: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    archived: "bg-slate-200 text-slate-800 border-slate-300",
   };
-  const current = config[status] ?? { color: "bg-gray-100 text-gray-800", label: status };
+  const color = colors[status] ?? "bg-gray-100 text-gray-800";
+  const label = labels[status] ?? status;
   return (
-    <span className={cn("px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold border", current.color)}>
-      {current.label}
+    <span className={cn("px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold border", color)}>
+      {label}
     </span>
   );
 }
