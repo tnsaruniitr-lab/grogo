@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "rb3SkjU5jRjqcbvDF0E6g"
@@ -18,3 +17,9 @@ id = "9iZxS_hYNes8CwGMbVkci"
 uri = "file://artifacts/demo-frontend/src/assets/care.png"
 type = "image"
 title = "Elderly care hands"
+
+[[outputs]]
+id = "lnqRHWNNhwVNfOh1JM8CA"
+uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
+type = "image"
+title = "Background-removed Dosteli logo — does content survive?"

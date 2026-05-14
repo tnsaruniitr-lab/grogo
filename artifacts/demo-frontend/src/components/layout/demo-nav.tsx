@@ -27,7 +27,6 @@ export function DemoNav({ branding }: { branding: DemoNavBranding }) {
               src={branding.logoUrl}
               alt={branding.companyName}
               className="h-8 w-auto max-w-[120px] object-contain rounded"
-              style={{ mixBlendMode: "multiply" }}
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           ) : (

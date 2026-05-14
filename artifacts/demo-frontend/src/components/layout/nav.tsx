@@ -18,7 +18,6 @@ export function Nav({ logoUrl, demoLanguage }: { logoUrl?: string | null; demoLa
                 src={logoUrl}
                 alt="Logo"
                 className="h-10 max-w-[160px] object-contain"
-                style={{ mixBlendMode: "multiply" }}
               />
             ) : (
               <>
