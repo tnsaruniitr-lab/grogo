@@ -4,12 +4,16 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
+import { getIndustryTheme, getLang, PRIMARY_VERTICALS } from "@/lib/industry-themes";
 import patternImg from "@/assets/pattern.png";
 import heroImg from "@/assets/hero-person.png";
 import careImg from "@/assets/care.png";
 import { Link } from "wouter";
 import {
   CheckCircle2,
+  ShieldCheck,
+  Award,
+  Clock,
   Loader2,
   ArrowRight,
   Heart,
@@ -17,10 +21,26 @@ import {
   Home as HomeIcon,
   PhoneCall,
   MessageCircle,
+  Sparkles,
+  Gem,
+  Star,
+  Stethoscope,
+  Activity,
+  Smile,
+  Shield,
+  Leaf,
+  Wind,
   type LucideIcon,
 } from "lucide-react";
 
-const SERVICE_ICONS: LucideIcon[] = [HomeIcon, Heart, Users];
+const ICON_MAP: Record<string, LucideIcon> = {
+  Home: HomeIcon, Heart, Users, Sparkles, Gem, Star,
+  Stethoscope, Activity, Smile, Shield, Leaf, Wind,
+};
+
+function resolveIcons(names: [string, string, string]): [LucideIcon, LucideIcon, LucideIcon] {
+  return names.map((n) => ICON_MAP[n] ?? Star) as [LucideIcon, LucideIcon, LucideIcon];
+}
 
 interface BrandingConfig {
   companyName: string;
@@ -131,6 +151,10 @@ export default function DemoPage() {
     ? resolveColors(branding)
     : { primary: "#374151", secondary: "#111827" };
   const t = getDemoT(branding?.demoLanguage);
+  const theme = getIndustryTheme(branding?.industry);
+  const lang = getLang(branding?.demoLanguage);
+  const themeIcons = resolveIcons(theme.serviceIconNames);
+  const isPrimary = PRIMARY_VERTICALS.has(branding?.industry ?? "");
 
   if (loading) {
     return (
@@ -278,12 +302,12 @@ export default function DemoPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-white text-[11px] font-semibold leading-tight truncate">{branding.companyName}</p>
-                      <p className="text-white/60 text-[10px]">{t.botStatus}</p>
+                      <p className="text-white/60 text-[10px]">{theme.botPersonaLabel[lang]}</p>
                     </div>
                     <div className="ml-auto shrink-0 h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
                   </div>
                   <div className="p-2 space-y-1.5 bg-[#ECE5DD]">
-                    {t.botMessages.slice(0, Math.min(visibleMessages, 2)).map((msg, i) => (
+                    {theme.botMessages[lang].slice(0, Math.min(visibleMessages, 2)).map((msg, i) => (
                       <motion.div
                         key={i}
                         initial={{ opacity: 0, y: 4 }}
@@ -320,12 +344,30 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── SERVICES ── */}
+      {/* ── TRUST BAR — primary verticals only ── */}
+      {isPrimary && (
+        <section className="py-5 border-b bg-card">
+          <div className="container mx-auto px-4 md:px-8">
+            <div className="flex flex-wrap justify-center gap-x-10 gap-y-3">
+              {theme.trustBadges.map((badge, i) => {
+                const TrustIcon = [ShieldCheck, Award, Clock, Star][i % 4];
+                return (
+                  <div key={badge} className="flex items-center gap-2 text-sm font-medium" style={{ color: secondary }}>
+                    <TrustIcon className="w-4 h-4 shrink-0" style={{ color: primary }} />
+                    <span>{badge}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section id="leistungen" className="py-24 bg-background">
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-16 max-w-3xl mx-auto">
             <h2 className="text-4xl font-bold mb-6" style={{ color: secondary }}>{t.servicesTitle}</h2>
-            <p className="text-lg text-muted-foreground">{t.servicesSubtitle}</p>
+            <p className="text-lg text-muted-foreground">{theme.servicesSubtitle[lang]}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {(content?.hasCrawlData && content.services.length > 0
@@ -337,7 +379,25 @@ export default function DemoPage() {
                 }))
               : t.services.map(({ title, desc }, i) => ({ title, desc, isReal: false, i }))
             ).map(({ title, desc, i }) => {
-              const Icon = SERVICE_ICONS[i % SERVICE_ICONS.length];
+              const Icon = themeIcons[i % themeIcons.length];
+              if (isPrimary) {
+                return (
+                  <div
+                    key={i}
+                    className="bg-card rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border-t-2"
+                    style={{ borderTopColor: primary }}
+                  >
+                    <div
+                      className="w-11 h-11 rounded-full flex items-center justify-center mb-6"
+                      style={{ backgroundColor: primary + "14" }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: primary }} />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-3 leading-snug" style={{ color: secondary }}>{title}</h3>
+                    <p className="text-muted-foreground leading-relaxed text-sm">{desc}</p>
+                  </div>
+                );
+              }
               return (
                 <div
                   key={i}
@@ -371,7 +431,7 @@ export default function DemoPage() {
               />
             </div>
             <div className="flex-1">
-              <h2 className="text-4xl font-bold mb-6 tracking-tight" style={{ color: secondary }}>{t.infoTitle}</h2>
+              <h2 className="text-4xl font-bold mb-6 tracking-tight" style={{ color: secondary }}>{theme.infoTitle[lang]}</h2>
               <p className="text-lg text-muted-foreground mb-6">
                 {content?.hasCrawlData && content.about.length > 0
                   ? content.about[0].answer
@@ -415,7 +475,7 @@ export default function DemoPage() {
             <p className="text-sm text-muted-foreground mb-8">📍 {branding.city}</p>
           )}
           <div className="flex justify-center gap-12 mt-10">
-            {t.aboutStats.map(([num, label]) => (
+            {theme.stats[lang].map(([num, label]) => (
               <div key={label} className="text-center">
                 <div className="text-4xl font-extrabold" style={{ color: primary }}>{num}</div>
                 <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
@@ -435,7 +495,7 @@ export default function DemoPage() {
             <p className="text-muted-foreground max-w-xl mx-auto">{t.howSubtitle}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {t.steps.map(({ title, desc }, i) => (
+            {theme.steps[lang].map(({ title, desc }, i) => (
               <div key={i} className="bg-card rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div
                   className="h-11 w-11 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-5 shadow-sm"
