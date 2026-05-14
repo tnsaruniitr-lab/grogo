@@ -245,12 +245,15 @@ export default defineConfig({
               faqItems = FAQ_FALLBACKS[key] ?? FAQ_FALLBACKS["aesthetics"];
             }
 
-            // Read index.html and apply Vite transforms (injects dev client etc.)
+            // Read index.html from disk. We build the full SSR HTML first,
+            // then call transformIndexHtml so Vite's dev-client injection
+            // happens AFTER our content is already in the document.
+            // (transformIndexHtml strips HTML comments in Vite v7, so the
+            // <!--ssr-content--> placeholder must be replaced beforehand.)
             let html = readFileSync(
               path.resolve(server.config.root, "index.html"),
               "utf-8",
             );
-            html = await server.transformIndexHtml(req.url!, html);
 
             // ── Escape helpers ─────────────────────────────────────────────
             // esc(): full HTML attr escaping (for attribute values)
@@ -559,7 +562,12 @@ export default defineConfig({
   </section>
 </main>`;
 
+            // Replace placeholder BEFORE transformIndexHtml — Vite v7 strips
+            // HTML comments during its transform, so this must come first.
             html = html.replace("<!--ssr-content-->", ssrContent);
+
+            // Now let Vite inject the dev client / HMR script into <head>.
+            html = await server.transformIndexHtml(req.url!, html);
 
             res.setHeader("Content-Type", "text/html; charset=utf-8");
             res.end(html);
