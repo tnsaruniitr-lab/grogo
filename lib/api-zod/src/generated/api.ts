@@ -307,6 +307,55 @@ export const GetClientBrandingResponse = zod.object({
 });
 
 /**
+ * Starts a background deep crawl of the client's website. Discovers all internal pages, extracts structured Q&A knowledge via GPT function calling, embeds each chunk with text-embedding-3-small, and stores results in company_knowledge. Returns immediately with the queued job — poll /status for progress.
+
+ * @summary Trigger a deep crawl for a demo client
+ */
+export const TriggerCrawlParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+/**
+ * @summary Get the latest crawl job status for a demo client
+ */
+export const GetCrawlStatusParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetCrawlStatusResponse = zod.object({
+  jobId: zod.number(),
+  status: zod.string(),
+  pagesFound: zod.number(),
+  pagesCrawled: zod.number(),
+  pagesFailed: zod.number(),
+  pagesSkipped: zod.number(),
+  chunksExtracted: zod.number(),
+  errorSummary: zod.string().nullish(),
+  startedAt: zod.string().nullish(),
+  completedAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Get page-by-page crawl breakdown for a demo client
+ */
+export const GetCrawlPagesParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetCrawlPagesResponseItem = zod.object({
+  id: zod.number(),
+  url: zod.string(),
+  status: zod.string(),
+  depth: zod.number(),
+  pageTitle: zod.string().nullish(),
+  chunksExtracted: zod.number(),
+  lastError: zod.string().nullish(),
+  crawledAt: zod.string().nullish(),
+});
+export const GetCrawlPagesResponse = zod.array(GetCrawlPagesResponseItem);
+
+/**
  * @summary Request a presigned upload URL for logo files
  */
 export const RequestUploadUrlBody = zod.object({

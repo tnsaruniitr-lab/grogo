@@ -142,6 +142,37 @@ export interface ExtractBrandingInput {
   url: string;
 }
 
+export interface CrawlJobStatus {
+  jobId: number;
+  status: string;
+  pagesFound: number;
+  pagesCrawled: number;
+  pagesFailed: number;
+  pagesSkipped: number;
+  chunksExtracted: number;
+  /** @nullable */
+  errorSummary?: string | null;
+  /** @nullable */
+  startedAt?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface CrawlPageDetail {
+  id: number;
+  url: string;
+  status: string;
+  depth: number;
+  /** @nullable */
+  pageTitle?: string | null;
+  chunksExtracted: number;
+  /** @nullable */
+  lastError?: string | null;
+  /** @nullable */
+  crawledAt?: string | null;
+}
+
 export interface UploadUrlInput {
   name: string;
   size: number;

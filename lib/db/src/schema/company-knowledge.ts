@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, real, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
@@ -15,12 +15,17 @@ export const companyKnowledgeTable = pgTable(
     answer: text("answer").notNull(),
     language: text("language").notNull().default("de"),
     priority: integer("priority").notNull().default(0),
+    source: text("source").notNull().default("manual"),
+    sourceUrl: text("source_url"),
+    confidence: real("confidence"),
+    embeddingJson: text("embedding_json"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => [
     index("knowledge_client_category_idx").on(table.clientId, table.category),
     index("knowledge_client_lang_idx").on(table.clientId, table.language),
+    index("knowledge_client_source_idx").on(table.clientId, table.source),
   ],
 );
 

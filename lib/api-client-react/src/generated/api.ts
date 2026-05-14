@@ -18,6 +18,8 @@ import type {
 
 import type {
   BrandingConfig,
+  CrawlJobStatus,
+  CrawlPageDetail,
   DashboardStats,
   DemoClient,
   DemoClientInput,
@@ -1118,6 +1120,266 @@ export function useGetClientBranding<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetClientBrandingQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Starts a background deep crawl of the client's website. Discovers all internal pages, extracts structured Q&A knowledge via GPT function calling, embeds each chunk with text-embedding-3-small, and stores results in company_knowledge. Returns immediately with the queued job — poll /status for progress.
+
+ * @summary Trigger a deep crawl for a demo client
+ */
+export const getTriggerCrawlUrl = (slug: string) => {
+  return `/api/admin/crawl/${slug}`;
+};
+
+export const triggerCrawl = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<CrawlJobStatus> => {
+  return customFetch<CrawlJobStatus>(getTriggerCrawlUrl(slug), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getTriggerCrawlMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof triggerCrawl>>,
+    TError,
+    { slug: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof triggerCrawl>>,
+  TError,
+  { slug: string },
+  TContext
+> => {
+  const mutationKey = ["triggerCrawl"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof triggerCrawl>>,
+    { slug: string }
+  > = (props) => {
+    const { slug } = props ?? {};
+
+    return triggerCrawl(slug, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TriggerCrawlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof triggerCrawl>>
+>;
+
+export type TriggerCrawlMutationError = ErrorType<void>;
+
+/**
+ * @summary Trigger a deep crawl for a demo client
+ */
+export const useTriggerCrawl = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof triggerCrawl>>,
+    TError,
+    { slug: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof triggerCrawl>>,
+  TError,
+  { slug: string },
+  TContext
+> => {
+  return useMutation(getTriggerCrawlMutationOptions(options));
+};
+
+/**
+ * @summary Get the latest crawl job status for a demo client
+ */
+export const getGetCrawlStatusUrl = (slug: string) => {
+  return `/api/admin/crawl/${slug}/status`;
+};
+
+export const getCrawlStatus = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<CrawlJobStatus> => {
+  return customFetch<CrawlJobStatus>(getGetCrawlStatusUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCrawlStatusQueryKey = (slug: string) => {
+  return [`/api/admin/crawl/${slug}/status`] as const;
+};
+
+export const getGetCrawlStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCrawlStatus>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCrawlStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCrawlStatusQueryKey(slug);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrawlStatus>>> = ({
+    signal,
+  }) => getCrawlStatus(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCrawlStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCrawlStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCrawlStatus>>
+>;
+export type GetCrawlStatusQueryError = ErrorType<void>;
+
+/**
+ * @summary Get the latest crawl job status for a demo client
+ */
+
+export function useGetCrawlStatus<
+  TData = Awaited<ReturnType<typeof getCrawlStatus>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCrawlStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCrawlStatusQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get page-by-page crawl breakdown for a demo client
+ */
+export const getGetCrawlPagesUrl = (slug: string) => {
+  return `/api/admin/crawl/${slug}/pages`;
+};
+
+export const getCrawlPages = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<CrawlPageDetail[]> => {
+  return customFetch<CrawlPageDetail[]>(getGetCrawlPagesUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCrawlPagesQueryKey = (slug: string) => {
+  return [`/api/admin/crawl/${slug}/pages`] as const;
+};
+
+export const getGetCrawlPagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCrawlPages>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCrawlPages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCrawlPagesQueryKey(slug);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCrawlPages>>> = ({
+    signal,
+  }) => getCrawlPages(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCrawlPages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCrawlPagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCrawlPages>>
+>;
+export type GetCrawlPagesQueryError = ErrorType<void>;
+
+/**
+ * @summary Get page-by-page crawl breakdown for a demo client
+ */
+
+export function useGetCrawlPages<
+  TData = Awaited<ReturnType<typeof getCrawlPages>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCrawlPages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCrawlPagesQueryOptions(slug, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

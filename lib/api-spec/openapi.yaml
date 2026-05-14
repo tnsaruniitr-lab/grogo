@@ -314,6 +314,78 @@ paths:
         "404":
           description: Client not found
 
+  /admin/crawl/{slug}:
+    post:
+      operationId: triggerCrawl
+      tags: [admin]
+      summary: Trigger a deep crawl for a demo client
+      description: >
+        Starts a background deep crawl of the client's website. Discovers all internal
+        pages, extracts structured Q&A knowledge via GPT function calling, embeds
+        each chunk with text-embedding-3-small, and stores results in company_knowledge.
+        Returns immediately with the queued job — poll /status for progress.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Crawl job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrawlJobStatus"
+        "400":
+          description: Client has no websiteUrl configured
+        "404":
+          description: Client not found
+
+  /admin/crawl/{slug}/status:
+    get:
+      operationId: getCrawlStatus
+      tags: [admin]
+      summary: Get the latest crawl job status for a demo client
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Crawl job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrawlJobStatus"
+        "404":
+          description: No crawl job found for this client
+
+  /admin/crawl/{slug}/pages:
+    get:
+      operationId: getCrawlPages
+      tags: [admin]
+      summary: Get page-by-page crawl breakdown for a demo client
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of crawled pages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CrawlPageDetail"
+        "404":
+          description: No crawl job found
+
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -562,6 +634,54 @@ components:
       properties:
         url:
           type: string
+
+    CrawlJobStatus:
+      type: object
+      required: [jobId, status, pagesFound, pagesCrawled, pagesFailed, pagesSkipped, chunksExtracted, createdAt]
+      properties:
+        jobId:
+          type: integer
+        status:
+          type: string
+        pagesFound:
+          type: integer
+        pagesCrawled:
+          type: integer
+        pagesFailed:
+          type: integer
+        pagesSkipped:
+          type: integer
+        chunksExtracted:
+          type: integer
+        errorSummary:
+          type: ["string", "null"]
+        startedAt:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CrawlPageDetail:
+      type: object
+      required: [id, url, status, depth, chunksExtracted]
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        status:
+          type: string
+        depth:
+          type: integer
+        pageTitle:
+          type: ["string", "null"]
+        chunksExtracted:
+          type: integer
+        lastError:
+          type: ["string", "null"]
+        crawledAt:
+          type: ["string", "null"]
 
     UploadUrlInput:
       type: object

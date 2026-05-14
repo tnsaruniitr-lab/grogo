@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { clientsTable } from "@workspace/db";
-import { eq, isNull, ne, and } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 import {
   ExtractBrandingBody,
   CreateDemoClientBody,
@@ -10,6 +10,7 @@ import {
   DeleteDemoClientParams,
   GetClientBrandingParams,
 } from "@workspace/api-zod";
+import { startCrawlJob, runCrawlPipeline } from "../lib/crawl-pipeline";
 
 const router: IRouter = Router();
 
@@ -158,6 +159,14 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
     .returning();
 
   res.status(201).json(toClientResponse(created));
+
+  // Auto-trigger crawl if a websiteUrl was provided
+  const websiteUrl = (branding as Record<string, unknown> | undefined)?.websiteUrl as string | undefined;
+  if (websiteUrl) {
+    startCrawlJob(created.id, websiteUrl)
+      .then((jobId) => runCrawlPipeline(created.id, websiteUrl, jobId))
+      .catch((err) => req.log.error({ err, clientId: created.id }, "Auto-crawl failed to start"));
+  }
 });
 
 router.patch("/admin/clients/:id", async (req: Request, res: Response) => {

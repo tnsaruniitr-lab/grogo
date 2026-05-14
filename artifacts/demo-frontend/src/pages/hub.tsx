@@ -7,6 +7,8 @@ import {
   useDeleteDemoClient,
   useUpdateDemoClient,
   useGetDashboardStats,
+  useGetCrawlStatus,
+  useTriggerCrawl,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +42,10 @@ import {
   PhoneCall,
   Settings,
   Pencil,
+  RefreshCw,
+  Database,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
@@ -235,6 +241,79 @@ function BrandLogo({ logoUrl, companyName, secondary }: { logoUrl?: string | nul
   );
 }
 
+function CrawlBadge({ slug }: { slug: string }) {
+  const { data: crawl, refetch } = useGetCrawlStatus(slug, {
+    query: {
+      queryKey: ["crawl-status", slug],
+      staleTime: 5000,
+      refetchInterval: (q) => {
+        const s = q.state.data?.status;
+        return s === "queued" || s === "running" ? 4000 : false;
+      },
+    },
+  });
+  const { mutate: triggerCrawl, isPending } = useTriggerCrawl({
+    mutation: { onSuccess: () => setTimeout(() => refetch(), 1000) },
+  });
+
+  if (!crawl) {
+    return (
+      <button
+        onClick={() => triggerCrawl({ slug })}
+        disabled={isPending}
+        className="flex items-center gap-1 text-[10px] font-semibold text-white/30 hover:text-white/60 transition-colors disabled:opacity-50"
+        title="No crawl yet — click to crawl website"
+      >
+        {isPending ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <Database className="h-3 w-3" />
+        )}
+        No KB
+      </button>
+    );
+  }
+
+  if (crawl.status === "queued" || crawl.status === "running") {
+    return (
+      <span className="flex items-center gap-1 text-[10px] font-semibold text-yellow-400/80">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Crawling…
+      </span>
+    );
+  }
+
+  if (crawl.status === "failed") {
+    return (
+      <button
+        onClick={() => triggerCrawl({ slug })}
+        disabled={isPending}
+        className="flex items-center gap-1 text-[10px] font-semibold text-red-400/80 hover:text-red-300 transition-colors disabled:opacity-50"
+        title="Crawl failed — click to retry"
+      >
+        <AlertTriangle className="h-3 w-3" />
+        Failed · Retry
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => triggerCrawl({ slug })}
+      disabled={isPending}
+      className="flex items-center gap-1 text-[10px] font-semibold text-[#A8C334]/80 hover:text-[#A8C334] transition-colors disabled:opacity-50"
+      title={`${crawl.chunksExtracted} knowledge chunks from ${crawl.pagesCrawled} pages — click to re-crawl`}
+    >
+      {isPending ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : (
+        <CheckCircle2 className="h-3 w-3" />
+      )}
+      {crawl.chunksExtracted} facts · {crawl.pagesCrawled}p
+    </button>
+  );
+}
+
 function BrandCard({
   client,
   copied,
@@ -281,7 +360,7 @@ function BrandCard({
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2.5 py-1.5">
             <Users className="h-3.5 w-3.5 text-white/40" />
             <span className="text-white text-xs font-bold">{stats?.totalLeads ?? "—"}</span>
@@ -298,6 +377,13 @@ function BrandCard({
               <span className="text-[#A8C334]/60 text-[10px]">Callbacks</span>
             </div>
           )}
+        </div>
+
+        {/* Crawl status row */}
+        <div className="flex items-center gap-2 bg-white/[0.03] rounded-lg px-2.5 py-1.5">
+          <RefreshCw className="h-3 w-3 text-white/20 shrink-0" />
+          <span className="text-white/20 text-[10px] shrink-0">KB:</span>
+          <CrawlBadge slug={client.slug} />
         </div>
 
         <div className="flex flex-wrap gap-2 mt-auto pt-2 border-t border-white/5">

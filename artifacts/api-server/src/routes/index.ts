@@ -5,6 +5,7 @@ import leadsRouter from "./leads";
 import dashboardRouter from "./dashboard";
 import adminRouter from "./admin";
 import storageRouter from "./storage";
+import crawlRouter from "./crawl";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(leadsRouter);
 router.use(dashboardRouter);
 router.use(adminRouter);
 router.use(storageRouter);
+router.use(crawlRouter);
 
 export default router;
