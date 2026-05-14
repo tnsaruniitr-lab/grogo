@@ -620,7 +620,7 @@ const defaultTheme: IndustryTheme = {
 // Exports
 // ─────────────────────────────────────────────────────────
 
-export const PRIMARY_VERTICALS = new Set(["aesthetics", "medical", "dental", "wellness", "hair_clinic", "iv_therapy", "physiotherapy", "cosmetic_surgery", "laser_eye", "fertility", "weight_management"]);
+export const PRIMARY_VERTICALS = new Set(["aesthetics", "medical", "dental", "wellness", "hair", "iv-therapy", "physiotherapy", "cosmetic-surgery", "laser-eye", "fertility", "weight-management"]);
 
 const THEME_MAP: Record<string, IndustryTheme> = {
   aesthetics: aestheticsTheme,
@@ -628,13 +628,13 @@ const THEME_MAP: Record<string, IndustryTheme> = {
   dental: dentalTheme,
   wellness: wellnessTheme,
   care: careTheme,
-  hair_clinic: aestheticsTheme,
-  iv_therapy: aestheticsTheme,
+  hair: aestheticsTheme,
+  "iv-therapy": aestheticsTheme,
   physiotherapy: medicalTheme,
-  cosmetic_surgery: aestheticsTheme,
-  laser_eye: medicalTheme,
+  "cosmetic-surgery": aestheticsTheme,
+  "laser-eye": medicalTheme,
   fertility: careTheme,
-  weight_management: medicalTheme,
+  "weight-management": medicalTheme,
 };
 
 /** Maps industry key → video filename served from /videos/ */
@@ -643,28 +643,28 @@ export const INDUSTRY_VIDEO_MAP: Record<string, string> = {
   wellness: "/videos/wellness-meditation.mp4",
   care: "/videos/care-compassion.mp4",
   dental: "/videos/dental-smile.mp4",
-  hair_clinic: "/videos/hair-clinic.mp4",
+  hair: "/videos/hair-clinic.mp4",
   physiotherapy: "/videos/physio-rehab.mp4",
-  iv_therapy: "/videos/iv-therapy.mp4",
-  cosmetic_surgery: "/videos/cosmetic-surgery.mp4",
-  laser_eye: "/videos/laser-eye.mp4",
+  "iv-therapy": "/videos/iv-therapy.mp4",
+  "cosmetic-surgery": "/videos/cosmetic-surgery.mp4",
+  "laser-eye": "/videos/laser-eye.mp4",
   fertility: "/videos/fertility-ivf.mp4",
-  weight_management: "/videos/weight-management.mp4",
+  "weight-management": "/videos/weight-management.mp4",
 };
 
 export const INDUSTRY_OPTIONS: Array<{ value: string; label: string; emoji: string }> = [
-  { value: "aesthetics",        label: "Medspa",        emoji: "✨" },
-  { value: "dental",            label: "Dental",         emoji: "🦷" },
-  { value: "wellness",          label: "Wellness",       emoji: "🌿" },
-  { value: "physiotherapy",     label: "Physio",         emoji: "🏃" },
-  { value: "hair_clinic",       label: "Hair Clinic",    emoji: "💆" },
-  { value: "iv_therapy",        label: "IV Therapy",     emoji: "⚡" },
-  { value: "cosmetic_surgery",  label: "Surgery",        emoji: "⭐" },
-  { value: "laser_eye",         label: "Laser Eye",      emoji: "👁" },
-  { value: "fertility",         label: "Fertility",      emoji: "❤️" },
-  { value: "weight_management", label: "Weight Mgmt",    emoji: "📉" },
-  { value: "care",              label: "Home Care",      emoji: "🏠" },
-  { value: "medical",           label: "Medical / GP",   emoji: "🩺" },
+  { value: "aesthetics",       label: "Medspa",        emoji: "✨" },
+  { value: "dental",           label: "Dental",         emoji: "🦷" },
+  { value: "wellness",         label: "Wellness",       emoji: "🌿" },
+  { value: "physiotherapy",    label: "Physio",         emoji: "🏃" },
+  { value: "hair",             label: "Hair Clinic",    emoji: "💆" },
+  { value: "iv-therapy",       label: "IV Therapy",     emoji: "⚡" },
+  { value: "cosmetic-surgery", label: "Surgery",        emoji: "⭐" },
+  { value: "laser-eye",        label: "Laser Eye",      emoji: "👁" },
+  { value: "fertility",        label: "Fertility",      emoji: "❤️" },
+  { value: "weight-management",label: "Weight Mgmt",    emoji: "📉" },
+  { value: "care",             label: "Home Care",      emoji: "🏠" },
+  { value: "medical",          label: "Medical / GP",   emoji: "🩺" },
 ];
 
 export function getIndustryTheme(industry?: string | null): IndustryTheme {
@@ -676,18 +676,18 @@ export function getIndustryTheme(industry?: string | null): IndustryTheme {
 // ─────────────────────────────────────────────────────────
 
 export const INDUSTRY_SCHEMA_TYPES: Record<string, string[]> = {
-  aesthetics:        ["LocalBusiness", "HealthAndBeautyBusiness"],
-  medical:           ["LocalBusiness", "MedicalBusiness"],
-  dental:            ["LocalBusiness", "Dentist"],
-  wellness:          ["LocalBusiness", "HealthClub"],
-  care:              ["LocalBusiness", "HomeAndConstructionBusiness"],
-  hair_clinic:       ["LocalBusiness", "HairSalon"],
-  iv_therapy:        ["LocalBusiness", "MedicalBusiness"],
-  physiotherapy:     ["LocalBusiness", "MedicalBusiness"],
-  cosmetic_surgery:  ["LocalBusiness", "MedicalBusiness"],
-  laser_eye:         ["LocalBusiness", "Optician"],
-  fertility:         ["LocalBusiness", "MedicalBusiness"],
-  weight_management: ["LocalBusiness", "MedicalBusiness"],
+  aesthetics:          ["LocalBusiness", "HealthAndBeautyBusiness"],
+  medical:             ["LocalBusiness", "MedicalBusiness"],
+  dental:              ["LocalBusiness", "Dentist"],
+  wellness:            ["LocalBusiness", "HealthClub"],
+  care:                ["LocalBusiness", "HomeAndConstructionBusiness"],
+  hair:                ["LocalBusiness", "HairSalon"],
+  "iv-therapy":        ["LocalBusiness", "MedicalBusiness"],
+  physiotherapy:       ["LocalBusiness", "MedicalBusiness"],
+  "cosmetic-surgery":  ["LocalBusiness", "MedicalBusiness"],
+  "laser-eye":         ["LocalBusiness", "Optician"],
+  fertility:           ["LocalBusiness", "MedicalBusiness"],
+  "weight-management": ["LocalBusiness", "MedicalBusiness"],
 };
 
 // ─────────────────────────────────────────────────────────
@@ -702,13 +702,13 @@ export interface Testimonial {
 }
 
 const TESTIMONIAL_KEY_FALLBACK: Record<string, string> = {
-  hair_clinic:       "aesthetics",
-  iv_therapy:        "aesthetics",
-  cosmetic_surgery:  "aesthetics",
-  physiotherapy:     "medical",
-  laser_eye:         "medical",
-  fertility:         "care",
-  weight_management: "medical",
+  hair:                "aesthetics",
+  "iv-therapy":        "aesthetics",
+  "cosmetic-surgery":  "aesthetics",
+  physiotherapy:       "medical",
+  "laser-eye":         "medical",
+  fertility:           "care",
+  "weight-management": "medical",
 };
 
 const INDUSTRY_TESTIMONIALS: Record<string, Testimonial[]> = {
@@ -854,13 +854,13 @@ export interface FAQItem {
 }
 
 const FAQ_KEY_FALLBACK: Record<string, string> = {
-  hair_clinic:       "aesthetics",
-  iv_therapy:        "aesthetics",
-  cosmetic_surgery:  "aesthetics",
-  physiotherapy:     "medical",
-  laser_eye:         "medical",
-  fertility:         "care",
-  weight_management: "medical",
+  hair:                "aesthetics",
+  "iv-therapy":        "aesthetics",
+  "cosmetic-surgery":  "aesthetics",
+  physiotherapy:       "medical",
+  "laser-eye":         "medical",
+  fertility:           "care",
+  "weight-management": "medical",
 };
 
 const INDUSTRY_FAQ_FALLBACKS: Record<string, FAQItem[]> = {

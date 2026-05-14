@@ -74,16 +74,10 @@ function resolveColors(branding: BrandingConfig): { primary: string; secondary: 
   }
   const industry = branding.industry ?? "other";
   const FALLBACKS: Record<string, { primary: string; secondary: string }> = {
-    care:                { primary: "#4A7C59", secondary: "#1B2B3A" },
-    aesthetics:          { primary: "#C9A84C", secondary: "#1A1A2E" },
-    dental:              { primary: "#2E86AB", secondary: "#2D3047" },
+    care:                { primary: "#E8A84C", secondary: "#1B2B3A" },
+    aesthetics:          { primary: "#C4882A", secondary: "#1A1008" },
+    dental:              { primary: "#3B9BD4", secondary: "#0A1A24" },
     medical:             { primary: "#1B4F8A", secondary: "#0D1B2A" },
-    legal:               { primary: "#1C2951", secondary: "#0B0E1A" },
-    finance:             { primary: "#0D5C40", secondary: "#071C13" },
-    retail:              { primary: "#7C3AED", secondary: "#1E1B4B" },
-    hospitality:         { primary: "#C1694F", secondary: "#2C1A14" },
-    education:           { primary: "#2563EB", secondary: "#1E1B4B" },
-    fitness:             { primary: "#F97316", secondary: "#1C0E05" },
     wellness:            { primary: "#8BAF6A", secondary: "#0D1209" },
     "cosmetic-surgery":  { primary: "#C9B99A", secondary: "#0B0907" },
     hair:                { primary: "#2A9BD4", secondary: "#060E14" },
