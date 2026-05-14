@@ -8,6 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Mockups from "@/pages/mockups";
 import Admin from "@/pages/admin";
 import Demo from "@/pages/demo";
+import DemoDashboard from "@/pages/demo-dashboard";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/mockups" component={Mockups} />
       <Route path="/admin" component={Admin} />
+      <Route path="/demo/:slug/dashboard" component={DemoDashboard} />
       <Route path="/demo/:slug" component={Demo} />
       <Route component={NotFound} />
     </Switch>

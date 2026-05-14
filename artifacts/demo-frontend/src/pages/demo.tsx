@@ -3,15 +3,13 @@ import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DemoNav } from "@/components/layout/demo-nav";
 import {
   MessageCircle,
-  Phone,
   CheckCircle2,
   Heart,
   Users,
-  Moon,
   Loader2,
-  ArrowRight,
   MapPin,
   Globe,
 } from "lucide-react";
@@ -95,37 +93,7 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav
-        className="sticky top-0 z-50 w-full border-b"
-        style={{ backgroundColor: secondary }}
-      >
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-3">
-            {branding.logoUrl ? (
-              <img
-                src={branding.logoUrl}
-                alt={branding.companyName}
-                className="h-9 w-auto max-w-[140px] object-contain rounded"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
-            ) : (
-              <span className="text-xl font-extrabold text-white tracking-tight">
-                {branding.companyName.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {branding.phone && (
-              <a href={`tel:${branding.phone}`} className="hidden md:flex items-center gap-1.5 text-white/80 hover:text-white text-sm">
-                <Phone className="h-4 w-4" /> {branding.phone}
-              </a>
-            )}
-            <div className="bg-white/10 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
-              KI-Demo
-            </div>
-          </div>
-        </div>
-      </nav>
+      <DemoNav branding={branding} />
 
       <section
         className="relative w-full overflow-hidden py-20 lg:py-28"

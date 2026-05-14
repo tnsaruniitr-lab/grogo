@@ -38,6 +38,7 @@ import {
   CheckCheck,
   Sparkles,
   Upload,
+  LayoutDashboard,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -231,6 +232,14 @@ export default function AdminPage() {
                             onClick={() => window.open(`/demo/${client.slug}`, "_blank")}
                           >
                             <ExternalLink className="h-3 w-3" /> Vorschau
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs"
+                            onClick={() => window.open(`/demo/${client.slug}/dashboard`, "_blank")}
+                          >
+                            <LayoutDashboard className="h-3 w-3" /> Dashboard
                           </Button>
                           <Button
                             size="sm"

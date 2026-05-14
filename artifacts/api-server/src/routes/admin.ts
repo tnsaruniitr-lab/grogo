@@ -224,6 +224,7 @@ router.get("/clients/:slug/branding", async (req: Request, res: Response) => {
 function buildBranding(client: typeof clientsTable.$inferSelect) {
   const cfg = (client.config ?? {}) as Record<string, unknown>;
   return {
+    clientId: client.id,
     companyName: (cfg.companyName as string | undefined) ?? client.name,
     slug: client.slug,
     tagline: (cfg.tagline as string | null | undefined) ?? null,
