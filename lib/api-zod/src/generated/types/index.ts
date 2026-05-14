@@ -7,8 +7,13 @@
  */
 
 export * from "./appointment";
+export * from "./brandingConfig";
 export * from "./conversationMessage";
 export * from "./dashboardStats";
+export * from "./demoClient";
+export * from "./demoClientInput";
+export * from "./demoClientUpdate";
+export * from "./extractBrandingInput";
 export * from "./getDashboardStatsParams";
 export * from "./getLeadParams";
 export * from "./healthStatus";
@@ -19,3 +24,5 @@ export * from "./leadUpdate";
 export * from "./listLeadsParams";
 export * from "./twilioWebhookPayload";
 export * from "./updateLeadParams";
+export * from "./uploadUrlInput";
+export * from "./uploadUrlResponse";

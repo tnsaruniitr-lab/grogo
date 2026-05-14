@@ -43,6 +43,13 @@ export function Nav() {
             >
               Ad Mockups
             </Link>
+            <Link 
+              href="/admin" 
+              className={cn("text-sm font-medium transition-colors", location.startsWith("/admin") ? "text-primary" : "text-muted-foreground hover:text-foreground")}
+              data-testid="nav-admin"
+            >
+              Demo Admin
+            </Link>
           </div>
         </div>
 

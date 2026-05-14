@@ -16,6 +16,10 @@ tags:
     description: Lead management
   - name: dashboard
     description: Dashboard summary data
+  - name: admin
+    description: Admin operations for managing branded demo clients
+  - name: storage
+    description: Object storage for logo uploads
 
 paths:
   /healthz:
@@ -186,6 +190,149 @@ paths:
         "404":
           description: Lead not found
 
+  /admin/extract-branding:
+    post:
+      operationId: extractBranding
+      tags: [admin]
+      summary: Extract brand from a website URL
+      description: >
+        Fetches the given URL server-side and extracts brand signals:
+        company name, primary color, logo URL, tagline. Returns suggested
+        branding that the admin can review and override before creating a demo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractBrandingInput"
+      responses:
+        "200":
+          description: Extracted branding suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingConfig"
+        "400":
+          description: Invalid URL or failed to fetch
+
+  /admin/clients:
+    get:
+      operationId: listDemoClients
+      tags: [admin]
+      summary: List all demo clients
+      description: Returns all demo clients with their branding config.
+      responses:
+        "200":
+          description: List of demo clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoClient"
+    post:
+      operationId: createDemoClient
+      tags: [admin]
+      summary: Create a new branded demo client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoClientInput"
+      responses:
+        "201":
+          description: Created demo client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoClient"
+        "400":
+          description: Validation error or slug conflict
+
+  /admin/clients/{id}:
+    patch:
+      operationId: updateDemoClient
+      tags: [admin]
+      summary: Update branding of a demo client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoClientUpdate"
+      responses:
+        "200":
+          description: Updated demo client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoClient"
+        "404":
+          description: Client not found
+    delete:
+      operationId: deleteDemoClient
+      tags: [admin]
+      summary: Delete (soft-delete) a demo client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Client not found
+
+  /clients/{slug}/branding:
+    get:
+      operationId: getClientBranding
+      tags: [admin]
+      summary: Get branding config for a demo client by slug
+      description: Public endpoint used by the branded demo frontend to load theme and assets.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Branding config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingConfig"
+        "404":
+          description: Client not found
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL for logo files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlInput"
+      responses:
+        "200":
+          description: Presigned upload URL and object path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -344,4 +491,92 @@ components:
         notes:
           type: string
         name:
+          type: string
+
+    BrandingConfig:
+      type: object
+      required: [companyName, slug]
+      properties:
+        companyName:
+          type: string
+        slug:
+          type: string
+        tagline:
+          type: ["string", "null"]
+        heroHeadline:
+          type: ["string", "null"]
+        primaryColor:
+          type: ["string", "null"]
+        secondaryColor:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        websiteUrl:
+          type: ["string", "null"]
+
+    DemoClient:
+      type: object
+      required: [id, name, slug, isActive, createdAt, branding]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+        branding:
+          $ref: "#/components/schemas/BrandingConfig"
+
+    DemoClientInput:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        branding:
+          $ref: "#/components/schemas/BrandingConfig"
+
+    DemoClientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        branding:
+          $ref: "#/components/schemas/BrandingConfig"
+
+    ExtractBrandingInput:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+
+    UploadUrlInput:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
           type: string

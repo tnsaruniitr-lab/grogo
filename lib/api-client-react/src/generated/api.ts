@@ -17,7 +17,12 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BrandingConfig,
   DashboardStats,
+  DemoClient,
+  DemoClientInput,
+  DemoClientUpdate,
+  ExtractBrandingInput,
   GetDashboardStatsParams,
   GetLeadParams,
   HealthStatus,
@@ -28,6 +33,8 @@ import type {
   ListLeadsParams,
   TwilioWebhookPayload,
   UpdateLeadParams,
+  UploadUrlInput,
+  UploadUrlResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -608,4 +615,599 @@ export const useUpdateLead = <
   TContext
 > => {
   return useMutation(getUpdateLeadMutationOptions(options));
+};
+
+/**
+ * Fetches the given URL server-side and extracts brand signals: company name, primary color, logo URL, tagline. Returns suggested branding that the admin can review and override before creating a demo.
+
+ * @summary Extract brand from a website URL
+ */
+export const getExtractBrandingUrl = () => {
+  return `/api/admin/extract-branding`;
+};
+
+export const extractBranding = async (
+  extractBrandingInput: ExtractBrandingInput,
+  options?: RequestInit,
+): Promise<BrandingConfig> => {
+  return customFetch<BrandingConfig>(getExtractBrandingUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(extractBrandingInput),
+  });
+};
+
+export const getExtractBrandingMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof extractBranding>>,
+    TError,
+    { data: BodyType<ExtractBrandingInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof extractBranding>>,
+  TError,
+  { data: BodyType<ExtractBrandingInput> },
+  TContext
+> => {
+  const mutationKey = ["extractBranding"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof extractBranding>>,
+    { data: BodyType<ExtractBrandingInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return extractBranding(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ExtractBrandingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof extractBranding>>
+>;
+export type ExtractBrandingMutationBody = BodyType<ExtractBrandingInput>;
+export type ExtractBrandingMutationError = ErrorType<void>;
+
+/**
+ * @summary Extract brand from a website URL
+ */
+export const useExtractBranding = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof extractBranding>>,
+    TError,
+    { data: BodyType<ExtractBrandingInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof extractBranding>>,
+  TError,
+  { data: BodyType<ExtractBrandingInput> },
+  TContext
+> => {
+  return useMutation(getExtractBrandingMutationOptions(options));
+};
+
+/**
+ * Returns all demo clients with their branding config.
+ * @summary List all demo clients
+ */
+export const getListDemoClientsUrl = () => {
+  return `/api/admin/clients`;
+};
+
+export const listDemoClients = async (
+  options?: RequestInit,
+): Promise<DemoClient[]> => {
+  return customFetch<DemoClient[]>(getListDemoClientsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDemoClientsQueryKey = () => {
+  return [`/api/admin/clients`] as const;
+};
+
+export const getListDemoClientsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDemoClients>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listDemoClients>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDemoClientsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDemoClients>>> = ({
+    signal,
+  }) => listDemoClients({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDemoClients>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListDemoClientsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDemoClients>>
+>;
+export type ListDemoClientsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all demo clients
+ */
+
+export function useListDemoClients<
+  TData = Awaited<ReturnType<typeof listDemoClients>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listDemoClients>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDemoClientsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new branded demo client
+ */
+export const getCreateDemoClientUrl = () => {
+  return `/api/admin/clients`;
+};
+
+export const createDemoClient = async (
+  demoClientInput: DemoClientInput,
+  options?: RequestInit,
+): Promise<DemoClient> => {
+  return customFetch<DemoClient>(getCreateDemoClientUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(demoClientInput),
+  });
+};
+
+export const getCreateDemoClientMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDemoClient>>,
+    TError,
+    { data: BodyType<DemoClientInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createDemoClient>>,
+  TError,
+  { data: BodyType<DemoClientInput> },
+  TContext
+> => {
+  const mutationKey = ["createDemoClient"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createDemoClient>>,
+    { data: BodyType<DemoClientInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createDemoClient(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateDemoClientMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createDemoClient>>
+>;
+export type CreateDemoClientMutationBody = BodyType<DemoClientInput>;
+export type CreateDemoClientMutationError = ErrorType<void>;
+
+/**
+ * @summary Create a new branded demo client
+ */
+export const useCreateDemoClient = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDemoClient>>,
+    TError,
+    { data: BodyType<DemoClientInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createDemoClient>>,
+  TError,
+  { data: BodyType<DemoClientInput> },
+  TContext
+> => {
+  return useMutation(getCreateDemoClientMutationOptions(options));
+};
+
+/**
+ * @summary Update branding of a demo client
+ */
+export const getUpdateDemoClientUrl = (id: number) => {
+  return `/api/admin/clients/${id}`;
+};
+
+export const updateDemoClient = async (
+  id: number,
+  demoClientUpdate: DemoClientUpdate,
+  options?: RequestInit,
+): Promise<DemoClient> => {
+  return customFetch<DemoClient>(getUpdateDemoClientUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(demoClientUpdate),
+  });
+};
+
+export const getUpdateDemoClientMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDemoClient>>,
+    TError,
+    { id: number; data: BodyType<DemoClientUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDemoClient>>,
+  TError,
+  { id: number; data: BodyType<DemoClientUpdate> },
+  TContext
+> => {
+  const mutationKey = ["updateDemoClient"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDemoClient>>,
+    { id: number; data: BodyType<DemoClientUpdate> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateDemoClient(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDemoClientMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDemoClient>>
+>;
+export type UpdateDemoClientMutationBody = BodyType<DemoClientUpdate>;
+export type UpdateDemoClientMutationError = ErrorType<void>;
+
+/**
+ * @summary Update branding of a demo client
+ */
+export const useUpdateDemoClient = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDemoClient>>,
+    TError,
+    { id: number; data: BodyType<DemoClientUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDemoClient>>,
+  TError,
+  { id: number; data: BodyType<DemoClientUpdate> },
+  TContext
+> => {
+  return useMutation(getUpdateDemoClientMutationOptions(options));
+};
+
+/**
+ * @summary Delete (soft-delete) a demo client
+ */
+export const getDeleteDemoClientUrl = (id: number) => {
+  return `/api/admin/clients/${id}`;
+};
+
+export const deleteDemoClient = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDemoClientUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDemoClientMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDemoClient>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDemoClient>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDemoClient"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDemoClient>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDemoClient(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDemoClientMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDemoClient>>
+>;
+
+export type DeleteDemoClientMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete (soft-delete) a demo client
+ */
+export const useDeleteDemoClient = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDemoClient>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDemoClient>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDemoClientMutationOptions(options));
+};
+
+/**
+ * Public endpoint used by the branded demo frontend to load theme and assets.
+ * @summary Get branding config for a demo client by slug
+ */
+export const getGetClientBrandingUrl = (slug: string) => {
+  return `/api/clients/${slug}/branding`;
+};
+
+export const getClientBranding = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<BrandingConfig> => {
+  return customFetch<BrandingConfig>(getGetClientBrandingUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetClientBrandingQueryKey = (slug: string) => {
+  return [`/api/clients/${slug}/branding`] as const;
+};
+
+export const getGetClientBrandingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getClientBranding>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClientBranding>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetClientBrandingQueryKey(slug);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getClientBranding>>
+  > = ({ signal }) => getClientBranding(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getClientBranding>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetClientBrandingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getClientBranding>>
+>;
+export type GetClientBrandingQueryError = ErrorType<void>;
+
+/**
+ * @summary Get branding config for a demo client by slug
+ */
+
+export function useGetClientBranding<
+  TData = Awaited<ReturnType<typeof getClientBranding>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClientBranding>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetClientBrandingQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Request a presigned upload URL for logo files
+ */
+export const getRequestUploadUrlUrl = () => {
+  return `/api/storage/uploads/request-url`;
+};
+
+export const requestUploadUrl = async (
+  uploadUrlInput: UploadUrlInput,
+  options?: RequestInit,
+): Promise<UploadUrlResponse> => {
+  return customFetch<UploadUrlResponse>(getRequestUploadUrlUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(uploadUrlInput),
+  });
+};
+
+export const getRequestUploadUrlMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    TError,
+    { data: BodyType<UploadUrlInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestUploadUrl>>,
+  TError,
+  { data: BodyType<UploadUrlInput> },
+  TContext
+> => {
+  const mutationKey = ["requestUploadUrl"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    { data: BodyType<UploadUrlInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return requestUploadUrl(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestUploadUrlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestUploadUrl>>
+>;
+export type RequestUploadUrlMutationBody = BodyType<UploadUrlInput>;
+export type RequestUploadUrlMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Request a presigned upload URL for logo files
+ */
+export const useRequestUploadUrl = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    TError,
+    { data: BodyType<UploadUrlInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestUploadUrl>>,
+  TError,
+  { data: BodyType<UploadUrlInput> },
+  TContext
+> => {
+  return useMutation(getRequestUploadUrlMutationOptions(options));
 };

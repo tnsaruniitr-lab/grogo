@@ -95,6 +95,62 @@ export interface LeadUpdate {
   name?: string;
 }
 
+export interface BrandingConfig {
+  companyName: string;
+  slug: string;
+  /** @nullable */
+  tagline?: string | null;
+  /** @nullable */
+  heroHeadline?: string | null;
+  /** @nullable */
+  primaryColor?: string | null;
+  /** @nullable */
+  secondaryColor?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  websiteUrl?: string | null;
+}
+
+export interface DemoClient {
+  id: number;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
+  branding: BrandingConfig;
+}
+
+export interface DemoClientInput {
+  name: string;
+  slug: string;
+  branding?: BrandingConfig;
+}
+
+export interface DemoClientUpdate {
+  name?: string;
+  branding?: BrandingConfig;
+}
+
+export interface ExtractBrandingInput {
+  url: string;
+}
+
+export interface UploadUrlInput {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
 export type GetDashboardStatsParams = {
   clientId: number;
 };

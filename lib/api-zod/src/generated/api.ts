@@ -157,3 +157,159 @@ export const UpdateLeadResponse = zod.object({
   lastContactAt: zod.string().nullish(),
   createdAt: zod.string(),
 });
+
+/**
+ * Fetches the given URL server-side and extracts brand signals: company name, primary color, logo URL, tagline. Returns suggested branding that the admin can review and override before creating a demo.
+
+ * @summary Extract brand from a website URL
+ */
+export const ExtractBrandingBody = zod.object({
+  url: zod.string(),
+});
+
+export const ExtractBrandingResponse = zod.object({
+  companyName: zod.string(),
+  slug: zod.string(),
+  tagline: zod.string().nullish(),
+  heroHeadline: zod.string().nullish(),
+  primaryColor: zod.string().nullish(),
+  secondaryColor: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  city: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  websiteUrl: zod.string().nullish(),
+});
+
+/**
+ * Returns all demo clients with their branding config.
+ * @summary List all demo clients
+ */
+export const ListDemoClientsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  slug: zod.string(),
+  isActive: zod.boolean(),
+  createdAt: zod.string(),
+  branding: zod.object({
+    companyName: zod.string(),
+    slug: zod.string(),
+    tagline: zod.string().nullish(),
+    heroHeadline: zod.string().nullish(),
+    primaryColor: zod.string().nullish(),
+    secondaryColor: zod.string().nullish(),
+    logoUrl: zod.string().nullish(),
+    city: zod.string().nullish(),
+    phone: zod.string().nullish(),
+    websiteUrl: zod.string().nullish(),
+  }),
+});
+export const ListDemoClientsResponse = zod.array(ListDemoClientsResponseItem);
+
+/**
+ * @summary Create a new branded demo client
+ */
+export const CreateDemoClientBody = zod.object({
+  name: zod.string(),
+  slug: zod.string(),
+  branding: zod
+    .object({
+      companyName: zod.string(),
+      slug: zod.string(),
+      tagline: zod.string().nullish(),
+      heroHeadline: zod.string().nullish(),
+      primaryColor: zod.string().nullish(),
+      secondaryColor: zod.string().nullish(),
+      logoUrl: zod.string().nullish(),
+      city: zod.string().nullish(),
+      phone: zod.string().nullish(),
+      websiteUrl: zod.string().nullish(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Update branding of a demo client
+ */
+export const UpdateDemoClientParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDemoClientBody = zod.object({
+  name: zod.string().optional(),
+  branding: zod
+    .object({
+      companyName: zod.string(),
+      slug: zod.string(),
+      tagline: zod.string().nullish(),
+      heroHeadline: zod.string().nullish(),
+      primaryColor: zod.string().nullish(),
+      secondaryColor: zod.string().nullish(),
+      logoUrl: zod.string().nullish(),
+      city: zod.string().nullish(),
+      phone: zod.string().nullish(),
+      websiteUrl: zod.string().nullish(),
+    })
+    .optional(),
+});
+
+export const UpdateDemoClientResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  slug: zod.string(),
+  isActive: zod.boolean(),
+  createdAt: zod.string(),
+  branding: zod.object({
+    companyName: zod.string(),
+    slug: zod.string(),
+    tagline: zod.string().nullish(),
+    heroHeadline: zod.string().nullish(),
+    primaryColor: zod.string().nullish(),
+    secondaryColor: zod.string().nullish(),
+    logoUrl: zod.string().nullish(),
+    city: zod.string().nullish(),
+    phone: zod.string().nullish(),
+    websiteUrl: zod.string().nullish(),
+  }),
+});
+
+/**
+ * @summary Delete (soft-delete) a demo client
+ */
+export const DeleteDemoClientParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * Public endpoint used by the branded demo frontend to load theme and assets.
+ * @summary Get branding config for a demo client by slug
+ */
+export const GetClientBrandingParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetClientBrandingResponse = zod.object({
+  companyName: zod.string(),
+  slug: zod.string(),
+  tagline: zod.string().nullish(),
+  heroHeadline: zod.string().nullish(),
+  primaryColor: zod.string().nullish(),
+  secondaryColor: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  city: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  websiteUrl: zod.string().nullish(),
+});
+
+/**
+ * @summary Request a presigned upload URL for logo files
+ */
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string(),
+  size: zod.number(),
+  contentType: zod.string(),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string(),
+  objectPath: zod.string(),
+});
