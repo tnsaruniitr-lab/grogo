@@ -8,6 +8,8 @@
 
 export * from "./appointment";
 export * from "./conversationMessage";
+export * from "./dashboardStats";
+export * from "./getDashboardStatsParams";
 export * from "./getLeadParams";
 export * from "./healthStatus";
 export * from "./lead";

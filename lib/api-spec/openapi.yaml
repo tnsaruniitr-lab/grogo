@@ -14,6 +14,8 @@ tags:
     description: Inbound webhook endpoints
   - name: leads
     description: Lead management
+  - name: dashboard
+    description: Dashboard summary data
 
 paths:
   /healthz:
@@ -54,6 +56,26 @@ paths:
                 type: string
         "403":
           description: Invalid Twilio signature
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Dashboard summary statistics
+      description: Returns aggregate counts for the lead dashboard — totals, by-status breakdown, and today's activity.
+      parameters:
+        - name: clientId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
 
   /leads:
     get:
@@ -290,6 +312,29 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Appointment"
+
+    DashboardStats:
+      type: object
+      required: [totalLeads, newLeads, qualifiedLeads, callbackBooked, escalated, needsHuman, bookedToday, newToday, contactedToday]
+      properties:
+        totalLeads:
+          type: integer
+        newLeads:
+          type: integer
+        qualifiedLeads:
+          type: integer
+        callbackBooked:
+          type: integer
+        escalated:
+          type: integer
+        needsHuman:
+          type: integer
+        bookedToday:
+          type: integer
+        newToday:
+          type: integer
+        contactedToday:
+          type: integer
 
     LeadUpdate:
       type: object

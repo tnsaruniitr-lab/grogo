@@ -77,11 +77,27 @@ export interface LeadDetail {
   appointments: Appointment[];
 }
 
+export interface DashboardStats {
+  totalLeads: number;
+  newLeads: number;
+  qualifiedLeads: number;
+  callbackBooked: number;
+  escalated: number;
+  needsHuman: number;
+  bookedToday: number;
+  newToday: number;
+  contactedToday: number;
+}
+
 export interface LeadUpdate {
   status?: string;
   notes?: string;
   name?: string;
 }
+
+export type GetDashboardStatsParams = {
+  clientId: number;
+};
 
 export type ListLeadsParams = {
   clientId: number;

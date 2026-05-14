@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "rb3SkjU5jRjqcbvDF0E6g"
+uri = "file://artifacts/demo-frontend/src/assets/pattern.png"
+type = "image"
+title = "Turkish floral pattern on green"
+
+[[generated]]
+id = "fOS1BwrAmLVMZJH7urUyz"
+uri = "file://artifacts/demo-frontend/src/assets/hero-person.png"
+type = "image"
+title = "Care professional woman"
+
+[[generated]]
+id = "9iZxS_hYNes8CwGMbVkci"
+uri = "file://artifacts/demo-frontend/src/assets/care.png"
+type = "image"
+title = "Elderly care hands"

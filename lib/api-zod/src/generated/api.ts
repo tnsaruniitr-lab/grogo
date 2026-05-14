@@ -16,6 +16,26 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * Returns aggregate counts for the lead dashboard — totals, by-status breakdown, and today's activity.
+ * @summary Dashboard summary statistics
+ */
+export const GetDashboardStatsQueryParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetDashboardStatsResponse = zod.object({
+  totalLeads: zod.number(),
+  newLeads: zod.number(),
+  qualifiedLeads: zod.number(),
+  callbackBooked: zod.number(),
+  escalated: zod.number(),
+  needsHuman: zod.number(),
+  bookedToday: zod.number(),
+  newToday: zod.number(),
+  contactedToday: zod.number(),
+});
+
+/**
  * Returns paginated leads for the dashboard, scoped to a client.
  * @summary List leads
  */
