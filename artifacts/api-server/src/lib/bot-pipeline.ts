@@ -257,6 +257,18 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
         ? "Şu an çok fazla mesaj geldi. En kısa sürede sizi arayacağız."
         : "Wir haben gerade viele Anfragen. Wir rufen Sie so schnell wie möglich zurück.";
     await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, msg);
+    // Persist outbound conversation row so audit trail is complete
+    await db.insert(conversationsTable).values({
+      clientId: clientRecord.id,
+      leadId,
+      direction: "outbound",
+      body: msg,
+      intentDetected: "rate_limited",
+    });
+    await db
+      .update(leadsTable)
+      .set({ lastContactAt: new Date(), updatedAt: new Date() })
+      .where(eq(leadsTable.id, leadId));
     logger.warn({ leadId }, "Rate limit hit — pipeline short-circuited");
     // Rate-limit short-circuit: mark done (reply was sent, nothing to retry)
     await markJobDone(messageEventId);
@@ -300,6 +312,25 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     conversationHistory,
     userMessage,
   });
+
+  // 6a. Backend post-validation: if knowledge base is empty and GPT did not
+  // escalate or book a callback, override reply with a controlled callback-offer
+  // template. This prevents hallucinated answers when there is no grounding data.
+  if (
+    knowledgeChunks.length === 0 &&
+    botResponse.intent !== "book_callback" &&
+    botResponse.intent !== "request_call_now" &&
+    botResponse.intent !== "escalate_human"
+  ) {
+    const callbackOffer =
+      language === "tr"
+        ? `Merhaba! Şu anda bu konuda size yardımcı olabilecek bilgiye sahip değilim. Sizi uzmanlarımızla buluşturalım — bugün veya yarın sizi geri aramamızı ister misiniz? Hizmet saatlerimiz: ${callbackHours}.`
+        : `Hallo! Zu dieser Frage kann ich Ihnen leider gerade keine genaue Auskunft geben. Lassen Sie uns einen Rückruf vereinbaren — soll ich Sie heute oder morgen zurückrufen lassen? Erreichbar sind wir ${callbackHours}.`;
+    botResponse.reply = callbackOffer;
+    botResponse.intent = "out_of_scope";
+    botResponse.action = "out_of_scope";
+    logger.info({ leadId, language }, "Empty knowledge base — backend override to callback-offer template");
+  }
 
   const now = new Date();
   const data = botResponse.data ?? {};
