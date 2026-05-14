@@ -152,6 +152,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Über uns Section */}
+      <section id="uber-uns" className="py-20 bg-background">
+        <div className="container mx-auto px-4 md:px-8 text-center max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold text-secondary mb-6">Über Dosteli</h2>
+          <p className="text-lg text-muted-foreground mb-6">
+            Dosteli ist ein familiengeführter Pflegedienst mit Sitz in Berlin. Wir wurden gegründet, um die Versorgungslücke für türkisch- und arabischsprachige Familien in Deutschland zu schließen. Unser Team aus über 30 mehrsprachigen Fachkräften begleitet täglich mehr als 150 Pflegebedürftige.
+          </p>
+          <div className="flex justify-center gap-12 mt-10">
+            {[["150+", "Pflegebedürftige"], ["30+", "Fachkräfte"], ["10+", "Jahre Erfahrung"]].map(([num, label]) => (
+              <div key={label} className="text-center">
+                <div className="text-4xl font-extrabold text-primary">{num}</div>
+                <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Jobs Section */}
+      <section id="jobs" className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4 md:px-8 text-center max-w-2xl mx-auto">
+          <h2 className="text-4xl font-bold text-secondary mb-6">Karriere bei Dosteli</h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            Wir suchen engagierte Pflegefachkräfte mit Herz und kulturellem Verständnis. Türkisch- oder Arabischkenntnisse sind von Vorteil — aber nicht Voraussetzung.
+          </p>
+          <Button size="lg" className="rounded-full h-14 px-8 text-lg bg-secondary hover:bg-secondary/90 text-white" data-testid="button-jobs">
+            Jetzt bewerben
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-secondary text-secondary-foreground py-16">
         <div className="container mx-auto px-4 md:px-8">
@@ -183,8 +215,8 @@ export default function HomePage() {
             <div>
               <h4 className="font-bold text-lg mb-4 text-white">Demo Links</h4>
               <ul className="space-y-3">
-                <li><Link href="/dashboard" className="text-primary hover:text-primary/80 font-semibold flex items-center gap-1" data-testid="link-footer-dashboard">Live Dashboard <ArrowRight className="w-4 h-4" /></Link></li>
-                <li><Link href="/mockups" className="text-primary hover:text-primary/80 font-semibold flex items-center gap-1" data-testid="link-footer-mockups">Ad Mockups <ArrowRight className="w-4 h-4" /></Link></li>
+                <li><Link href="/dashboard" className="text-primary hover:text-primary/80 font-semibold flex items-center gap-1" data-testid="link-footer-dashboard">Live-Dashboard <ArrowRight className="w-4 h-4" /></Link></li>
+                <li><Link href="/mockups" className="text-primary hover:text-primary/80 font-semibold flex items-center gap-1" data-testid="link-footer-mockups">Anzeigen-Mockups <ArrowRight className="w-4 h-4" /></Link></li>
               </ul>
             </div>
           </div>

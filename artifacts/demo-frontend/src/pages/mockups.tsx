@@ -16,8 +16,8 @@ export default function MockupsPage() {
         <div className="container mx-auto px-4 md:px-8">
           
           <div className="mb-16 text-center max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-secondary mb-6 tracking-tight">Ad & Product Mockups</h1>
-            <p className="text-xl text-muted-foreground font-medium">Visual showcases for the pitch deck and client presentations. Ready for your slides.</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-secondary mb-6 tracking-tight">Anzeigen & Produkt-Mockups</h1>
+            <p className="text-xl text-muted-foreground font-medium">Visuelle Showcases für Pitch-Decks und Kundenpräsentationen. Bereit für Ihre Folien.</p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-12 items-start max-w-7xl mx-auto">
@@ -37,7 +37,7 @@ export default function MockupsPage() {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold text-base leading-tight">Dosteli Pflege</h4>
-                    <p className="text-[11px] text-white/80 font-medium">Business Account</p>
+                    <p className="text-[11px] text-white/80 font-medium">Geschäftskonto</p>
                   </div>
                   <Video className="w-5 h-5 opacity-80" />
                   <Phone className="w-5 h-5 ml-1 opacity-80" />
@@ -48,7 +48,7 @@ export default function MockupsPage() {
                 <div className="flex-1 bg-[#ECE5DD] relative overflow-y-auto p-4 flex flex-col gap-3 no-scrollbar" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'cover', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(236, 229, 221, 0.95)' }}>
                   
                   <div className="bg-[#E1F5FE] text-[#128C7E] text-[10px] uppercase tracking-wider font-extrabold mx-auto px-4 py-1.5 rounded-lg mb-3 shadow-sm border border-blue-100">
-                    Today
+                    Heute
                   </div>
 
                   <Tabs defaultValue="de" className="w-full">
