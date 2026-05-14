@@ -377,7 +377,7 @@ export default function DemoPage() {
                   isReal: true,
                   i,
                 }))
-              : t.services.map(({ title, desc }, i) => ({ title, desc, isReal: false, i }))
+              : theme.servicesFallback[lang].map(({ title, desc }, i) => ({ title, desc, isReal: false, i }))
             ).map(({ title, desc, i }) => {
               const Icon = themeIcons[i % themeIcons.length];
               if (isPrimary) {
@@ -435,12 +435,12 @@ export default function DemoPage() {
               <p className="text-lg text-muted-foreground mb-6">
                 {content?.hasCrawlData && content.about.length > 0
                   ? content.about[0].answer
-                  : t.infoBody}
+                  : theme.infoBody[lang]}
               </p>
               <ul className="space-y-4 mb-8">
                 {(content?.hasCrawlData && content.about.length > 1
                   ? content.about.slice(1, 5).map((c) => c.answer)
-                  : t.infoPoints
+                  : theme.infoPoints[lang]
                 ).map((item, i) => (
                   <li key={i} className="flex items-start gap-3 font-medium" style={{ color: secondary }}>
                     <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: primary }} />
@@ -452,7 +452,7 @@ export default function DemoPage() {
                 className="rounded-full h-14 px-8 text-lg group text-white hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: secondary }}
               >
-                {t.infoButton}
+                {theme.infoButton[lang]}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>

@@ -1,45 +1,58 @@
 /**
  * Industry theme system.
  *
- * Primary verticals (exceptional treatment): aesthetics, medical, dental, wellness
- * Secondary verticals (clean professional):  care, and everything else
+ * HOW THE THEME IS DECIDED:
+ *   1. After every crawl, GPT analyses the homepage text and classifies `industry`
+ *      (aesthetics / medical / dental / wellness / care / legal / …)
+ *   2. That value is stored on the client config and returned by /clients/:slug/branding
+ *   3. demo.tsx calls getIndustryTheme(branding.industry) → full theme object
+ *   4. PRIMARY_VERTICALS (aesthetics, medical, dental, wellness) get premium card style
+ *      + trust bar. Everything else gets clean standard treatment.
  *
- * Each theme drives: service icons, trust badges, bot conversation, how-it-works
- * steps, about stats, and the visual card style used in the services section.
+ * CONTENT PRIORITY (in demo.tsx):
+ *   1. Real crawled content (content.services / content.about / …) — always preferred
+ *   2. Theme fallbacks below (industry-specific, never Dosteli care copy)
+ *   3. Nothing renders half-empty — a section either shows real data or a full fallback
+ *
+ * Primary verticals  — exceptional treatment: aesthetics, medical, dental, wellness
+ * Secondary verticals — clean professional:   care, and everything else
  */
 
 export type CardStyle = "premium" | "standard";
 
 export interface IndustryTheme {
-  /** Lucide icon names for the three service cards */
   serviceIconNames: [string, string, string];
-  /** Trust badge labels shown below the hero (primary verticals only) */
   trustBadges: string[];
-  /** Visual style for service cards */
   cardStyle: CardStyle;
-  /** Bot chat demo — shown in the floating card in the hero */
   botMessages: {
     de: Array<{ from: "bot" | "user"; text: string }>;
     en: Array<{ from: "bot" | "user"; text: string }>;
     tr: Array<{ from: "bot" | "user"; text: string }>;
   };
-  /** How-it-works steps */
   steps: {
     de: Array<{ title: string; desc: string }>;
     en: Array<{ title: string; desc: string }>;
-    tr: Array<{ from?: never; title: string; desc: string }>;
+    tr: Array<{ title: string; desc: string }>;
   };
-  /** About section stats — [value, label] in whichever language fits */
   stats: {
     de: Array<[string, string]>;
     en: Array<[string, string]>;
     tr: Array<[string, string]>;
   };
-  /** Services section subtitle */
   servicesSubtitle: { de: string; en: string; tr: string };
-  /** Info section title */
   infoTitle: { de: string; en: string; tr: string };
-  /** Bot persona label shown in the chat card header */
+  /** Body paragraph shown in the info section when no crawl data is available */
+  infoBody: { de: string; en: string; tr: string };
+  /** Bullet points shown in the info section when no crawl data is available */
+  infoPoints: { de: string[]; en: string[]; tr: string[] };
+  /** CTA label on the info section button */
+  infoButton: { de: string; en: string; tr: string };
+  /** Three service cards shown when no crawl data is available */
+  servicesFallback: {
+    de: Array<{ title: string; desc: string }>;
+    en: Array<{ title: string; desc: string }>;
+    tr: Array<{ title: string; desc: string }>;
+  };
   botPersonaLabel: { de: string; en: string; tr: string };
 }
 
@@ -99,6 +112,38 @@ const aestheticsTheme: IndustryTheme = {
     de: "Ästhetik trifft Kompetenz",
     en: "Aesthetics Meets Expertise",
     tr: "Estetik ve Uzmanlık Buluşuyor",
+  },
+  infoBody: {
+    de: "Unsere Klinik vereint modernste Technologie mit individueller Beratung, um außergewöhnliche ästhetische Ergebnisse zu erzielen. Jede Behandlung wird auf Ihre persönlichen Ziele abgestimmt.",
+    en: "Our clinic combines cutting-edge technology with personalised care to deliver exceptional aesthetic results. Every treatment is tailored to your unique goals.",
+    tr: "Kliniğimiz, olağanüstü estetik sonuçlar sunmak için en son teknolojiyi bireysel bakımla bir araya getiriyor. Her tedavi, kişisel hedeflerinize göre özel olarak tasarlanır.",
+  },
+  infoPoints: {
+    de: ["Zertifizierte Fachkräfte mit nachgewiesener Expertise", "Individuelle Behandlungspläne", "Modernste Geräte und Technologien", "Diskrete und professionelle Atmosphäre"],
+    en: ["Certified practitioners with proven expertise", "Personalised treatment plans", "State-of-the-art technology", "Discreet, professional environment"],
+    tr: ["Kanıtlanmış uzmanlığa sahip sertifikalı uzmanlar", "Kişiselleştirilmiş tedavi planları", "Son teknoloji ekipmanlar", "Gizli ve profesyonel ortam"],
+  },
+  infoButton: {
+    de: "Beratung vereinbaren",
+    en: "Book a Consultation",
+    tr: "Randevu Al",
+  },
+  servicesFallback: {
+    de: [
+      { title: "Ästhetische Behandlungen", desc: "Modernste Eingriffe zur Verschönerung und Verjüngung — individuell auf Ihre Bedürfnisse abgestimmt." },
+      { title: "Hautpflege & Therapien", desc: "Professionelle Hautbehandlungen für eine strahlende, gesunde Haut — mit klinisch geprüften Methoden." },
+      { title: "Beratung & Nachsorge", desc: "Umfassende Beratung vor der Behandlung und professionelle Nachsorge für optimale Ergebnisse." },
+    ],
+    en: [
+      { title: "Aesthetic Treatments", desc: "Advanced procedures for enhancement and rejuvenation — individually tailored to your needs." },
+      { title: "Skin Care & Therapies", desc: "Professional skin treatments for radiant, healthy skin — using clinically proven methods." },
+      { title: "Consultation & Aftercare", desc: "Comprehensive pre-treatment consultation and professional aftercare for optimal results." },
+    ],
+    tr: [
+      { title: "Estetik Tedaviler", desc: "Güzellik ve gençleştirme için gelişmiş prosedürler — ihtiyaçlarınıza göre bireysel olarak tasarlanmış." },
+      { title: "Cilt Bakımı ve Terapiler", desc: "Parlak, sağlıklı cilt için profesyonel cilt tedavileri — klinik olarak kanıtlanmış yöntemler kullanılarak." },
+      { title: "Danışmanlık ve Sonrası Bakım", desc: "Tedavi öncesi kapsamlı danışmanlık ve optimum sonuçlar için profesyonel sonrası bakım." },
+    ],
   },
   botPersonaLabel: {
     de: "Behandlungsberatung · Online",
@@ -160,6 +205,38 @@ const medicalTheme: IndustryTheme = {
     en: "Medicine You Can Trust",
     tr: "Güvenebileceğiniz Tıp",
   },
+  infoBody: {
+    de: "Unsere Praxis bietet umfassende, patientenzentrierte medizinische Versorgung. Von der Routinevorsorge bis zur Fachberatung — wir sind für Sie da.",
+    en: "Our practice delivers comprehensive, patient-centred medical care. From routine check-ups to specialist consultations, we're here for you.",
+    tr: "Muayenehanemiz kapsamlı, hasta odaklı tıbbi bakım sunar. Rutin kontrollerden uzman danışmanlığına kadar — sizin için buradayız.",
+  },
+  infoPoints: {
+    de: ["Erfahrenes, qualifiziertes Ärzteteam", "Kurzfristige Terminvergabe", "Ganzheitliche Patientenbetreuung", "Digitale Patientenakte"],
+    en: ["Experienced, qualified medical team", "Same-day appointments available", "Holistic patient care", "Digital health records"],
+    tr: ["Deneyimli, nitelikli tıbbi ekip", "Aynı gün randevu imkânı", "Bütüncül hasta bakımı", "Dijital sağlık kayıtları"],
+  },
+  infoButton: {
+    de: "Termin vereinbaren",
+    en: "Book an Appointment",
+    tr: "Randevu Al",
+  },
+  servicesFallback: {
+    de: [
+      { title: "Allgemeinmedizin", desc: "Umfassende hausärztliche Versorgung für die ganze Familie — von der Vorsorge bis zur Behandlung." },
+      { title: "Fachberatung", desc: "Gezielte Fachkonsultationen und Überweisungen an Spezialisten Ihres Vertrauens." },
+      { title: "Gesundheitsvorsorge", desc: "Präventive Untersuchungen und Impfungen für langfristige Gesundheit und Wohlbefinden." },
+    ],
+    en: [
+      { title: "General Medicine", desc: "Comprehensive GP care for the whole family — from routine check-ups to treatment." },
+      { title: "Specialist Referrals", desc: "Targeted specialist consultations and referrals to trusted experts." },
+      { title: "Preventive Health", desc: "Preventive screenings and vaccinations for long-term health and wellbeing." },
+    ],
+    tr: [
+      { title: "Genel Tıp", desc: "Tüm aile için kapsamlı pratisyen hekim hizmetleri — rutin kontrollerden tedaviye kadar." },
+      { title: "Uzman Yönlendirme", desc: "Güvenilir uzmanlara hedefli danışmanlık ve yönlendirme." },
+      { title: "Koruyucu Sağlık", desc: "Uzun vadeli sağlık ve iyilik hali için koruyucu taramalar ve aşılar." },
+    ],
+  },
   botPersonaLabel: {
     de: "Praxis-Assistent · Online",
     en: "Practice Assistant · Online",
@@ -220,6 +297,38 @@ const dentalTheme: IndustryTheme = {
     en: "Your Smile in Expert Hands",
     tr: "Gülüşünüz Uzman Ellerde",
   },
+  infoBody: {
+    de: "Wir bieten sanfte, hochwertige Zahnmedizin für die ganze Familie — von der professionellen Reinigung bis hin zu modernen ästhetischen Behandlungen.",
+    en: "We offer gentle, high-quality dental care for the whole family — from routine hygiene to advanced cosmetic dentistry.",
+    tr: "Tüm aile için nazik, yüksek kaliteli diş bakımı sunuyoruz — rutin hijyenden gelişmiş kozmetik diş hekimliğine kadar.",
+  },
+  infoPoints: {
+    de: ["Sanfte, schmerzarme Behandlungen", "Digitale Röntgentechnologie", "Ästhetische & allgemeine Zahnheilkunde", "Flexible Terminzeiten"],
+    en: ["Comfortable, pain-free treatments", "Digital X-ray technology", "Cosmetic & general dentistry", "Flexible appointment times"],
+    tr: ["Konforlu, ağrısız tedaviler", "Dijital röntgen teknolojisi", "Kozmetik ve genel diş hekimliği", "Esnek randevu saatleri"],
+  },
+  infoButton: {
+    de: "Termin buchen",
+    en: "Book an Appointment",
+    tr: "Randevu Al",
+  },
+  servicesFallback: {
+    de: [
+      { title: "Prophylaxe & Hygiene", desc: "Professionelle Zahnreinigung und individuelle Prophylaxeberatung für langfristig gesunde Zähne." },
+      { title: "Ästhetische Zahnheilkunde", desc: "Bleaching, Veneers und Zahnersatz für ein strahlendes, natürliches Lächeln." },
+      { title: "Implantate & Prothetik", desc: "Hochwertige Zahnimplantate und Prothesen für einen festen, natürlichen Biss." },
+    ],
+    en: [
+      { title: "Hygiene & Prevention", desc: "Professional cleaning and individual hygiene advice for long-term dental health." },
+      { title: "Cosmetic Dentistry", desc: "Whitening, veneers and restorations for a bright, natural-looking smile." },
+      { title: "Implants & Prosthetics", desc: "High-quality dental implants and dentures for a firm, natural bite." },
+    ],
+    tr: [
+      { title: "Hijyen ve Önleme", desc: "Uzun vadeli diş sağlığı için profesyonel temizlik ve bireysel hijyen tavsiyesi." },
+      { title: "Kozmetik Diş Hekimliği", desc: "Parlak, doğal görünümlü bir gülümseme için beyazlatma, kaplama ve restorasyonlar." },
+      { title: "İmplant ve Protez", desc: "Sağlam, doğal bir ısırış için yüksek kaliteli diş implantları ve takma dişler." },
+    ],
+  },
   botPersonaLabel: {
     de: "Praxis-Assistent · Online",
     en: "Practice Assistant · Online",
@@ -279,6 +388,38 @@ const wellnessTheme: IndustryTheme = {
     de: "Ihr Weg zu mehr Wohlbefinden",
     en: "Your Path to Wellbeing",
     tr: "İyilik Halinize Giden Yol",
+  },
+  infoBody: {
+    de: "Unsere ganzheitlichen Wellness-Programme sind auf Ihre persönlichen Ziele ausgerichtet — eine Verbindung aus evidenzbasierten Therapien und einem wirklich individuellen Ansatz.",
+    en: "Our holistic wellness programmes are designed around your personal goals — blending evidence-based therapies with a truly personalised approach.",
+    tr: "Bütünsel wellness programlarımız kişisel hedefleriniz etrafında tasarlanmıştır — kanıta dayalı terapileri gerçek anlamda kişiselleştirilmiş bir yaklaşımla harmanlar.",
+  },
+  infoPoints: {
+    de: ["Zertifizierte Wellness-Therapeuten", "Individuelle Programme nach Maß", "Ganzheitlicher Ansatz für Körper & Geist", "Begleitende Beratung & Unterstützung"],
+    en: ["Certified wellness therapists", "Personalised programmes tailored to you", "Mind & body holistic approach", "Ongoing support & guidance"],
+    tr: ["Sertifikalı wellness terapistleri", "Size özel kişiselleştirilmiş programlar", "Beden ve zihin bütünsel yaklaşımı", "Sürekli destek ve rehberlik"],
+  },
+  infoButton: {
+    de: "Erstgespräch buchen",
+    en: "Book a Consultation",
+    tr: "Danışma Randevusu Al",
+  },
+  servicesFallback: {
+    de: [
+      { title: "Wellness-Beratung", desc: "Individuelle Erstberatung zur Ermittlung Ihrer Ziele und Entwicklung eines maßgeschneiderten Wellness-Plans." },
+      { title: "Therapeutische Behandlungen", desc: "Professionelle Therapien für Körper und Geist — aus einem breiten Spektrum evidenzbasierter Methoden." },
+      { title: "Wellbeing-Programme", desc: "Strukturierte Programme für nachhaltige Verbesserung Ihres körperlichen und mentalen Wohlbefindens." },
+    ],
+    en: [
+      { title: "Wellness Consultation", desc: "Individual initial consultation to identify your goals and develop a tailored wellness plan." },
+      { title: "Therapeutic Treatments", desc: "Professional therapies for body and mind — from a wide range of evidence-based methods." },
+      { title: "Wellbeing Programmes", desc: "Structured programmes for sustainable improvement of your physical and mental wellbeing." },
+    ],
+    tr: [
+      { title: "Wellness Danışmanlığı", desc: "Hedeflerinizi belirlemek ve kişiye özel bir wellness planı geliştirmek için bireysel ilk görüşme." },
+      { title: "Terapötik Tedaviler", desc: "Beden ve zihin için profesyonel terapiler — geniş bir kanıta dayalı yöntem yelpazesinden." },
+      { title: "İyilik Hali Programları", desc: "Fiziksel ve zihinsel iyilik halinizin sürdürülebilir gelişimi için yapılandırılmış programlar." },
+    ],
   },
   botPersonaLabel: {
     de: "Wellness-Beratung · Online",
@@ -344,6 +485,38 @@ const careTheme: IndustryTheme = {
     en: "Security Through Cultural Closeness",
     tr: "Kültürel Yakınlıkla Güven",
   },
+  infoBody: {
+    de: "Für Menschen mit Demenz ist die Muttersprache und eine vertraute kulturelle Umgebung essenziell. Wir schaffen ein Zuhause, das genau das bietet.",
+    en: "For people with dementia, their native language and a familiar cultural environment are essential. We create a home that offers exactly that.",
+    tr: "Demans hastaları için anadil ve tanıdık kültürel ortam çok önemlidir. Tam da bunu sunan bir yuva yaratıyoruz.",
+  },
+  infoPoints: {
+    de: ["Muttersprachliches Pflegepersonal", "Kulturspezifische Mahlzeiten", "Berücksichtigung religiöser Feiertage", "Familienfreundliche Besuchszeiten"],
+    en: ["Native-speaking care staff", "Culturally appropriate meals", "Religious holidays respected", "Family-friendly visiting hours"],
+    tr: ["Anadil konuşan bakım personeli", "Kültüre özgü yemekler", "Dini bayramların dikkate alınması", "Aile dostu ziyaret saatleri"],
+  },
+  infoButton: {
+    de: "Plätze anfragen",
+    en: "Enquire About Availability",
+    tr: "Yer Sorgula",
+  },
+  servicesFallback: {
+    de: [
+      { title: "Häusliche Pflege", desc: "Medizinische und pflegerische Versorgung in den eigenen vier Wänden. Vertraut, sicher und respektvoll." },
+      { title: "24h Betreuung", desc: "Rund-um-die-Uhr Betreuung für maximale Sicherheit und Geborgenheit im eigenen Zuhause." },
+      { title: "Demenzpflege WG", desc: "Eine familiäre Wohngemeinschaft für demenzerkrankte Menschen mit 24/7 Betreuung durch muttersprachliches Personal." },
+    ],
+    en: [
+      { title: "Home Care", desc: "Medical and nursing care in your own home. Familiar, safe and respectful." },
+      { title: "24h Care", desc: "Around-the-clock care for maximum safety and comfort at home." },
+      { title: "Dementia Care Home", desc: "A family-style shared home for people with dementia, staffed 24/7 by native speakers." },
+    ],
+    tr: [
+      { title: "Evde Bakım", desc: "Kendi evinde tıbbi ve bakım hizmetleri. Güvenilir, emniyetli ve saygılı." },
+      { title: "24 Saat Bakım", desc: "Evde maksimum güvenlik ve huzur için günün her saati bakım." },
+      { title: "Demans Bakım Evi", desc: "Anadil konuşan personel tarafından 7/24 bakım sağlanan aile sıcaklığında bir yaşam ortamı." },
+    ],
+  },
   botPersonaLabel: {
     de: "KI-Assistent · Online",
     en: "AI Assistant · Online",
@@ -403,6 +576,38 @@ const defaultTheme: IndustryTheme = {
     de: "Warum uns wählen",
     en: "Why Choose Us",
     tr: "Neden Bizi Seçmelisiniz",
+  },
+  infoBody: {
+    de: "Wir stehen für verlässliche, professionelle Leistungen — schnell, kompetent und auf Ihre Bedürfnisse zugeschnitten.",
+    en: "We stand for reliable, professional services — fast, competent and tailored to your needs.",
+    tr: "Güvenilir, profesyonel hizmetlerin yanında duruyoruz — hızlı, yetkin ve ihtiyaçlarınıza göre uyarlanmış.",
+  },
+  infoPoints: {
+    de: ["Erfahrenes, professionelles Team", "Schnelle Reaktionszeiten", "DSGVO-konform & versichert", "Individuelle Beratung"],
+    en: ["Experienced, professional team", "Fast response times", "GDPR compliant & insured", "Individual consultation"],
+    tr: ["Deneyimli, profesyonel ekip", "Hızlı yanıt süreleri", "GDPR uyumlu ve sigortalı", "Bireysel danışmanlık"],
+  },
+  infoButton: {
+    de: "Kontakt aufnehmen",
+    en: "Get in Touch",
+    tr: "İletişime Geç",
+  },
+  servicesFallback: {
+    de: [
+      { title: "Unsere Leistungen", desc: "Professionelle, auf Ihre Bedürfnisse zugeschnittene Dienstleistungen — zuverlässig und kompetent." },
+      { title: "Beratung & Planung", desc: "Individuelle Beratung und maßgeschneiderte Lösungen für Ihre Anforderungen." },
+      { title: "Support & Nachsorge", desc: "Umfassender Support und kontinuierliche Betreuung für nachhaltigen Erfolg." },
+    ],
+    en: [
+      { title: "Our Services", desc: "Professional services tailored to your needs — reliable and competent." },
+      { title: "Consultation & Planning", desc: "Individual consultation and tailored solutions for your requirements." },
+      { title: "Support & Follow-up", desc: "Comprehensive support and continuous care for lasting success." },
+    ],
+    tr: [
+      { title: "Hizmetlerimiz", desc: "İhtiyaçlarınıza göre uyarlanmış profesyonel hizmetler — güvenilir ve yetkin." },
+      { title: "Danışmanlık ve Planlama", desc: "Gereksinimleriniz için bireysel danışmanlık ve özel çözümler." },
+      { title: "Destek ve Takip", desc: "Kalıcı başarı için kapsamlı destek ve sürekli bakım." },
+    ],
   },
   botPersonaLabel: {
     de: "KI-Assistent · Online",
