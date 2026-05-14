@@ -9,10 +9,11 @@ import {
   getGetLeadQueryKey, 
   useUpdateLead 
 } from "@workspace/api-client-react";
+import type { LeadDetail } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
-import { Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText } from "lucide-react";
+import { Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,24 +55,23 @@ export default function DashboardPage() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                   </span>
-                  Live updates every 10s
+                  Live-Aktualisierung alle 10 Sek.
                 </p>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <StatCard title="Total Leads" value={stats?.totalLeads} loading={statsLoading} icon={<UsersIcon />} />
-              <StatCard title="New" value={stats?.newLeads} loading={statsLoading} className="border-primary/50" />
-              <StatCard title="Callbacks Booked" value={stats?.callbackBooked} loading={statsLoading} className="border-green-500/50" />
-              <StatCard title="Escalated" value={stats?.escalated} loading={statsLoading} className="border-destructive/50" />
-              <StatCard title="Booked Today" value={stats?.bookedToday} loading={statsLoading} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard title="Gesamt-Leads" value={stats?.totalLeads} loading={statsLoading} icon={<Users className="h-6 w-6" />} />
+              <StatCard title="Neu" value={stats?.newLeads} loading={statsLoading} className="border-primary/50" icon={<PhoneCall className="h-6 w-6" />} />
+              <StatCard title="Ausstehende Rückrufe" value={stats?.callbackBooked} loading={statsLoading} className="border-green-500/50" icon={<Calendar className="h-6 w-6" />} />
+              <StatCard title="Heute gebucht" value={stats?.bookedToday} loading={statsLoading} icon={<MessageSquare className="h-6 w-6" />} />
             </div>
 
             {/* Leads Table */}
             <Card className="border shadow-sm overflow-hidden rounded-xl">
               <CardHeader className="border-b bg-card pb-4">
-                <CardTitle className="text-lg font-bold">Recent Leads</CardTitle>
+                <CardTitle className="text-lg font-bold">Aktuelle Leads</CardTitle>
               </CardHeader>
               <div className="bg-card">
                 {leadsLoading ? (
@@ -83,12 +83,12 @@ export default function DashboardPage() {
                     <table className="w-full text-sm text-left">
                       <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold tracking-wider">
                         <tr>
-                          <th className="px-6 py-4">Contact</th>
-                          <th className="px-6 py-4">Language</th>
+                          <th className="px-6 py-4">Kontakt</th>
+                          <th className="px-6 py-4">Sprache</th>
                           <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">Source</th>
-                          <th className="px-6 py-4">Last Activity</th>
-                          <th className="px-6 py-4 text-right">Action</th>
+                          <th className="px-6 py-4">Quelle</th>
+                          <th className="px-6 py-4">Letzte Aktivität</th>
+                          <th className="px-6 py-4 text-right">Details</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y border-t">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                             data-testid={`row-lead-${lead.id}`}
                           >
                             <td className="px-6 py-4">
-                              <div className="font-bold text-secondary text-base">{lead.name || 'Unknown'}</div>
+                              <div className="font-bold text-secondary text-base">{lead.name || 'Unbekannt'}</div>
                               <div className="text-muted-foreground font-medium mt-1">{maskPhone(lead.phone)}</div>
                             </td>
                             <td className="px-6 py-4">
@@ -118,10 +118,10 @@ export default function DashboardPage() {
                               <Badge variant="outline" className="font-semibold text-xs bg-white">{lead.source}</Badge>
                             </td>
                             <td className="px-6 py-4 text-muted-foreground font-medium text-xs">
-                              {lead.lastContactAt ? formatDistanceToNow(new Date(lead.lastContactAt), { addSuffix: true, locale: de }) : 'Never'}
+                              {lead.lastContactAt ? formatDistanceToNow(new Date(lead.lastContactAt), { addSuffix: true, locale: de }) : 'Nie'}
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 group-hover:bg-primary/20 group-hover:text-primary rounded-full" aria-label="View Details">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 group-hover:bg-primary/20 group-hover:text-primary rounded-full" aria-label="Details anzeigen">
                                 <ChevronRight className="h-5 w-5" />
                               </Button>
                             </td>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                             <td colSpan={6} className="px-6 py-16 text-center">
                               <div className="flex flex-col items-center justify-center text-muted-foreground">
                                 <Users className="h-12 w-12 opacity-20 mb-4" />
-                                <span className="text-lg font-medium text-secondary">No leads found</span>
+                                <span className="text-lg font-medium text-secondary">Noch keine Leads vorhanden</span>
                               </div>
                             </td>
                           </tr>
@@ -187,7 +187,7 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
   const updateLead = useUpdateLead({
     mutation: {
       onSuccess: (data) => {
-        queryClient.setQueryData(getGetLeadQueryKey(leadId, { clientId: CLIENT_ID }), (old: any) => 
+        queryClient.setQueryData<LeadDetail>(getGetLeadQueryKey(leadId, { clientId: CLIENT_ID }), (old) =>
           old ? { ...old, lead: data } : old
         );
         queryClient.invalidateQueries({ queryKey: getListLeadsQueryKey({ clientId: CLIENT_ID, limit: 50 }) });
@@ -228,7 +228,7 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
              <User className="h-5 w-5" />
           </div>
-          {lead.name || 'Unknown Lead'}
+          {lead.name || 'Unbekannter Lead'}
         </h3>
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-muted" data-testid="button-close-panel">
           <X className="h-5 w-5" />
@@ -240,7 +240,7 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
         <div className="bg-card p-5 space-y-5 border-b shadow-sm z-10 relative">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-muted-foreground block text-xs font-bold uppercase tracking-wider mb-1.5">Phone</span>
+              <span className="text-muted-foreground block text-xs font-bold uppercase tracking-wider mb-1.5">Telefon</span>
               <span className="font-semibold text-sm">{lead.phone}</span>
             </div>
             <div>
@@ -250,13 +250,13 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="callback_booked">Callback Booked</SelectItem>
-                  <SelectItem value="escalated">Escalated</SelectItem>
-                  <SelectItem value="needs_human">Needs Human</SelectItem>
-                  <SelectItem value="converted">Converted</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  <SelectItem value="new">Neu</SelectItem>
+                  <SelectItem value="qualified">Qualifiziert</SelectItem>
+                  <SelectItem value="callback_booked">Rückruf gebucht</SelectItem>
+                  <SelectItem value="escalated">Eskaliert</SelectItem>
+                  <SelectItem value="needs_human">Braucht Beratung</SelectItem>
+                  <SelectItem value="converted">Gewonnen</SelectItem>
+                  <SelectItem value="archived">Archiviert</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -265,13 +265,13 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
           {appointments.length > 0 && (
             <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl p-4 shadow-sm">
               <h4 className="text-xs font-extrabold text-[#166534] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" /> Scheduled Callback
+                <Calendar className="h-4 w-4" /> Rückruf geplant
               </h4>
               <div className="text-sm font-bold text-[#14532d]">
-                {appointments[0].preferredTime || 'Time flexible'}
+                {appointments[0].preferredTime || 'Zeitpunkt flexibel'}
               </div>
               <div className="text-xs font-medium text-[#166534]/70 mt-1">
-                Outcome: {appointments[0].outcome}
+                Ergebnis: {appointments[0].outcome}
               </div>
             </div>
           )}
@@ -280,7 +280,7 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
             <div className="bg-muted/50 p-4 rounded-xl text-sm flex gap-3 border shadow-sm">
               <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-secondary block mb-1">AI Summary</span>
+                <span className="font-bold text-secondary block mb-1">KI-Zusammenfassung</span>
                 <span className="text-muted-foreground font-medium leading-relaxed">{lead.conversationSummary}</span>
               </div>
             </div>
@@ -292,7 +292,7 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
           {conversations.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground font-medium flex-col gap-3">
               <MessageSquare className="h-10 w-10 opacity-20" />
-              No messages yet
+              Noch keine Nachrichten
             </div>
           ) : (
             conversations.map((msg) => {
@@ -339,7 +339,15 @@ function LeadDetailPanel({ leadId, onClose }: { leadId: number, onClose: () => v
   );
 }
 
-function StatCard({ title, value, loading, className, icon }: any) {
+interface StatCardProps {
+  title: string;
+  value: number | undefined;
+  loading: boolean;
+  className?: string;
+  icon?: React.ReactNode;
+}
+
+function StatCard({ title, value, loading, className, icon }: StatCardProps) {
   return (
     <Card className={cn("bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow", className)}>
       <CardContent className="p-5 flex flex-col gap-2">
@@ -359,13 +367,13 @@ function StatCard({ title, value, loading, className, icon }: any) {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string, label: string }> = {
-    new: { color: "bg-blue-100 text-blue-800 border-blue-200", label: "New" },
-    qualified: { color: "bg-indigo-100 text-indigo-800 border-indigo-200", label: "Qualified" },
-    callback_booked: { color: "bg-green-100 text-green-800 border-green-300", label: "Booked" },
-    escalated: { color: "bg-red-100 text-red-800 border-red-200", label: "Escalated" },
-    needs_human: { color: "bg-orange-100 text-orange-800 border-orange-200", label: "Needs Human" },
-    converted: { color: "bg-emerald-100 text-emerald-800 border-emerald-300", label: "Converted" },
-    archived: { color: "bg-slate-200 text-slate-800 border-slate-300", label: "Archived" },
+    new: { color: "bg-blue-100 text-blue-800 border-blue-200", label: "Neu" },
+    qualified: { color: "bg-indigo-100 text-indigo-800 border-indigo-200", label: "Qualifiziert" },
+    callback_booked: { color: "bg-green-100 text-green-800 border-green-300", label: "Rückruf" },
+    escalated: { color: "bg-red-100 text-red-800 border-red-200", label: "Eskaliert" },
+    needs_human: { color: "bg-orange-100 text-orange-800 border-orange-200", label: "Beratung" },
+    converted: { color: "bg-emerald-100 text-emerald-800 border-emerald-300", label: "Gewonnen" },
+    archived: { color: "bg-slate-200 text-slate-800 border-slate-300", label: "Archiviert" },
   };
 
   const current = config[status] || { color: "bg-gray-100 text-gray-800", label: status };
@@ -391,6 +399,3 @@ function getLanguageFlag(lang: string | null | undefined) {
   return "🌐";
 }
 
-function UsersIcon() {
-  return <Users className="h-6 w-6" />;
-}
