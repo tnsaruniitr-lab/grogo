@@ -75,6 +75,29 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
       .replace(/[^a-z0-9]+/gi, "-")
       .toLowerCase();
 
+    // Smart logo extraction: prefer actual logo images over og:image (which is usually a hero banner)
+    const findLogoUrl = (): string | null => {
+      // 1. <img> anywhere with alt/class/id/src containing "logo"
+      const logoPatterns = [
+        /<img[^>]+(?:class|id|alt)=["'][^"']*logo[^"']*["'][^>]+src=["']([^"']+)["']/i,
+        /<img[^>]+src=["']([^"']+)["'][^>]+(?:class|id|alt)=["'][^"']*logo[^"']*["']/i,
+        /<img[^>]+src=["']([^"'\/][^"']*logo[^"']*\.[a-z]{2,5})["']/i,
+      ];
+      for (const pat of logoPatterns) {
+        const m = html.match(pat);
+        if (m?.[1] && !m[1].includes("data:")) return resolve(m[1]);
+      }
+      // 2. <link rel="apple-touch-icon"> — usually 180×180, better than favicon
+      const appleIcon =
+        html.match(/<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+        html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*apple-touch-icon[^"']*["']/i)?.[1];
+      if (appleIcon) return resolve(appleIcon);
+      // 3. Favicon (better than og:image for logo purposes)
+      if (rawFavicon) return resolve(rawFavicon);
+      // 4. og:image last resort — likely a hero banner not a logo
+      return null;
+    };
+
     res.json({
       companyName,
       slug,
@@ -82,7 +105,7 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
       heroHeadline: null,
       primaryColor: themeColor ?? null,
       secondaryColor: null,
-      logoUrl: ogImage ? resolve(ogImage) : resolve(rawFavicon),
+      logoUrl: findLogoUrl(),
       city: null,
       phone: null,
       websiteUrl: url,
