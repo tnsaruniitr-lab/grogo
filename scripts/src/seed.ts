@@ -5,26 +5,33 @@ import { eq } from "drizzle-orm";
 async function seed() {
   console.log("Seeding database...");
 
-  // Upsert Dosteli client
-  const existing = await db
-    .select({ id: clientsTable.id })
-    .from(clientsTable)
-    .where(eq(clientsTable.slug, "dosteli"))
-    .limit(1);
-
-  let clientId: number;
-
-  if (existing.length > 0) {
-    clientId = existing[0].id;
-    console.log(`Client 'dosteli' already exists (id=${clientId}), skipping insert.`);
-  } else {
-    const inserted = await db
-      .insert(clientsTable)
-      .values({
+  // Upsert Dosteli as client id=1 (guaranteed by explicit id insert + conflict resolution)
+  // This ensures the acceptance criterion "Dosteli as client_id=1" is always met regardless
+  // of whether the DB is fresh or already contains rows.
+  await db
+    .insert(clientsTable)
+    .values({
+      id: 1,
+      name: "Dosteli GmbH",
+      slug: "dosteli",
+      whatsappNumber: "+49000000000",
+      twilioSender: "whatsapp:+14155238886", // Twilio sandbox sender
+      languagePrimary: "de",
+      languageSecondary: "tr",
+      isActive: true,
+      config: {
+        callbackHours: "Mo–Fr 8:00–18:00 Uhr",
+        callbackNumber: "+49000000000",
+        maxBotTurnsPerHour: 10,
+      },
+    })
+    .onConflictDoUpdate({
+      target: clientsTable.id,
+      set: {
         name: "Dosteli GmbH",
         slug: "dosteli",
         whatsappNumber: "+49000000000",
-        twilioSender: "whatsapp:+14155238886", // Twilio sandbox sender
+        twilioSender: "whatsapp:+14155238886",
         languagePrimary: "de",
         languageSecondary: "tr",
         isActive: true,
@@ -33,11 +40,11 @@ async function seed() {
           callbackNumber: "+49000000000",
           maxBotTurnsPerHour: 10,
         },
-      })
-      .returning({ id: clientsTable.id });
-    clientId = inserted[0].id;
-    console.log(`Created client 'dosteli' (id=${clientId})`);
-  }
+      },
+    });
+
+  const clientId = 1;
+  console.log(`Upserted client 'dosteli' as id=1`);
 
   // Clear existing knowledge for clean re-seed
   await db

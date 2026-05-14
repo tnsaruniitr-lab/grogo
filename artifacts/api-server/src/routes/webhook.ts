@@ -10,11 +10,16 @@ import {
   jobQueueTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import type { TwilioWebhookPayload } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-// Zod schema for Twilio form-encoded webhook payload validation
-const TwilioPayloadSchema = z.object({
+// Zod schema for Twilio form-encoded webhook payload.
+// NOTE: Orval does not generate Zod schemas for application/x-www-form-urlencoded
+// request bodies — only for JSON bodies. A local Zod schema is therefore required
+// here. The schema is typed as z.ZodType<TwilioWebhookPayload> so it stays in
+// lock-step with the generated TypeScript interface from the OpenAPI spec.
+const TwilioPayloadSchema: z.ZodType<TwilioWebhookPayload> = z.object({
   MessageSid: z.string().min(1),
   From: z.string().min(1),
   To: z.string().min(1),
