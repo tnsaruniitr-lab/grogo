@@ -671,6 +671,188 @@ export function getIndustryTheme(industry?: string | null): IndustryTheme {
   return THEME_MAP[industry ?? ""] ?? defaultTheme;
 }
 
+// ─────────────────────────────────────────────────────────
+// Schema.org types per industry (for JSON-LD structured data)
+// ─────────────────────────────────────────────────────────
+
+export const INDUSTRY_SCHEMA_TYPES: Record<string, string[]> = {
+  aesthetics:        ["LocalBusiness", "HealthAndBeautyBusiness"],
+  medical:           ["LocalBusiness", "MedicalBusiness"],
+  dental:            ["LocalBusiness", "Dentist"],
+  wellness:          ["LocalBusiness", "HealthClub"],
+  care:              ["LocalBusiness", "HomeAndConstructionBusiness"],
+  hair_clinic:       ["LocalBusiness", "HairSalon"],
+  iv_therapy:        ["LocalBusiness", "MedicalBusiness"],
+  physiotherapy:     ["LocalBusiness", "MedicalBusiness"],
+  cosmetic_surgery:  ["LocalBusiness", "MedicalBusiness"],
+  laser_eye:         ["LocalBusiness", "Optician"],
+  fertility:         ["LocalBusiness", "MedicalBusiness"],
+  weight_management: ["LocalBusiness", "MedicalBusiness"],
+};
+
+// ─────────────────────────────────────────────────────────
+// Testimonials per industry (bilingual, realistic)
+// ─────────────────────────────────────────────────────────
+
+export interface Testimonial {
+  name: string;
+  location: string;
+  rating: number;
+  text: { de: string; en: string; tr: string };
+}
+
+const TESTIMONIAL_KEY_FALLBACK: Record<string, string> = {
+  hair_clinic:       "aesthetics",
+  iv_therapy:        "aesthetics",
+  cosmetic_surgery:  "aesthetics",
+  physiotherapy:     "medical",
+  laser_eye:         "medical",
+  fertility:         "care",
+  weight_management: "medical",
+};
+
+const INDUSTRY_TESTIMONIALS: Record<string, Testimonial[]> = {
+  aesthetics: [
+    {
+      name: "Sarah M.", location: "Berlin", rating: 5,
+      text: {
+        de: "Der Buchungsprozess war unglaublich einfach. Der Bot hat sofort geantwortet und mir in 2 Minuten einen Termin bestätigt.",
+        en: "The booking process was incredibly smooth. The bot responded instantly and confirmed my appointment in under 2 minutes.",
+        tr: "Rezervasyon süreci inanılmaz kolaydı. Bot anında yanıt verdi ve randevumu 2 dakika içinde onayladı.",
+      },
+    },
+    {
+      name: "Julia K.", location: "München", rating: 5,
+      text: {
+        de: "Endlich eine Klinik, die rund um die Uhr erreichbar ist. Meine Fragen wurden sofort und kompetent beantwortet.",
+        en: "Finally a clinic reachable around the clock. My questions were answered immediately and professionally.",
+        tr: "Sonunda 7/24 ulaşılabilen bir klinik. Sorularım hemen ve profesyonelce yanıtlandı.",
+      },
+    },
+    {
+      name: "Cem A.", location: "Hamburg", rating: 5,
+      text: {
+        de: "Ich habe um Mitternacht geschrieben und bekam sofort eine professionelle Antwort. Absolut beeindruckend.",
+        en: "I messaged at midnight and got an instant professional reply. Absolutely impressive.",
+        tr: "Gece yarısı mesaj yazdım ve anında profesyonel bir yanıt aldım. Kesinlikle etkileyici.",
+      },
+    },
+  ],
+  dental: [
+    {
+      name: "Thomas B.", location: "Frankfurt", rating: 5,
+      text: {
+        de: "Schnelle Terminbuchung, kein Warten in der Warteschleife. Der WhatsApp-Bot macht alles viel angenehmer.",
+        en: "Fast appointment booking with no waiting on hold. The WhatsApp bot makes everything so much easier.",
+        tr: "Hızlı randevu ve beklemeler yok. WhatsApp botu her şeyi çok kolaylaştırıyor.",
+      },
+    },
+    {
+      name: "Anna L.", location: "Köln", rating: 5,
+      text: {
+        de: "Ich hatte Angst vor dem Zahnarzt — der Bot hat mir alle Fragen ruhig und klar beantwortet.",
+        en: "I was anxious about the dentist — the bot answered all my questions calmly and clearly.",
+        tr: "Dişçiden korkuyordum — bot tüm sorularımı sakin ve net bir şekilde yanıtladı.",
+      },
+    },
+    {
+      name: "Mark S.", location: "Stuttgart", rating: 5,
+      text: {
+        de: "Meine gesamte Familie hat Termine gebucht, alles lief reibungslos. Klasse System.",
+        en: "My whole family booked appointments, everything ran perfectly. Great system.",
+        tr: "Tüm ailem randevu aldı, her şey sorunsuz çalıştı. Harika sistem.",
+      },
+    },
+  ],
+  medical: [
+    {
+      name: "Petra M.", location: "Berlin", rating: 5,
+      text: {
+        de: "Der Bot versteht mein Anliegen und leitet mich genau an die richtige Stelle weiter. Sehr beeindruckend.",
+        en: "The bot understands my concern and directs me exactly where I need to go. Very impressive.",
+        tr: "Bot endişemi anlıyor ve tam olarak doğru yere yönlendiriyor. Çok etkileyici.",
+      },
+    },
+    {
+      name: "Hans J.", location: "Düsseldorf", rating: 5,
+      text: {
+        de: "Kein Warten in der Warteschleife mehr. Der Bot hat meinen Rückruf direkt gebucht — perfekt.",
+        en: "No more waiting on hold. The bot booked my callback directly — perfect.",
+        tr: "Artık bekleme müziği yok. Bot geri aramasını doğrudan ayarladı — mükemmel.",
+      },
+    },
+    {
+      name: "Fatma Y.", location: "Berlin", rating: 5,
+      text: {
+        de: "Ich konnte auf Türkisch schreiben und bekam sofort eine Antwort. Das ist sehr wichtig für mich.",
+        en: "I could write in Turkish and got an immediate response. That's very important to me.",
+        tr: "Türkçe yazabildim ve hemen yanıt aldım. Bu benim için çok önemli.",
+      },
+    },
+  ],
+  wellness: [
+    {
+      name: "Lisa H.", location: "München", rating: 5,
+      text: {
+        de: "Der Bot hat mir genau erklärt, welches Programm zu meinen Zielen passt. Fühlt sich persönlich an.",
+        en: "The bot explained exactly which programme suits my goals. It feels personal.",
+        tr: "Bot, hedeflerime en uygun programı tam olarak açıkladı. Kişisel hissettiriyor.",
+      },
+    },
+    {
+      name: "Marco P.", location: "Wien", rating: 5,
+      text: {
+        de: "24/7 Erreichbarkeit ist für mich als Schichtarbeiter Gold wert. Termin gebucht, fertig.",
+        en: "24/7 availability is golden for me as a shift worker. Appointment booked, done.",
+        tr: "Vardiyalı çalışan biri olarak 7/24 ulaşılabilirlik altın değerinde. Randevu alındı, bitti.",
+      },
+    },
+    {
+      name: "Ayşe D.", location: "Berlin", rating: 5,
+      text: {
+        de: "Sehr einfühlsam und professionell. Ich habe mich sofort gut aufgehoben gefühlt.",
+        en: "Very empathetic and professional. I felt looked after right away.",
+        tr: "Çok anlayışlı ve profesyonel. Hemen kendimi iyi hissettim.",
+      },
+    },
+  ],
+  care: [
+    {
+      name: "Renate K.", location: "Berlin", rating: 5,
+      text: {
+        de: "In einer stressigen Situation hat der Bot ruhig alle Optionen erklärt. Das hat uns wirklich geholfen.",
+        en: "In a stressful situation the bot calmly explained all options. It really helped us.",
+        tr: "Stresli bir durumda bot sakin bir şekilde tüm seçenekleri açıkladı. Bu bize gerçekten yardımcı oldu.",
+      },
+    },
+    {
+      name: "Familie Müller", location: "Hamburg", rating: 5,
+      text: {
+        de: "Wir konnten auch auf Türkisch mit dem Bot kommunizieren. Das war für unsere Mutter sehr wichtig.",
+        en: "We could also communicate with the bot in Turkish. That was very important for our mother.",
+        tr: "Botla Türkçe de iletişim kurabildik. Bu annemiz için çok önemliydi.",
+      },
+    },
+    {
+      name: "Stefan R.", location: "München", rating: 5,
+      text: {
+        de: "Nachts um 2 Uhr hatte ich Fragen zur Pflege meines Vaters — und bekam sofort hilfreiche Antworten.",
+        en: "At 2am I had questions about my father's care — and got helpful answers immediately.",
+        tr: "Gece 2'de babamın bakımı hakkında sorularım vardı — ve hemen yararlı yanıtlar aldım.",
+      },
+    },
+  ],
+};
+
+export function getTestimonials(industry?: string | null): Testimonial[] {
+  const key = industry ?? "";
+  return (
+    INDUSTRY_TESTIMONIALS[key] ??
+    INDUSTRY_TESTIMONIALS[TESTIMONIAL_KEY_FALLBACK[key] ?? ""] ??
+    INDUSTRY_TESTIMONIALS["aesthetics"]
+  );
+}
+
 export type ThemeLang = "de" | "en" | "tr";
 
 export function getLang(demoLanguage?: string | null): ThemeLang {

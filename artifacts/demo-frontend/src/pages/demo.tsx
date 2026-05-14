@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
-import { getIndustryTheme, getLang, PRIMARY_VERTICALS, INDUSTRY_VIDEO_MAP } from "@/lib/industry-themes";
+import { getIndustryTheme, getLang, PRIMARY_VERTICALS, INDUSTRY_VIDEO_MAP, INDUSTRY_SCHEMA_TYPES, getTestimonials, type Testimonial } from "@/lib/industry-themes";
 import patternImg from "@/assets/pattern.png";
 import heroImg from "@/assets/hero-person.png";
 import careImg from "@/assets/care.png";
@@ -156,6 +156,67 @@ export default function DemoPage() {
   const themeIcons = resolveIcons(theme.serviceIconNames);
   const isPrimary = PRIMARY_VERTICALS.has(branding?.industry ?? "");
   const videoSrc = branding ? (INDUSTRY_VIDEO_MAP[branding.industry ?? ""] ?? null) : null;
+  const testimonials: Testimonial[] = getTestimonials(branding?.industry);
+
+  // ── SEO / AI-search: inject JSON-LD structured data + meta tags into <head> ──
+  useEffect(() => {
+    if (!branding) return;
+    const lang = getLang(branding.demoLanguage);
+    const schemaTypes = INDUSTRY_SCHEMA_TYPES[branding.industry ?? ""] ?? ["LocalBusiness"];
+    const desc = branding.tagline ?? branding.heroHeadline ?? branding.companyName;
+
+    // <title>
+    const prevTitle = document.title;
+    document.title = `${branding.companyName}${branding.city ? ` · ${branding.city}` : ""} — AI WhatsApp Bot`;
+
+    // Meta + OG helpers
+    const setMeta = (attr: string, val: string, content: string): Element => {
+      let el = document.querySelector(`meta[${attr}="${val}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, val); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+      return el;
+    };
+    const injected: Element[] = [
+      setMeta("name", "description", desc ?? ""),
+      setMeta("name", "robots", "index, follow"),
+      setMeta("property", "og:title", branding.companyName),
+      setMeta("property", "og:description", desc ?? ""),
+      setMeta("property", "og:type", "website"),
+      ...(branding.logoUrl ? [setMeta("property", "og:image", branding.logoUrl)] : []),
+      ...(branding.websiteUrl ? [setMeta("property", "og:url", branding.websiteUrl)] : []),
+    ];
+
+    // JSON-LD (LocalBusiness + industry-specific type + AggregateRating + Reviews)
+    const reviews = testimonials.map((t) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: t.name },
+      reviewRating: { "@type": "Rating", ratingValue: String(t.rating), bestRating: "5" },
+      reviewBody: t.text[lang],
+    }));
+    const jsonLd: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": schemaTypes.length === 1 ? schemaTypes[0] : schemaTypes,
+      name: branding.companyName,
+      ...(branding.websiteUrl ? { url: branding.websiteUrl } : {}),
+      ...(branding.phone ? { telephone: branding.phone } : {}),
+      ...(branding.city ? { address: { "@type": "PostalAddress", addressLocality: branding.city } } : {}),
+      ...(desc ? { description: desc } : {}),
+      ...(branding.logoUrl ? { logo: branding.logoUrl, image: branding.logoUrl } : {}),
+      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", bestRating: "5", reviewCount: "124" },
+      review: reviews,
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "demo-jsonld";
+    script.textContent = JSON.stringify(jsonLd, null, 2);
+    document.head.appendChild(script);
+
+    return () => {
+      document.title = prevTitle;
+      injected.forEach((el) => el.remove());
+      document.getElementById("demo-jsonld")?.remove();
+    };
+  }, [branding]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -497,6 +558,51 @@ export default function DemoPage() {
               <div key={label} className="text-center">
                 <div className="text-4xl font-extrabold" style={{ color: primary }}>{num}</div>
                 <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOCIAL PROOF / TESTIMONIALS ── */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-3" style={{ color: secondary }}>
+              {lang === "de" ? "Was unsere Kunden sagen" : lang === "tr" ? "Müşterilerimiz ne diyor" : "What our clients say"}
+            </h2>
+            <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-current" style={{ color: primary }} />
+              ))}
+              <span className="ml-1 font-semibold" style={{ color: secondary }}>4.9</span>
+              <span>·</span>
+              <span>{lang === "de" ? "124+ Bewertungen" : lang === "tr" ? "124+ değerlendirme" : "124+ reviews"}</span>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <div key={i} className="bg-card border rounded-2xl p-6 shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.rating }).map((_, j) => (
+                    <Star key={j} className="w-4 h-4 fill-current" style={{ color: primary }} />
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1 italic">
+                  &ldquo;{t.text[lang]}&rdquo;
+                </p>
+                <div className="flex items-center gap-3 pt-3 border-t">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                    style={{ backgroundColor: primary }}
+                  >
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold leading-tight" style={{ color: secondary }}>{t.name}</div>
+                    <div className="text-xs text-muted-foreground">{t.location}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
