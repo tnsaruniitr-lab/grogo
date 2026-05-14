@@ -1,14 +1,110 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Heart, Home, HeartHandshake, Brain, Clock, ShieldCheck, Phone, ChevronRight } from 'lucide-react';
 import './_care.css';
 
 export function Care() {
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Morning light god-rays canvas animation
+  useEffect(() => {
+    const canvas = bgCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let animId: number;
+    let t = 0;
+
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+
+    const hexAlpha = (a: number) => Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+
+    const animate = () => {
+      const w = canvas.offsetWidth, h = canvas.offsetHeight;
+
+      // Warm cream base — like bright morning interior
+      ctx.fillStyle = '#f5efe6';
+      ctx.fillRect(0, 0, w, h);
+
+      // Source of light: upper-right corner, like a window
+      const srcX = w * 0.78;
+      const srcY = -h * 0.1;
+
+      // God rays — long triangular beams of warm light
+      const rays = [
+        { angle: Math.PI * 0.62, width: 0.045, color: '#e8a84c', alpha: 0.10 + 0.04 * Math.sin(t * 0.4) },
+        { angle: Math.PI * 0.68, width: 0.06,  color: '#f5d08a', alpha: 0.08 + 0.03 * Math.sin(t * 0.3 + 1) },
+        { angle: Math.PI * 0.72, width: 0.035, color: '#e8a84c', alpha: 0.13 + 0.05 * Math.sin(t * 0.5 + 2) },
+        { angle: Math.PI * 0.76, width: 0.07,  color: '#f5e0b0', alpha: 0.07 + 0.03 * Math.sin(t * 0.35 + 0.5) },
+        { angle: Math.PI * 0.80, width: 0.025, color: '#c4882a', alpha: 0.06 + 0.02 * Math.sin(t * 0.6 + 1.5) },
+        { angle: Math.PI * 0.84, width: 0.05,  color: '#f5d08a', alpha: 0.09 + 0.04 * Math.sin(t * 0.45 + 3) },
+        { angle: Math.PI * 0.88, width: 0.03,  color: '#e8a84c', alpha: 0.11 + 0.04 * Math.sin(t * 0.55 + 1) },
+      ];
+
+      const rayLen = Math.sqrt(w * w + h * h) * 1.5;
+
+      ctx.globalCompositeOperation = 'multiply';
+
+      for (const ray of rays) {
+        const angleOffset = 0.015 * Math.sin(t * 0.2 + ray.angle);
+        const a1 = ray.angle - ray.width / 2 + angleOffset;
+        const a2 = ray.angle + ray.width / 2 + angleOffset;
+
+        const x1 = srcX + Math.cos(a1) * rayLen;
+        const y1 = srcY + Math.sin(a1) * rayLen;
+        const x2 = srcX + Math.cos(a2) * rayLen;
+        const y2 = srcY + Math.sin(a2) * rayLen;
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const grd = ctx.createLinearGradient(srcX, srcY, midX, midY);
+        grd.addColorStop(0,   `${ray.color}${hexAlpha(ray.alpha * 0.9)}`);
+        grd.addColorStop(0.6, `${ray.color}${hexAlpha(ray.alpha * 0.5)}`);
+        grd.addColorStop(1,   `${ray.color}00`);
+
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.moveTo(srcX, srcY);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Warm ambient bloom at the light source
+      ctx.globalCompositeOperation = 'source-over';
+      const bloom = ctx.createRadialGradient(srcX, srcY, 0, srcX, srcY, w * 0.55);
+      bloom.addColorStop(0,   `#f5e0b0${hexAlpha(0.35 + 0.08 * Math.sin(t * 0.3))}`);
+      bloom.addColorStop(0.3, `#e8c07a${hexAlpha(0.12)}`);
+      bloom.addColorStop(0.6, `#e8a84c${hexAlpha(0.06)}`);
+      bloom.addColorStop(1,   '#faf7f200');
+      ctx.fillStyle = bloom;
+      ctx.fillRect(0, 0, w, h);
+
+      // Soft ambient gradient for warm room feel
+      const ambient = ctx.createLinearGradient(0, 0, w, h);
+      ambient.addColorStop(0, 'rgba(250,240,220,0.25)');
+      ambient.addColorStop(0.5, 'rgba(255,255,255,0.0)');
+      ambient.addColorStop(1, 'rgba(240,225,200,0.15)');
+      ctx.fillStyle = ambient;
+      ctx.fillRect(0, 0, w, h);
+
+      t += 0.016;
+      animId = requestAnimationFrame(animate);
+    };
+
+    resize();
+    animate();
+    const onResize = () => resize();
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
+  }, []);
+
   return (
     <div className="min-h-screen font-['Inter',sans-serif] text-[#2c2416] bg-[#faf7f2] overflow-x-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
       `}} />
-      
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#faf7f2]/90 backdrop-blur-md border-b border-[#ede8e0] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-[#2c2416]">
@@ -27,10 +123,21 @@ export function Care() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 care-hero-container">
-        <div className="care-orb-1" />
-        <div className="care-orb-2" />
-        
+      <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 care-hero-container overflow-hidden">
+        {/* Morning light god-rays canvas */}
+        <canvas
+          ref={bgCanvasRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 0 }}
+        />
+        {/* Subtle left-side text readability overlay */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(110deg, rgba(250,247,242,0.55) 0%, rgba(250,247,242,0.35) 45%, rgba(250,247,242,0.10) 100%)',
+          zIndex: 1
+        }} />
+        <div className="care-orb-1" style={{ zIndex: 2 }} />
+        <div className="care-orb-2" style={{ zIndex: 2 }} />
+
         <div className="container mx-auto px-6 relative z-10 max-w-6xl flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 max-w-2xl">
             <h1 className="font-['Lora',serif] text-5xl md:text-[72px] leading-[1.1] font-semibold text-[#2c2416] mb-6 care-fade-in">
@@ -49,7 +156,7 @@ export function Care() {
               </button>
             </div>
           </div>
-          
+
           <div className="flex-1 w-full max-w-md md:max-w-none care-fade-in-delay-1">
             <div className="aspect-[4/5] rounded-[2rem] bg-gradient-to-br from-[#e8a84c]/20 to-[#7aab7a]/20 border border-white/50 shadow-lg relative overflow-hidden flex items-center justify-center group">
               <div className="absolute inset-0 bg-white/20 backdrop-blur-sm group-hover:backdrop-blur-0 transition-all duration-700"></div>
@@ -94,7 +201,6 @@ export function Care() {
             <h2 className="font-['Lora',serif] text-3xl md:text-4xl font-semibold text-[#2c2416] mb-4">Care Tailored to You</h2>
             <p className="text-[#8a7a6a] max-w-2xl mx-auto">We understand that every family's situation is unique. Our flexible care services adapt to your specific requirements.</p>
           </div>
-          
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { title: "Live-In Care", desc: "Round-the-clock support and companionship in the comfort of home.", icon: Home },
@@ -118,7 +224,6 @@ export function Care() {
       <section id="how-it-works" className="py-24 bg-white border-t border-[#ede8e0]">
         <div className="container mx-auto px-6 max-w-6xl">
           <h2 className="font-['Lora',serif] text-3xl md:text-4xl font-semibold text-center mb-16">How It Works</h2>
-          
           <div className="grid md:grid-cols-3 gap-8 relative">
             <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-[2px] bg-[#ede8e0] z-0"></div>
             {[
@@ -150,7 +255,6 @@ export function Care() {
               View all carers <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { initials: "SJ", name: "Sarah Jenkins", role: "Senior Care Specialist", exp: "8 years experience", color: "bg-[#7aab7a]/20 text-[#7aab7a]" },
@@ -188,8 +292,7 @@ export function Care() {
           </div>
         </div>
       </section>
-      
-      {/* Footer minimal */}
+
       <footer className="bg-[#2c2416] text-[#8a7a6a] py-12 text-sm text-center">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-center gap-2 mb-6 text-white/50">

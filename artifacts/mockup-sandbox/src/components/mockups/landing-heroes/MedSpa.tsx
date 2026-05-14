@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Star, ChevronRight, Menu } from 'lucide-react';
 import './_group.css';
 
 export function MedSpa() {
   const [particles, setParticles] = useState<{ id: number; left: string; size: string; duration: string; delay: string }[]>([]);
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    // Generate random particles
     const newParticles = Array.from({ length: 30 }).map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
@@ -15,6 +15,80 @@ export function MedSpa() {
       delay: `${Math.random() * 5}s`,
     }));
     setParticles(newParticles);
+  }, []);
+
+  // Gold bokeh canvas animation
+  useEffect(() => {
+    const canvas = bgCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let animId: number;
+
+    interface Bokeh { x: number; y: number; r: number; vx: number; vy: number; alpha: number; alphaDelta: number; color: string; }
+    let bokehs: Bokeh[] = [];
+    const colors = ['#c9a84c', '#e8d5a3', '#b8962a', '#f5e8c0', '#a07838'];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+
+    const initBokehs = () => {
+      bokehs = [];
+      const w = canvas.offsetWidth, h = canvas.offsetHeight;
+      for (let i = 0; i < 50; i++) {
+        bokehs.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() * 130 + 25,
+          vx: (Math.random() - 0.5) * 0.18,
+          vy: -(Math.random() * 0.35 + 0.04),
+          alpha: Math.random() * 0.20 + 0.04,
+          alphaDelta: (Math.random() - 0.5) * 0.0008,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        });
+      }
+    };
+
+    const hexAlpha = (a: number) => Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+
+    const animate = () => {
+      const w = canvas.offsetWidth, h = canvas.offsetHeight;
+      ctx.fillStyle = '#0a0a0f';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'screen';
+
+      for (const b of bokehs) {
+        const grd = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        grd.addColorStop(0,   `${b.color}${hexAlpha(b.alpha)}`);
+        grd.addColorStop(0.4, `${b.color}${hexAlpha(b.alpha * 0.45)}`);
+        grd.addColorStop(1,   `${b.color}00`);
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        b.x += b.vx;
+        b.y += b.vy;
+        b.alpha += b.alphaDelta;
+        if (b.alpha > 0.24) b.alphaDelta = -Math.abs(b.alphaDelta);
+        if (b.alpha < 0.03) b.alphaDelta = Math.abs(b.alphaDelta);
+        if (b.y < -b.r) { b.y = h + b.r; b.x = Math.random() * w; }
+        if (b.x < -b.r) b.x = w + b.r;
+        if (b.x > w + b.r) b.x = -b.r;
+      }
+
+      ctx.globalCompositeOperation = 'source-over';
+      animId = requestAnimationFrame(animate);
+    };
+
+    resize();
+    initBokehs();
+    animate();
+    const onResize = () => { resize(); initBokehs(); };
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
   }, []);
 
   return (
@@ -32,14 +106,12 @@ export function MedSpa() {
           </div>
           <span className="font-serif text-xl tracking-widest text-[#f5f0e8]">ELEGANZE</span>
         </div>
-        
         <div className="hidden md:flex items-center gap-8 text-sm tracking-wide text-[#a09080]">
           <a href="#" className="hover:text-[#c9a84c] transition-colors">Treatments</a>
           <a href="#" className="hover:text-[#c9a84c] transition-colors">About</a>
           <a href="#" className="hover:text-[#c9a84c] transition-colors">Testimonials</a>
           <a href="#" className="hover:text-[#c9a84c] transition-colors">Contact</a>
         </div>
-
         <div className="flex items-center gap-4">
           <button className="hidden md:block px-6 py-2 rounded-none text-sm tracking-wider uppercase btn-gold font-medium">
             Book Consultation
@@ -52,33 +124,31 @@ export function MedSpa() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 px-6 overflow-hidden">
-        {/* Animated Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full mix-blend-screen filter blur-[100px] opacity-30" 
-             style={{ 
-               background: 'radial-gradient(circle, #c9a84c 0%, transparent 70%)',
-               animation: 'slow-rotate 25s linear infinite'
-             }} 
+        {/* Live bokeh canvas — replaces video */}
+        <canvas
+          ref={bgCanvasRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 0 }}
         />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full mix-blend-screen filter blur-[80px] opacity-20" 
-             style={{ 
-               background: 'radial-gradient(circle, #e8d5a3 0%, transparent 70%)',
-               animation: 'slow-rotate 20s linear infinite reverse'
-             }} 
-        />
+        {/* Vignette overlay */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at center, rgba(10,10,15,0.0) 30%, rgba(10,10,15,0.85) 100%)',
+          zIndex: 1
+        }} />
 
-        {/* Particles */}
-        <div className="absolute inset-0 z-0">
+        {/* Gold slow-rotate orbs layered above bokeh for extra depth */}
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full mix-blend-screen filter blur-[100px] opacity-20"
+             style={{ background: 'radial-gradient(circle, #c9a84c 0%, transparent 70%)', animation: 'slow-rotate 25s linear infinite', zIndex: 2 }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full mix-blend-screen filter blur-[80px] opacity-15"
+             style={{ background: 'radial-gradient(circle, #e8d5a3 0%, transparent 70%)', animation: 'slow-rotate 20s linear infinite reverse', zIndex: 2 }} />
+
+        {/* Floating dust particles */}
+        <div className="absolute inset-0" style={{ zIndex: 3 }}>
           {particles.map(p => (
-            <div 
+            <div
               key={p.id}
               className="particle"
-              style={{
-                left: p.left,
-                width: p.size,
-                height: p.size,
-                animationDuration: p.duration,
-                animationDelay: p.delay
-              }}
+              style={{ left: p.left, width: p.size, height: p.size, animationDuration: p.duration, animationDelay: p.delay }}
             />
           ))}
         </div>
@@ -109,12 +179,7 @@ export function MedSpa() {
       <section className="relative z-20 py-8 border-y border-[#c9a84c]/10 bg-[#0a0a0f]/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              "CQC Registered",
-              "500+ 5-Star Reviews",
-              "Award-Winning Clinic",
-              "Doctor-Led Treatments"
-            ].map((text, i) => (
+            {["CQC Registered","500+ 5-Star Reviews","Award-Winning Clinic","Doctor-Led Treatments"].map((text, i) => (
               <div key={i} className="flex flex-col items-center justify-center">
                 <span className="text-[#c9a84c] text-xs uppercase tracking-widest">{text}</span>
               </div>
@@ -130,30 +195,18 @@ export function MedSpa() {
             <h2 className="font-serif text-4xl md:text-5xl mb-4 text-[#f5f0e8]">Our Expertise</h2>
             <div className="w-12 h-px bg-[#c9a84c] mx-auto"></div>
           </div>
-
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              {
-                title: "Facial Rejuvenation",
-                desc: "Subtle enhancements designed to restore volume, smooth lines, and perfect symmetry.",
-              },
-              {
-                title: "Body Contouring",
-                desc: "Advanced non-surgical technologies to sculpt and refine your natural silhouette.",
-              },
-              {
-                title: "Skin Treatments",
-                desc: "Medical-grade therapies to address pigmentation, texture, and cellular renewal.",
-              }
+              { title: "Facial Rejuvenation", desc: "Subtle enhancements designed to restore volume, smooth lines, and perfect symmetry." },
+              { title: "Body Contouring", desc: "Advanced non-surgical technologies to sculpt and refine your natural silhouette." },
+              { title: "Skin Treatments", desc: "Medical-grade therapies to address pigmentation, texture, and cellular renewal." }
             ].map((service, i) => (
               <div key={i} className="glass-card p-10 flex flex-col items-start text-left group">
                 <div className="w-12 h-12 rounded-full border border-[#c9a84c]/30 flex items-center justify-center mb-8">
                   <div className="w-2 h-2 rounded-full bg-[#c9a84c]"></div>
                 </div>
                 <h3 className="font-serif text-2xl mb-4 text-[#e8d5a3]">{service.title}</h3>
-                <p className="text-[#a09080] font-light leading-relaxed mb-8 flex-grow">
-                  {service.desc}
-                </p>
+                <p className="text-[#a09080] font-light leading-relaxed mb-8 flex-grow">{service.desc}</p>
                 <a href="#" className="inline-flex items-center gap-2 text-[#c9a84c] text-sm uppercase tracking-widest font-medium group-hover:gap-4 transition-all">
                   Learn More <ChevronRight className="w-4 h-4" />
                 </a>
@@ -192,8 +245,7 @@ export function MedSpa() {
           </button>
         </div>
       </section>
-      
-      {/* Footer minimal */}
+
       <footer className="py-10 text-center border-t border-[#c9a84c]/10">
         <p className="text-[#a09080] text-sm">&copy; {new Date().getFullYear()} Eleganze Aesthetics. All rights reserved.</p>
       </footer>
