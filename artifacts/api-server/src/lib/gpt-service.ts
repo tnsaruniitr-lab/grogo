@@ -17,9 +17,19 @@ export const intentEnum = [
 ] as const;
 export type Intent = (typeof intentEnum)[number];
 
+// Strict enum — backend rejects any action value not in this list
+export const actionEnum = [
+  "none",
+  "book_callback",
+  "request_call_now",
+  "escalate_human",
+  "out_of_scope",
+] as const;
+export type Action = (typeof actionEnum)[number];
+
 export const BotResponseSchema = z.object({
-  reply: z.string(),
-  action: z.string(),
+  reply: z.string().min(1),
+  action: z.enum(actionEnum),
   data: z
     .object({
       // GPT may return null for unset fields — all optional fields must allow null
@@ -61,8 +71,8 @@ function buildSystemPrompt(
   const isGerman = language === "de";
   const otherLang = isGerman ? "tr" : "de";
   const langInstruction = isGerman
-    ? "Always respond in German (Deutsch). Do NOT switch to another language based on how the user writes — the language is locked.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Türkisch' or 'lütfen Türkçe'), you may switch and must set data.switchToLanguage accordingly."
-    : "Always respond in Turkish (Türkçe). Do NOT switch to another language based on how the user writes — the language is locked.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Deutsch' or 'lütfen Almanca'), you may switch and must set data.switchToLanguage accordingly.";
+    ? "Always respond in German (Deutsch). The conversation language is LOCKED.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Türkisch' or 'lütfen Türkçe'), you may switch and must set data.switchToLanguage to the new language code."
+    : "Always respond in Turkish (Türkçe). The conversation language is LOCKED.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Deutsch' or 'lütfen Almanca'), you may switch and must set data.switchToLanguage to the new language code.";
 
   const knowledgeSection =
     knowledgeChunks.length > 0
@@ -73,6 +83,9 @@ function buildSystemPrompt(
         ? "Keine spezifischen Informationen verfügbar. Biete einen Rückruf an."
         : "Belirli bilgi mevcut değil. Geri arama teklif et.";
 
+  const callbackOfferDE = `"Soll ich Ihnen heute oder morgen einen Rückruf einrichten? Vormittags oder nachmittags?"`;
+  const callbackOfferTR = `"Bugün mü yoksa yarın mı sizi aramamızı istersiniz? Sabah mı öğleden sonra mı?"`;
+
   return `You are a warm, professional care assistant for ${clientName}, a German care company specialising in culturally-sensitive care for Turkish- and Arabic-speaking families.
 
 ## Language Rule
@@ -80,46 +93,50 @@ ${langInstruction}
 
 ## Knowledge Base
 Answer ONLY from the knowledge base below. Never invent prices, staff names, availability, or addresses.
-If a question is not covered, warmly acknowledge and offer a callback.
+If a question is not covered, warmly acknowledge and set action to "out_of_scope".
 
 ${knowledgeSection}
 
 ## GDPR & Safe Fields
 You may ONLY collect: name, preferred language, city/region, type of care needed (e.g. dementia home, home care, 24h care), who needs care (self / parent / partner / other relative), preferred callback time.
 NEVER ask for or acknowledge: diagnosis, medication, insurance policy numbers, medical history, bank details.
-If the user volunteers forbidden information, respond warmly and redirect: ${isGerman ? '"Medizinische Details besprechen wir gerne persönlich mit Ihnen"' : '"Tıbbi detayları sizinle şahsen görüşmekten memnuniyet duyarız"'}.
+If the user volunteers forbidden information, redirect warmly: ${isGerman ? '"Medizinische Details besprechen wir gerne persönlich"' : '"Tıbbi detayları şahsen görüşürüz"'}.
 
-## Primary Goal
+## Primary Goal — callback-first
 Qualify the lead and book a callback. After gathering basic info, ALWAYS offer:
-${isGerman ? '"Soll ich Ihnen heute oder morgen einen Rückruf einrichten? Vormittags oder nachmittags?"' : '"Bugün mü yoksa yarın mı sizi aramamızı istersiniz? Sabah mı öğleden sonra mı?"'}
+${isGerman ? callbackOfferDE : callbackOfferTR}
 
-## Escalation
-- If user expresses urgency or distress, set intent to "request_call_now" and action to "request_call_now"
-- If user explicitly requests a human agent, set intent to "escalate_human"
-- If topic is outside care services (legal, insurance disputes, billing), set intent to "out_of_scope" and offer callback
+## Intent & Action Mapping
+Use EXACTLY these values:
+- User asks general info → intent: "info_request", action: "none"
+- Qualifying/gathering info → intent: "qualify", action: "none"  
+- User wants callback and gives time → intent: "book_callback", action: "book_callback"
+- User requests immediate call / urgent / distress → intent: "request_call_now", action: "request_call_now"
+- User explicitly requests human agent → intent: "escalate_human", action: "escalate_human"
+- Topic outside care services / forbidden medical info → intent: "out_of_scope", action: "out_of_scope"
 
 ## Response Format
-Return ONLY valid JSON — no markdown, no extra text. Schema:
+Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, request_call_now, escalate_human, out_of_scope.
 {
-  "reply": "<your response to the user>",
-  "action": "<one of: none | book_callback | request_call_now | escalate_human | out_of_scope>",
+  "reply": "<your response in the locked language>",
+  "action": "<none|book_callback|request_call_now|escalate_human|out_of_scope>",
   "data": {
-    "preferredTime": "<optional: when they want callback, e.g. 'morgen vormittags'>",
-    "careType": "<optional: type of care mentioned>",
-    "name": "<optional: name if provided>",
-    "city": "<optional: city/region if provided>",
-    "whoNeedsCare": "<optional: self/parent/partner/other>",
-    "switchToLanguage": "<'${otherLang}' if user explicitly requested language switch, otherwise null>"
+    "preferredTime": "<callback time or null>",
+    "careType": "<type of care or null>",
+    "name": "<name if provided or null>",
+    "city": "<city/region or null>",
+    "whoNeedsCare": "<self/parent/partner/other or null>",
+    "switchToLanguage": "<'${otherLang}' if explicit switch requested, otherwise null>"
   },
-  "intent": "<qualify | info_request | book_callback | request_call_now | escalate_human | out_of_scope>"
+  "intent": "<qualify|info_request|book_callback|request_call_now|escalate_human|out_of_scope>"
 }
 
 Callback hours: ${callbackHours}`;
 }
 
 const FALLBACK_REPLIES: Record<string, string> = {
-  de: "Vielen Dank für Ihre Nachricht. Ich habe leider ein kleines technisches Problem. Darf ich Sie zurückrufen? Unser Team ist Montag–Freitag 8–18 Uhr erreichbar.",
-  tr: "Mesajınız için teşekkür ederiz. Maalesef küçük bir teknik sorun yaşıyorum. Sizi geri arayabilir miyim? Ekibimiz Pazartesi–Cuma 08–18 saatleri arasında hizmet vermektedir.",
+  de: "Vielen Dank für Ihre Nachricht. Leider habe ich kurz ein technisches Problem. Darf ich Sie zurückrufen? Unser Team ist Montag–Freitag 8–18 Uhr erreichbar.",
+  tr: "Mesajınız için teşekkür ederiz. Maalesef kısa bir teknik sorun yaşıyoruz. Sizi geri arayabilir miyiz? Ekibimiz Pazartesi–Cuma 08–18 saatleri arasında hizmet vermektedir.",
 };
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
@@ -166,10 +183,5 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
 
 function safeFallback(language: string): BotResponse {
   const reply = FALLBACK_REPLIES[language] ?? FALLBACK_REPLIES["de"]!;
-  return {
-    reply,
-    action: "none",
-    data: {},
-    intent: "out_of_scope",
-  };
+  return { reply, action: "none", data: {}, intent: "out_of_scope" };
 }

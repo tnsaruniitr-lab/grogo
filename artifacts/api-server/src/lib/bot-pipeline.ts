@@ -11,7 +11,12 @@ import {
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { logger } from "./logger";
 import { retrieveKnowledge } from "./knowledge";
-import { callGpt, type BotResponse, type ConversationMessage } from "./gpt-service";
+import {
+  callGpt,
+  type BotResponse,
+  type ConversationMessage,
+  type Intent,
+} from "./gpt-service";
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -19,7 +24,7 @@ const MAX_BOT_TURNS_PER_HOUR = 10;
 
 /**
  * Detect language from user message. Falls back to client primary language.
- * Uses word patterns and Turkish-exclusive chars (ğ,ş,ı,İ,Ğ,Ş).
+ * Only truly Turkish-exclusive chars used: ğ,ş,ı,İ,Ğ,Ş
  * NOTE: ü and ö are intentionally NOT in the Turkish char set — they appear in
  * German too (e.g. "für", "können") and would cause false-positive Turkish detection.
  */
@@ -30,7 +35,6 @@ function detectLanguage(
 ): string {
   const turkishPatterns =
     /\b(merhaba|evet|hay[iı]r|te[sş]ekk[uü]r|nas[iı]l|nerede|ne zaman|bak[iı]m|aile|annem|babam|e[sş]im|yard[iı]m|bilgi|almak|lazım|gereki|için|ile|sizi|size|bizi|beni|ben|tamam|lütfen|bir|var|yok|bu|ne|kim|ka[cç]|nas[iı]l)\b/i;
-  // Only truly Turkish-exclusive chars — ü and ö are shared with German so excluded
   const turkishChars = /[ğşıİĞŞ]/;
 
   const hasTurkish = turkishPatterns.test(text) || turkishChars.test(text);
@@ -119,14 +123,41 @@ function buildSummary(
 
   if (typeof data["name"] === "string" && data["name"]) parts.push(`Name: ${data["name"]}`);
   if (typeof data["city"] === "string" && data["city"]) parts.push(`Stadt: ${data["city"]}`);
-  if (typeof data["careType"] === "string" && data["careType"]) parts.push(`Pflege: ${data["careType"]}`);
-  if (typeof data["whoNeedsCare"] === "string" && data["whoNeedsCare"]) parts.push(`Person: ${data["whoNeedsCare"]}`);
+  if (typeof data["careType"] === "string" && data["careType"])
+    parts.push(`Pflege: ${data["careType"]}`);
+  if (typeof data["whoNeedsCare"] === "string" && data["whoNeedsCare"])
+    parts.push(`Person: ${data["whoNeedsCare"]}`);
   if (preferredTime) parts.push(`Rückrufzeit: ${preferredTime}`);
   parts.push(`Intent: ${botResponse.intent}`);
   parts.push(`Sprache: ${language}`);
 
   const newLine = parts.join(" | ");
   return lead.conversationSummary ? `${lead.conversationSummary}\n${newLine}` : newLine;
+}
+
+/**
+ * Backend-controlled intent → lead status mapping.
+ * GPT classifies intent; backend deterministically derives DB state from it.
+ * This is intentionally decoupled from botResponse.action.
+ */
+function intentToStatus(
+  intent: Intent,
+  currentStatus: string,
+): string {
+  switch (intent) {
+    case "book_callback":
+      return "callback_booked";
+    case "request_call_now":
+      return "escalated";
+    case "escalate_human":
+      return "needs_human";
+    case "qualify":
+      return currentStatus === "new" ? "qualified" : currentStatus;
+    case "out_of_scope":
+    case "info_request":
+    default:
+      return currentStatus;
+  }
 }
 
 export interface BotPipelineInput {
@@ -141,18 +172,21 @@ export interface BotPipelineInput {
 /**
  * Full bot pipeline:
  * 1. Load lead
- * 2. Language detection / lock (explicit user switch request honoured)
+ * 2. Language detection / lock
  * 3. Rate limit check
  * 4. Load conversation history
  * 5. Knowledge retrieval
  * 6. GPT call (structured JSON: { reply, action, data, intent })
- * 7. Action execution:
- *    - book_callback → insert appointment + write notification log + set callback_booked
+ * 7. Intent-driven action execution (backend-controlled, not action string):
+ *    - book_callback  → insert appointment + notification log + set callback_booked
  *    - request_call_now → set status=escalated + urgent note
  *    - escalate_human → set status=needs_human
+ *    - out_of_scope   → warm redirect reply (no DB change)
+ *    - qualify / info_request → update status only if progressing
  * 8. Language switch persistence (if GPT indicates user explicitly requested switch)
- * 9. Write outbound conversation + lead summary update
+ * 9. Write outbound conversation + any system notification entries
  * 10. Twilio reply
+ * 11. Mark job as done (AFTER all writes + send — partial failures leave job pending/failed)
  */
 export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   const { clientRecord, leadId, messageEventId, userMessage, userPhone, twilioSender } = input;
@@ -194,7 +228,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     return;
   }
 
-  // 4. Conversation history (last 20 turns, chronological, excluding the current inbound msg)
+  // 4. Conversation history (last 20 turns, chronological, excluding current inbound msg)
   const rawHistory = await db
     .select({ direction: conversationsTable.direction, body: conversationsTable.body })
     .from(conversationsTable)
@@ -206,11 +240,11 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
       ),
     )
     .orderBy(desc(conversationsTable.createdAt))
-    .limit(21); // +1 to drop current inbound message
+    .limit(21);
 
   const conversationHistory: ConversationMessage[] = rawHistory
     .reverse()
-    .slice(0, -1) // drop last item (current inbound message already stored)
+    .slice(0, -1) // drop last item (current inbound already stored)
     .map((h) => ({
       role: h.direction === "inbound" ? ("user" as const) : ("assistant" as const),
       content: h.body,
@@ -232,21 +266,13 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     userMessage,
   });
 
-  // 7. Action execution
   const now = new Date();
+  const data = botResponse.data ?? {};
 
-  // Mark the pending job as done
-  await db
-    .update(jobQueueTable)
-    .set({ status: "done", processedAt: now, updatedAt: now })
-    .where(
-      and(
-        eq(jobQueueTable.messageEventId, messageEventId),
-        eq(jobQueueTable.status, "pending"),
-      ),
-    );
+  // 7. Intent-driven action execution
+  // Status is derived from INTENT (backend-controlled), not action string.
+  const newStatus = intentToStatus(botResponse.intent, lead.status);
 
-  let newStatus = lead.status;
   const leadUpdates: Partial<{
     status: string;
     name: string;
@@ -257,7 +283,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     updatedAt: Date;
   }> = { lastContactAt: now, updatedAt: now };
 
-  const data = botResponse.data ?? {};
+  if (newStatus !== lead.status) leadUpdates.status = newStatus;
 
   // Capture name on first disclosure
   if (typeof data["name"] === "string" && data["name"] && !lead.name) {
@@ -279,10 +305,12 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   }
 
   const preferredTime =
-    typeof data["preferredTime"] === "string" ? (data["preferredTime"] as string) : null;
+    typeof data["preferredTime"] === "string" && data["preferredTime"]
+      ? (data["preferredTime"] as string)
+      : null;
 
-  // Conversations to insert (collected, inserted in one batch at end)
-  const conversationInserts: {
+  // System-notification conversation entries (inserted alongside outbound reply)
+  const notificationInserts: {
     clientId: number;
     leadId: number;
     direction: string;
@@ -290,61 +318,46 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     intentDetected?: string;
   }[] = [];
 
-  switch (botResponse.action) {
-    case "book_callback": {
-      // Write appointment record
-      await db.insert(appointmentsTable).values({
-        clientId: clientRecord.id,
-        leadId,
-        type: "callback",
-        preferredTime: preferredTime ?? undefined,
-        outcome: "pending",
-        notes: `Gebucht via WhatsApp-Bot (${language})`,
-      });
+  // -- book_callback: deterministic appointment write + notification log --
+  if (botResponse.intent === "book_callback") {
+    await db.insert(appointmentsTable).values({
+      clientId: clientRecord.id,
+      leadId,
+      type: "callback",
+      preferredTime: preferredTime ?? undefined,
+      outcome: "pending",
+      notes: `Gebucht via WhatsApp-Bot (${language})`,
+    });
 
-      // Notification/audit log: system entry in conversations table
-      const notifBody =
-        language === "tr"
-          ? `[SİSTEM] Geri arama randevusu oluşturuldu. Tercih edilen zaman: ${preferredTime ?? "belirtilmedi"}`
-          : `[SYSTEM] Rückruf gebucht. Gewünschter Zeitpunkt: ${preferredTime ?? "nicht angegeben"}`;
-      conversationInserts.push({
-        clientId: clientRecord.id,
-        leadId,
-        direction: "system",
-        body: notifBody,
-        intentDetected: "book_callback_confirmed",
-      });
+    const notifBody =
+      language === "tr"
+        ? `[SİSTEM] Geri arama randevusu oluşturuldu. Tercih edilen zaman: ${preferredTime ?? "belirtilmedi"}`
+        : `[SYSTEM] Rückruf gebucht. Gewünschter Zeitpunkt: ${preferredTime ?? "nicht angegeben"}`;
 
-      newStatus = "callback_booked";
-      break;
-    }
-
-    case "request_call_now": {
-      // Explicit urgent flag: set status to "escalated" (schema-backed urgency state)
-      newStatus = "escalated";
-      const urgentNote = "[DRINGEND] Sofortiger Rückruf gewünscht";
-      leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
-      break;
-    }
-
-    case "escalate_human": {
-      newStatus = "needs_human";
-      break;
-    }
-
-    default: {
-      if (botResponse.intent === "qualify" && newStatus === "new") {
-        newStatus = "qualified";
-      }
-    }
+    notificationInserts.push({
+      clientId: clientRecord.id,
+      leadId,
+      direction: "system",
+      body: notifBody,
+      intentDetected: "book_callback_confirmed",
+    });
   }
 
-  if (newStatus !== lead.status) leadUpdates.status = newStatus;
-  leadUpdates.conversationSummary = buildSummary(lead, botResponse, language, preferredTime);
+  // -- request_call_now: urgent flag explicitly backed by schema status --
+  if (botResponse.intent === "request_call_now") {
+    const urgentNote =
+      language === "tr"
+        ? "[ACİL] Anında geri arama talep edildi"
+        : "[DRINGEND] Sofortiger Rückruf gewünscht";
+    leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
+  }
+
+  // -- out_of_scope: warm redirect — backend enforces redirect regardless of GPT reply text --
+  // GPT reply text is still used (it will already be a warm redirect per system prompt),
+  // but we ensure the action taken server-side is logged with intent out_of_scope.
+  // No lead status change. The intent label on the outbound message provides the audit trail.
 
   // 8. Language switch persistence
-  // GPT sets data.switchToLanguage only when the user EXPLICITLY requested a switch.
-  // We persist this to leads.language so all subsequent turns use the new language.
   const requestedSwitch = data["switchToLanguage"];
   if (
     typeof requestedSwitch === "string" &&
@@ -355,14 +368,20 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     leadUpdates.language = language;
     logger.info({ leadId, newLanguage: language }, "Language switch persisted per user request");
   } else {
-    // Keep the existing locked language
     leadUpdates.language = lead.language ?? language;
   }
 
+  leadUpdates.conversationSummary = buildSummary(lead, botResponse, language, preferredTime);
+
+  // -- All DB side-effects first --
   await db.update(leadsTable).set(leadUpdates).where(eq(leadsTable.id, leadId));
 
-  // 9. Write outbound conversation + any notification entries
-  conversationInserts.push({
+  // 9. Write outbound conversation + any system notification entries
+  for (const entry of notificationInserts) {
+    await db.insert(conversationsTable).values(entry);
+  }
+
+  await db.insert(conversationsTable).values({
     clientId: clientRecord.id,
     leadId,
     direction: "outbound",
@@ -370,12 +389,21 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     intentDetected: botResponse.intent,
   });
 
-  for (const entry of conversationInserts) {
-    await db.insert(conversationsTable).values(entry);
-  }
-
   // 10. Twilio reply
   await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
+
+  // 11. Mark job done AFTER all writes + send succeed.
+  // If anything above throws, this line is never reached — job remains pending/failed
+  // and can be retried or inspected without ambiguity.
+  await db
+    .update(jobQueueTable)
+    .set({ status: "done", processedAt: now, updatedAt: now })
+    .where(
+      and(
+        eq(jobQueueTable.messageEventId, messageEventId),
+        eq(jobQueueTable.status, "pending"),
+      ),
+    );
 
   logger.info(
     {
