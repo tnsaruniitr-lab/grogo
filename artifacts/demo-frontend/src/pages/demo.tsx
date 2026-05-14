@@ -188,7 +188,7 @@ export default function DemoPage() {
         {/* Video background — shown when industry has a mapped video */}
         {videoSrc && (
           <video
-            autoPlay muted loop playsInline
+            autoPlay muted loop playsInline preload="metadata"
             className="absolute inset-0 w-full h-full object-cover"
             style={{ filter: "brightness(0.58) saturate(1.1)" }}
           >
