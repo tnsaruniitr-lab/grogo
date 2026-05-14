@@ -844,6 +844,97 @@ const INDUSTRY_TESTIMONIALS: Record<string, Testimonial[]> = {
   ],
 };
 
+// ─────────────────────────────────────────────────────────
+// FAQ fallbacks per industry (shown when no crawl data)
+// ─────────────────────────────────────────────────────────
+
+export interface FAQItem {
+  q: { de: string; en: string; tr: string };
+  a: { de: string; en: string; tr: string };
+}
+
+const FAQ_KEY_FALLBACK: Record<string, string> = {
+  hair_clinic:       "aesthetics",
+  iv_therapy:        "aesthetics",
+  cosmetic_surgery:  "aesthetics",
+  physiotherapy:     "medical",
+  laser_eye:         "medical",
+  fertility:         "care",
+  weight_management: "medical",
+};
+
+const INDUSTRY_FAQ_FALLBACKS: Record<string, FAQItem[]> = {
+  aesthetics: [
+    { q: { de: "Wie buche ich einen Termin?", en: "How do I book an appointment?", tr: "Randevu nasıl alırım?" },
+      a: { de: "Schreiben Sie uns auf WhatsApp — unser KI-Assistent antwortet sofort, rund um die Uhr.", en: "Simply message us on WhatsApp — our AI assistant responds instantly, 24/7.", tr: "Bize WhatsApp'tan yazın — yapay zeka asistanımız 7/24 anında yanıt verir." } },
+    { q: { de: "Welche Behandlungen bieten Sie an?", en: "What treatments do you offer?", tr: "Hangi tedavileri sunuyorsunuz?" },
+      a: { de: "Wir bieten Botox, Filler, Laserbehandlungen, Hautpflege und weitere ästhetische Behandlungen an.", en: "We offer Botox, fillers, laser treatments, skincare and further aesthetic treatments.", tr: "Botoks, dolgu, lazer tedavileri, cilt bakımı ve diğer estetik tedavileri sunuyoruz." } },
+    { q: { de: "Ist eine Erstberatung kostenlos?", en: "Is an initial consultation free?", tr: "İlk danışma ücretsiz mi?" },
+      a: { de: "Ja, wir bieten kostenlose Erstberatungen an. Unser WhatsApp-Bot bucht direkt einen Termin für Sie.", en: "Yes, we offer free initial consultations. Our WhatsApp bot books directly for you.", tr: "Evet, ücretsiz ilk danışma sunuyoruz. WhatsApp botumuz sizin için doğrudan randevu alır." } },
+    { q: { de: "Wie lange dauert eine Behandlung?", en: "How long does a treatment take?", tr: "Tedavi ne kadar sürer?" },
+      a: { de: "Die Behandlungsdauer variiert je nach Eingriff zwischen 30 Minuten und 2 Stunden.", en: "Treatment duration varies between 30 minutes and 2 hours depending on the procedure.", tr: "Tedavi süresi işleme göre 30 dakika ile 2 saat arasında değişir." } },
+    { q: { de: "Sind Ihre Behandlungen sicher?", en: "Are your treatments safe?", tr: "Tedavileriniz güvenli mi?" },
+      a: { de: "Alle Behandlungen werden von zertifizierten Fachärzten durchgeführt. Wir verwenden ausschließlich zugelassene Produkte.", en: "All treatments are performed by certified specialists using exclusively approved products.", tr: "Tüm tedaviler sertifikalı uzmanlar tarafından, yalnızca onaylı ürünler kullanılarak yapılır." } },
+  ],
+  dental: [
+    { q: { de: "Bieten Sie ästhetische Zahnbehandlungen an?", en: "Do you offer cosmetic dental treatments?", tr: "Estetik diş tedavileri sunuyor musunuz?" },
+      a: { de: "Ja, wir bieten Zahnaufhellung, Veneers, unsichtbare Zahnspangen und weitere kosmetische Behandlungen an.", en: "Yes, we offer teeth whitening, veneers, invisible braces and further cosmetic treatments.", tr: "Evet, diş beyazlatma, veneer, görünmez diş teli ve daha fazlasını sunuyoruz." } },
+    { q: { de: "Wie buche ich einen Zahnarzttermin?", en: "How do I book a dental appointment?", tr: "Diş hekimi randevusu nasıl alırım?" },
+      a: { de: "Schreiben Sie uns auf WhatsApp — unser Assistent bucht sofort einen passenden Termin.", en: "Message us on WhatsApp — our assistant books a suitable appointment instantly.", tr: "Bize WhatsApp'tan yazın — asistanımız size uygun randevuyu anında alır." } },
+    { q: { de: "Behandeln Sie Angstpatienten?", en: "Do you treat anxious patients?", tr: "Korkan hastalara tedavi yapıyor musunuz?" },
+      a: { de: "Ja, wir haben Erfahrung mit Angstpatienten und bieten ein ruhiges, einfühlsames Behandlungsumfeld.", en: "Yes, we have experience with anxious patients and offer a calm, empathetic environment.", tr: "Evet, korkan hastalarla deneyimimiz var ve sakin, anlayışlı bir ortam sunuyoruz." } },
+    { q: { de: "Wie lange dauert eine Zahnaufhellung?", en: "How long does teeth whitening take?", tr: "Diş beyazlatma ne kadar sürer?" },
+      a: { de: "Eine professionelle Zahnaufhellung dauert in der Regel 60–90 Minuten.", en: "Professional teeth whitening typically takes 60–90 minutes.", tr: "Profesyonel diş beyazlatma genellikle 60–90 dakika sürer." } },
+    { q: { de: "Akzeptieren Sie Krankenkassen?", en: "Do you accept health insurance?", tr: "Sigorta kabul ediyor musunuz?" },
+      a: { de: "Wir arbeiten mit den meisten gesetzlichen und privaten Krankenkassen zusammen.", en: "We work with most statutory and private health insurers.", tr: "Çoğu kamu ve özel sağlık sigortasıyla çalışıyoruz." } },
+  ],
+  medical: [
+    { q: { de: "Kann ich eine Überweisung über WhatsApp anfordern?", en: "Can I request a referral via WhatsApp?", tr: "WhatsApp üzerinden sevk talep edebilir miyim?" },
+      a: { de: "Ja, unser KI-Assistent koordiniert Überweisungen und bucht direkt Folgetermine.", en: "Yes, our AI assistant coordinates referrals and books follow-up appointments directly.", tr: "Evet, yapay zeka asistanımız sevkleri koordine eder ve takip randevularını doğrudan ayarlar." } },
+    { q: { de: "Wie schnell erhalte ich einen Termin?", en: "How quickly can I get an appointment?", tr: "Ne kadar hızlı randevu alabilirim?" },
+      a: { de: "Dringende Fälle werden bevorzugt behandelt. Schreiben Sie uns — wir antworten sofort.", en: "Urgent cases are prioritised. Message us on WhatsApp — we respond instantly.", tr: "Acil durumlar öncelikli olarak değerlendirilir. Yazın — anında yanıt veriyoruz." } },
+    { q: { de: "Welche Sprachen sprechen Sie?", en: "Which languages do you speak?", tr: "Hangi dilleri konuşuyorsunuz?" },
+      a: { de: "Unser Team und unser KI-Assistent kommunizieren auf Deutsch, Englisch und Türkisch.", en: "Our team and AI assistant communicate in German, English and Turkish.", tr: "Ekibimiz ve yapay zeka asistanımız Almanca, İngilizce ve Türkçe iletişim kurar." } },
+    { q: { de: "Sind Hausbesuche möglich?", en: "Are home visits possible?", tr: "Ev ziyareti mümkün mü?" },
+      a: { de: "In bestimmten Fällen bieten wir Hausbesuche an. Kontaktieren Sie uns für mehr Informationen.", en: "In certain cases we offer home visits. Contact us for more information.", tr: "Belirli durumlarda ev ziyareti sunuyoruz. Daha fazla bilgi için iletişime geçin." } },
+    { q: { de: "Ist meine Anfrage vertraulich?", en: "Is my enquiry confidential?", tr: "Başvurum gizli mi?" },
+      a: { de: "Ja, alle Anfragen werden streng vertraulich und DSGVO-konform behandelt.", en: "Yes, all enquiries are handled strictly confidentially and in compliance with GDPR.", tr: "Evet, tüm başvurular kesinlikle gizli ve GDPR uyumlu şekilde işlenir." } },
+  ],
+  wellness: [
+    { q: { de: "Welche Wellnessprogramme bieten Sie an?", en: "What wellness programmes do you offer?", tr: "Hangi wellness programlarını sunuyorsunuz?" },
+      a: { de: "Wir bieten Yoga, Meditation, Massage, Ernährungsberatung und individuelle Wellnesspakete an.", en: "We offer yoga, meditation, massage, nutrition counselling and individual wellness packages.", tr: "Yoga, meditasyon, masaj, beslenme danışmanlığı ve bireysel wellness paketleri sunuyoruz." } },
+    { q: { de: "Wie buche ich einen Kurs?", en: "How do I book a class?", tr: "Nasıl ders alırım?" },
+      a: { de: "Schreiben Sie uns auf WhatsApp — unser Assistent zeigt freie Plätze und bucht direkt.", en: "Message us on WhatsApp — our assistant shows availability and books directly.", tr: "Bize WhatsApp'tan yazın — asistanımız müsait yerleri gösterir ve doğrudan rezervasyon yapar." } },
+    { q: { de: "Bieten Sie Einzelsitzungen oder Pakete an?", en: "Do you offer single sessions or packages?", tr: "Tek seans mı yoksa paket mi sunuyorsunuz?" },
+      a: { de: "Wir bieten Einzelsitzungen sowie vergünstigte Monatspakete und Jahresabos an.", en: "We offer both single sessions and discounted monthly packages and annual subscriptions.", tr: "Hem tek seans hem de indirimli aylık paketler ve yıllık abonelikler sunuyoruz." } },
+    { q: { de: "Kann ich mit einem Trainer sprechen, bevor ich buche?", en: "Can I speak to a trainer before booking?", tr: "Rezervasyon yapmadan önce bir eğitmenle konuşabilir miyim?" },
+      a: { de: "Natürlich — unser WhatsApp-Bot verbindet Sie sofort mit einem unserer Berater.", en: "Of course — our WhatsApp bot connects you instantly with one of our advisors.", tr: "Tabii ki — WhatsApp botumuz sizi anında danışmanlarımızdan biriyle buluşturur." } },
+    { q: { de: "Sind Ihre Kurse für Anfänger geeignet?", en: "Are your classes suitable for beginners?", tr: "Kurslarınız yeni başlayanlar için uygun mu?" },
+      a: { de: "Ja, wir haben Kurse für alle Niveaus — von Einsteigern bis zu Fortgeschrittenen.", en: "Yes, we have classes for all levels — from beginners to advanced practitioners.", tr: "Evet, her seviye için kurslarımız var — başlangıçtan ileri seviyeye kadar." } },
+  ],
+  care: [
+    { q: { de: "Welche Pflegeleistungen bieten Sie an?", en: "What care services do you offer?", tr: "Hangi bakım hizmetlerini sunuyorsunuz?" },
+      a: { de: "Wir bieten ambulante Pflege, Betreuung zuhause, Demenzbegleitung und 24h-Pflege an.", en: "We offer outpatient care, home care, dementia support and 24h care.", tr: "Ayakta bakım, evde bakım, demans desteği ve 24 saat bakım sunuyoruz." } },
+    { q: { de: "Wie schnell können Sie Pflege organisieren?", en: "How quickly can you organise care?", tr: "Bakımı ne kadar hızlı organize edebilirsiniz?" },
+      a: { de: "In dringenden Fällen oft noch am selben Tag. Schreiben Sie uns auf WhatsApp.", en: "In urgent cases often the same day. Message us on WhatsApp and we will help immediately.", tr: "Acil durumlarda çoğu zaman aynı gün. WhatsApp'tan yazın, hemen yardım edelim." } },
+    { q: { de: "Sprechen Ihre Pflegekräfte Türkisch?", en: "Do your carers speak Turkish?", tr: "Bakıcılarınız Türkçe konuşuyor mu?" },
+      a: { de: "Ja, wir haben muttersprachliche türkischsprachige Pflegekräfte.", en: "Yes, we have Turkish-speaking native carers and communicate multilingually.", tr: "Evet, Türkçe konuşan anadil bakıcılarımız var ve çok dilli iletişim kuruyoruz." } },
+    { q: { de: "Übernimmt die Pflegekasse die Kosten?", en: "Does long-term care insurance cover the costs?", tr: "Bakım sigortası maliyetleri karşılıyor mu?" },
+      a: { de: "Viele unserer Leistungen werden von der Pflegekasse übernommen. Wir beraten Sie kostenlos.", en: "Many of our services are covered by long-term care insurance. We advise you free of charge.", tr: "Hizmetlerimizin büyük çoğunluğu bakım sigortası tarafından karşılanır. Ücretsiz danışmanlık sunuyoruz." } },
+    { q: { de: "Wie funktioniert die Anmeldung?", en: "How does registration work?", tr: "Kayıt nasıl çalışır?" },
+      a: { de: "Einfach auf WhatsApp schreiben — unser KI-Assistent führt Sie durch den gesamten Prozess.", en: "Simply message on WhatsApp — our AI assistant guides you through the entire process.", tr: "Sadece WhatsApp'tan yazın — yapay zeka asistanımız sizi tüm süreçte yönlendirir." } },
+  ],
+};
+
+export function getFAQFallbacks(industry?: string | null): FAQItem[] {
+  const key = industry ?? "";
+  return (
+    INDUSTRY_FAQ_FALLBACKS[key] ??
+    INDUSTRY_FAQ_FALLBACKS[FAQ_KEY_FALLBACK[key] ?? ""] ??
+    INDUSTRY_FAQ_FALLBACKS["aesthetics"]
+  );
+}
+
 export function getTestimonials(industry?: string | null): Testimonial[] {
   const key = industry ?? "";
   return (
