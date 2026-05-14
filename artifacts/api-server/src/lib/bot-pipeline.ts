@@ -8,7 +8,7 @@ import {
   type Client,
   type Lead,
 } from "@workspace/db";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { logger } from "./logger";
 import { retrieveKnowledge } from "./knowledge";
 import {
@@ -84,15 +84,21 @@ async function checkRateLimit(lead: Lead): Promise<boolean> {
 
 /**
  * Send a WhatsApp message via Twilio REST API with one retry on failure.
+ *
+ * THROWS on non-recoverable failure so the caller knows the message was not delivered
+ * and can persist job failure state accordingly.
+ *
+ * In TWILIO_SANDBOX=true mode the message is only logged (no throw) since this is
+ * intentional: dev runs without real credentials on purpose.
  */
 async function sendWhatsAppReply(from: string, to: string, body: string): Promise<void> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    if (process.env.TWILIO_SANDBOX === "true") {
-      logger.info({ from, to, body: body.slice(0, 120) }, "[SANDBOX] Twilio creds not set — reply logged only");
-      return;
-    }
-    logger.error("TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN missing — cannot send reply");
+  if (process.env.TWILIO_SANDBOX === "true") {
+    logger.info({ from, to, body: body.slice(0, 120) }, "[SANDBOX] Reply logged only (sandbox mode)");
     return;
+  }
+
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+    throw new Error("TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN missing — cannot send reply");
   }
 
   const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
@@ -101,13 +107,16 @@ async function sendWhatsAppReply(from: string, to: string, body: string): Promis
   try {
     await attempt();
     logger.info({ from, to }, "Twilio WhatsApp reply sent");
-  } catch (err) {
-    logger.warn({ err }, "Twilio send failed — retrying once");
+  } catch (firstErr) {
+    logger.warn({ err: firstErr }, "Twilio send failed — retrying once");
     try {
       await attempt();
       logger.info({ from, to }, "Twilio reply sent (retry succeeded)");
     } catch (retryErr) {
-      logger.error({ err: retryErr }, "Twilio send failed after retry — reply not delivered");
+      // Re-throw so the pipeline's catch block can persist job failure state
+      throw new Error(
+        `Twilio send failed after retry: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`,
+      );
     }
   }
 }
@@ -140,10 +149,7 @@ function buildSummary(
  * GPT classifies intent; backend deterministically derives DB state from it.
  * This is intentionally decoupled from botResponse.action.
  */
-function intentToStatus(
-  intent: Intent,
-  currentStatus: string,
-): string {
+function intentToStatus(intent: Intent, currentStatus: string): string {
   switch (intent) {
     case "book_callback":
       return "callback_booked";
@@ -181,14 +187,43 @@ export interface BotPipelineInput {
  *    - book_callback  → insert appointment + notification log + set callback_booked
  *    - request_call_now → set status=escalated + urgent note
  *    - escalate_human → set status=needs_human
- *    - out_of_scope   → warm redirect reply (no DB change)
+ *    - out_of_scope   → intentDetected logged on outbound, no status change
  *    - qualify / info_request → update status only if progressing
- * 8. Language switch persistence (if GPT indicates user explicitly requested switch)
+ * 8. Language switch persistence
  * 9. Write outbound conversation + any system notification entries
- * 10. Twilio reply
- * 11. Mark job as done (AFTER all writes + send — partial failures leave job pending/failed)
+ * 10. Twilio reply (throws on failure — propagates to job failure handler)
+ * 11. Mark job done — ONLY if step 10 succeeded
+ *
+ * On ANY unhandled error: job is marked failed, attempts incremented, lastError recorded.
  */
 export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
+  const { clientRecord, leadId, messageEventId, userMessage, userPhone, twilioSender } = input;
+
+  try {
+    await executePipeline(input);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, leadId, messageEventId }, "Bot pipeline failed — persisting job failure");
+
+    // Persist failure so the job is retryable / visible in ops dashboards
+    await db
+      .update(jobQueueTable)
+      .set({
+        status: "failed",
+        lastError: msg.slice(0, 1000),
+        attempts: sql`${jobQueueTable.attempts} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(jobQueueTable.messageEventId, messageEventId),
+          eq(jobQueueTable.status, "pending"),
+        ),
+      );
+  }
+}
+
+async function executePipeline(input: BotPipelineInput): Promise<void> {
   const { clientRecord, leadId, messageEventId, userMessage, userPhone, twilioSender } = input;
 
   // 1. Load lead
@@ -199,14 +234,12 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     .limit(1);
 
   if (leads.length === 0) {
-    logger.error({ leadId }, "Lead not found in bot pipeline");
-    return;
+    throw new Error(`Lead ${leadId} not found for client ${clientRecord.id}`);
   }
 
   const lead = leads[0]!;
 
   // 2. Language detection — detect on first message, lock thereafter.
-  // An explicit switch request (detected by GPT later) will update the lock.
   let language = lead.language;
   if (!language) {
     language = detectLanguage(userMessage, clientRecord.languagePrimary, clientRecord.languageSecondary);
@@ -225,6 +258,8 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
         : "Wir haben gerade viele Anfragen. Wir rufen Sie so schnell wie möglich zurück.";
     await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, msg);
     logger.warn({ leadId }, "Rate limit hit — pipeline short-circuited");
+    // Rate-limit short-circuit: mark done (reply was sent, nothing to retry)
+    await markJobDone(messageEventId);
     return;
   }
 
@@ -244,7 +279,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
 
   const conversationHistory: ConversationMessage[] = rawHistory
     .reverse()
-    .slice(0, -1) // drop last item (current inbound already stored)
+    .slice(0, -1)
     .map((h) => ({
       role: h.direction === "inbound" ? ("user" as const) : ("assistant" as const),
       content: h.body,
@@ -269,8 +304,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   const now = new Date();
   const data = botResponse.data ?? {};
 
-  // 7. Intent-driven action execution
-  // Status is derived from INTENT (backend-controlled), not action string.
+  // 7. Intent-driven action execution — status derived from INTENT (backend-controlled)
   const newStatus = intentToStatus(botResponse.intent, lead.status);
 
   const leadUpdates: Partial<{
@@ -309,7 +343,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
       ? (data["preferredTime"] as string)
       : null;
 
-  // System-notification conversation entries (inserted alongside outbound reply)
+  // System notification entries (inserted before outbound reply)
   const notificationInserts: {
     clientId: number;
     leadId: number;
@@ -343,7 +377,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     });
   }
 
-  // -- request_call_now: urgent flag explicitly backed by schema status --
+  // -- request_call_now: urgent flag backed by schema status + note --
   if (botResponse.intent === "request_call_now") {
     const urgentNote =
       language === "tr"
@@ -351,11 +385,6 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
         : "[DRINGEND] Sofortiger Rückruf gewünscht";
     leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
   }
-
-  // -- out_of_scope: warm redirect — backend enforces redirect regardless of GPT reply text --
-  // GPT reply text is still used (it will already be a warm redirect per system prompt),
-  // but we ensure the action taken server-side is logged with intent out_of_scope.
-  // No lead status change. The intent label on the outbound message provides the audit trail.
 
   // 8. Language switch persistence
   const requestedSwitch = data["switchToLanguage"];
@@ -373,10 +402,10 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
 
   leadUpdates.conversationSummary = buildSummary(lead, botResponse, language, preferredTime);
 
-  // -- All DB side-effects first --
+  // All DB side-effects before Twilio send
   await db.update(leadsTable).set(leadUpdates).where(eq(leadsTable.id, leadId));
 
-  // 9. Write outbound conversation + any system notification entries
+  // 9. Conversation entries
   for (const entry of notificationInserts) {
     await db.insert(conversationsTable).values(entry);
   }
@@ -389,21 +418,11 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     intentDetected: botResponse.intent,
   });
 
-  // 10. Twilio reply
+  // 10. Twilio reply — THROWS on failure; job will be marked failed by outer catch
   await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
 
-  // 11. Mark job done AFTER all writes + send succeed.
-  // If anything above throws, this line is never reached — job remains pending/failed
-  // and can be retried or inspected without ambiguity.
-  await db
-    .update(jobQueueTable)
-    .set({ status: "done", processedAt: now, updatedAt: now })
-    .where(
-      and(
-        eq(jobQueueTable.messageEventId, messageEventId),
-        eq(jobQueueTable.status, "pending"),
-      ),
-    );
+  // 11. Mark job done — ONLY reached if step 10 succeeded
+  await markJobDone(messageEventId);
 
   logger.info(
     {
@@ -416,4 +435,16 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     },
     "Bot pipeline complete",
   );
+}
+
+async function markJobDone(messageEventId: number): Promise<void> {
+  await db
+    .update(jobQueueTable)
+    .set({ status: "done", processedAt: new Date(), updatedAt: new Date() })
+    .where(
+      and(
+        eq(jobQueueTable.messageEventId, messageEventId),
+        eq(jobQueueTable.status, "pending"),
+      ),
+    );
 }
