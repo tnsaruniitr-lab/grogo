@@ -97,7 +97,7 @@ router.get("/admin/clients", async (req: Request, res: Response) => {
   const clients = await db
     .select()
     .from(clientsTable)
-    .where(and(isNull(clientsTable.deletedAt), ne(clientsTable.id, 1)))
+    .where(isNull(clientsTable.deletedAt))
     .orderBy(clientsTable.createdAt);
 
   res.json(clients.map(toClientResponse));
@@ -189,6 +189,11 @@ router.delete("/admin/clients/:id", async (req: Request, res: Response) => {
 
   if (!existing) {
     res.status(404).json({ error: "Client not found" });
+    return;
+  }
+
+  if (params.data.id === 1) {
+    res.status(403).json({ error: "Cannot delete the primary client" });
     return;
   }
 
