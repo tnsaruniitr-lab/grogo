@@ -4,10 +4,16 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
-import { getIndustryTheme, getLang, PRIMARY_VERTICALS, INDUSTRY_VIDEO_MAP, INDUSTRY_SCHEMA_TYPES, getTestimonials, getFAQFallbacks, type Testimonial } from "@/lib/industry-themes";
+import {
+  getIndustryTheme,
+  getLang,
+  PRIMARY_VERTICALS,
+  INDUSTRY_SCHEMA_TYPES,
+  getTestimonials,
+  getFAQFallbacks,
+  type Testimonial,
+} from "@/lib/industry-themes";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import patternImg from "@/assets/pattern.png";
-import heroImg from "@/assets/hero-person.png";
 import careImg from "@/assets/care.png";
 import { Link } from "wouter";
 import {
@@ -33,6 +39,8 @@ import {
   Wind,
   type LucideIcon,
 } from "lucide-react";
+import { IndustryPicker } from "@/components/heroes/IndustryPicker";
+import { V3Hero } from "@/components/heroes/V3Hero";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Home: HomeIcon, Heart, Users, Sparkles, Gem, Star,
@@ -44,6 +52,7 @@ function resolveIcons(names: [string, string, string]): [LucideIcon, LucideIcon,
 }
 
 interface BrandingConfig {
+  clientId?: number;
   companyName: string;
   slug: string;
   tagline?: string | null;
@@ -59,25 +68,31 @@ interface BrandingConfig {
   heroImageUrl?: string | null;
 }
 
-const CARE_INDUSTRIES = new Set(["care", "medical", "dental", "fitness"]);
-
 function resolveColors(branding: BrandingConfig): { primary: string; secondary: string } {
   if (branding.primaryColor && branding.secondaryColor) {
     return { primary: branding.primaryColor, secondary: branding.secondaryColor };
   }
   const industry = branding.industry ?? "other";
   const FALLBACKS: Record<string, { primary: string; secondary: string }> = {
-    care:        { primary: "#4A7C59", secondary: "#1B2B3A" },
-    aesthetics:  { primary: "#C9A84C", secondary: "#1A1A2E" },
-    dental:      { primary: "#2E86AB", secondary: "#2D3047" },
-    medical:     { primary: "#1B4F8A", secondary: "#0D1B2A" },
-    legal:       { primary: "#1C2951", secondary: "#0B0E1A" },
-    finance:     { primary: "#0D5C40", secondary: "#071C13" },
-    retail:      { primary: "#7C3AED", secondary: "#1E1B4B" },
-    hospitality: { primary: "#C1694F", secondary: "#2C1A14" },
-    education:   { primary: "#2563EB", secondary: "#1E1B4B" },
-    fitness:     { primary: "#F97316", secondary: "#1C0E05" },
-    other:       { primary: "#374151", secondary: "#111827" },
+    care:                { primary: "#4A7C59", secondary: "#1B2B3A" },
+    aesthetics:          { primary: "#C9A84C", secondary: "#1A1A2E" },
+    dental:              { primary: "#2E86AB", secondary: "#2D3047" },
+    medical:             { primary: "#1B4F8A", secondary: "#0D1B2A" },
+    legal:               { primary: "#1C2951", secondary: "#0B0E1A" },
+    finance:             { primary: "#0D5C40", secondary: "#071C13" },
+    retail:              { primary: "#7C3AED", secondary: "#1E1B4B" },
+    hospitality:         { primary: "#C1694F", secondary: "#2C1A14" },
+    education:           { primary: "#2563EB", secondary: "#1E1B4B" },
+    fitness:             { primary: "#F97316", secondary: "#1C0E05" },
+    wellness:            { primary: "#8BAF6A", secondary: "#0D1209" },
+    "cosmetic-surgery":  { primary: "#C9B99A", secondary: "#0B0907" },
+    hair:                { primary: "#2A9BD4", secondary: "#060E14" },
+    "weight-management": { primary: "#4CAF80", secondary: "#040C07" },
+    "iv-therapy":        { primary: "#9B72CF", secondary: "#080512" },
+    fertility:           { primary: "#C4788A", secondary: "#140B0E" },
+    physiotherapy:       { primary: "#4A9B6A", secondary: "#060E08" },
+    "laser-eye":         { primary: "#2A74CB", secondary: "#04080F" },
+    other:               { primary: "#374151", secondary: "#111827" },
   };
   const fallback = FALLBACKS[industry] ?? FALLBACKS.other!;
   return {
@@ -125,7 +140,7 @@ export default function DemoPage() {
         return r.json() as Promise<BrandingConfig>;
       }),
       fetch(`/api/clients/${slug}/content`)
-        .then((r) => r.ok ? r.json() as Promise<ClientContent> : null)
+        .then((r) => (r.ok ? (r.json() as Promise<ClientContent>) : null))
         .catch(() => null),
     ])
       .then(([b, c]) => {
@@ -148,93 +163,27 @@ export default function DemoPage() {
     return () => clearInterval(timer);
   }, [branding]);
 
-  const { primary, secondary } = branding
-    ? resolveColors(branding)
-    : { primary: "#374151", secondary: "#111827" };
-  const t = getDemoT(branding?.demoLanguage);
-  const theme = getIndustryTheme(branding?.industry);
-  const lang = getLang(branding?.demoLanguage);
-  const themeIcons = resolveIcons(theme.serviceIconNames);
-  const isPrimary = PRIMARY_VERTICALS.has(branding?.industry ?? "");
-  const videoSrc = branding ? (INDUSTRY_VIDEO_MAP[branding.industry ?? ""] ?? null) : null;
-  const testimonials: Testimonial[] = getTestimonials(branding?.industry);
-
-  // faqItems: real crawled Q&As → services Q&As as fallback → industry fallbacks
-  const faqItems: Array<{ q: string; a: string }> =
-    content?.hasCrawlData && content.faq.length > 0
-      ? content.faq.slice(0, 8).map((c) => ({ q: c.question, a: c.answer }))
-      : content?.hasCrawlData && content.services.length > 0
-        ? content.services.slice(0, 5).map((c) => ({ q: c.question, a: c.answer }))
-        : getFAQFallbacks(branding?.industry).slice(0, 5).map((f) => ({ q: f.q[lang], a: f.a[lang] }));
-
   // ── Client-side SEO: update <head> after React hydrates ──────────────────
-  // The Vite middleware already injects all JSON-LD schemas server-side for bots.
-  // This effect only updates the dynamic meta tags (title, og:*, twitter:*,
-  // canonical) that browsers need, and keeps them in sync with the branding data.
-  // JSON-LD is NOT re-injected here — server-side schemas are the source of truth.
   useEffect(() => {
     if (!branding) return;
-    const currentLang = getLang(branding.demoLanguage);
-    const langCode = currentLang === "tr" ? "tr" : currentLang === "en" ? "en" : "de";
-    const desc = branding.tagline ?? branding.heroHeadline ?? branding.companyName;
-    const pageUrl = window.location.href;
-
-    // 1. <html lang>
-    const prevLang = document.documentElement.lang;
-    document.documentElement.lang = langCode;
-
-    // 2. <title>
-    const prevTitle = document.title;
-    document.title = `${branding.companyName}${branding.city ? ` · ${branding.city}` : ""} — AI WhatsApp Bot`;
-
-    // 3. Meta tags — upsert (find existing or create)
-    const setMeta = (attr: string, val: string, content: string): Element => {
-      let el = document.querySelector(`meta[${attr}="${val}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(attr, val);
-        document.head.appendChild(el);
-      }
-      el.setAttribute("content", content);
-      return el;
+    const ind = branding.industry ?? "other";
+    const schemaType = (INDUSTRY_SCHEMA_TYPES[ind]?.[0]) ?? "LocalBusiness";
+    document.title = `${branding.companyName} — WhatsApp AI Bot Demo`;
+    const setMeta = (name: string, content: string) => {
+      let el = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+      if (!el) { el = document.createElement("meta"); el.name = name; document.head.appendChild(el); }
+      el.content = content;
     };
-    const injected: Element[] = [
-      setMeta("name", "description", desc ?? ""),
-      setMeta("name", "robots", "index, follow"),
-      setMeta("property", "og:title", branding.companyName),
-      setMeta("property", "og:description", desc ?? ""),
-      setMeta("property", "og:type", "website"),
-      setMeta("property", "og:url", pageUrl),
-      setMeta("name", "twitter:card", "summary_large_image"),
-      setMeta("name", "twitter:title", branding.companyName),
-      setMeta("name", "twitter:description", desc ?? ""),
-      ...(branding.logoUrl
-        ? [
-            setMeta("property", "og:image", branding.logoUrl),
-            setMeta("name", "twitter:image", branding.logoUrl),
-          ]
-        : []),
-    ];
-
-    // 4. <link rel="canonical">
-    let canonical = document.getElementById(
-      "demo-canonical",
-    ) as HTMLLinkElement | null;
-    if (!canonical) {
-      canonical = document.createElement("link") as HTMLLinkElement;
-      canonical.id = "demo-canonical";
-      canonical.rel = "canonical";
-      document.head.appendChild(canonical);
-    }
-    canonical.href = pageUrl;
-
-    return () => {
-      document.title = prevTitle;
-      document.documentElement.lang = prevLang;
-      injected.forEach((el) => el.remove());
-      document.getElementById("demo-canonical")?.remove();
+    const setOg = (prop: string, content: string) => {
+      let el = document.querySelector<HTMLMetaElement>(`meta[property="${prop}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute("property", prop); document.head.appendChild(el); }
+      el.content = content;
     };
-  }, [branding]); // eslint-disable-line react-hooks/exhaustive-deps
+    setMeta("description", `${branding.companyName} — AI WhatsApp bot. ${branding.tagline ?? ""}`);
+    setOg("og:title", `${branding.companyName} — AI WhatsApp Bot`);
+    setOg("og:description", branding.tagline ?? `AI-powered WhatsApp bot for ${schemaType}`);
+    if (branding.logoUrl) setOg("og:image", branding.logoUrl);
+  }, [branding]);
 
   if (loading) {
     return (
@@ -243,6 +192,8 @@ export default function DemoPage() {
       </div>
     );
   }
+
+  const t = getDemoT(null);
 
   if (error || !branding) {
     return (
@@ -254,194 +205,57 @@ export default function DemoPage() {
     );
   }
 
+  // ── If no industry set, show the full-screen picker ──────────────────────
+  if (!branding.industry) {
+    return (
+      <IndustryPicker
+        branding={branding}
+        onSelect={(industry, updated) => setBranding(updated)}
+      />
+    );
+  }
+
   const headline = branding.heroHeadline || branding.tagline || branding.companyName;
   const subtext = branding.tagline && branding.heroHeadline ? branding.tagline : t.defaultSubtitle;
-  const initials = branding.companyName.slice(0, 2).toUpperCase();
+  const { primary, secondary } = resolveColors(branding);
+  const lang = getLang(branding.demoLanguage);
+  const theme = getIndustryTheme(branding.industry);
+  const themeIcons = resolveIcons(theme.serviceIconNames);
+  const isPrimary = PRIMARY_VERTICALS.has(branding.industry ?? "");
+  const testimonials: Testimonial[] = getTestimonials(branding.industry);
+
+  const faqItems: Array<{ q: string; a: string }> =
+    content?.hasCrawlData && content.faq.length > 0
+      ? content.faq.slice(0, 8).map((c) => ({ q: c.question, a: c.answer }))
+      : content?.hasCrawlData && content.services.length > 0
+        ? content.services.slice(0, 5).map((c) => ({ q: c.question, a: c.answer }))
+        : getFAQFallbacks(branding.industry).slice(0, 5).map((f) => ({ q: f.q[lang], a: f.a[lang] }));
 
   return (
     <div className="min-h-screen bg-background">
-      <DemoNav branding={branding} />
+      {/* DemoNav sits above the hero visually but the hero is full-bleed, so we need it as fixed */}
+      <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+        {/* transparent — nav is inside V3Hero itself */}
+      </div>
 
-      {/* ── HERO ── */}
-      <section className="relative w-full overflow-hidden pt-12 lg:pt-0 lg:h-[calc(100vh-80px)] flex items-center" style={{ backgroundColor: primary }}>
-        {/* Video background — shown when industry has a mapped video */}
-        {videoSrc && (
-          <video
-            autoPlay muted loop playsInline preload="metadata"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "brightness(0.58) saturate(1.1)" }}
-          >
-            <source src={videoSrc} type="video/mp4" />
-          </video>
-        )}
-        {/* Brand-color gradient overlay: strong on text side, fades right so video shows through */}
-        {videoSrc && (
-          <div
-            className="absolute inset-0"
-            style={{ background: `linear-gradient(105deg, ${primary}DD 0%, ${primary}99 45%, ${primary}33 100%)` }}
-          />
-        )}
-        <div
-          className={`absolute inset-0 z-0 pointer-events-none mix-blend-multiply ${videoSrc ? "opacity-5" : "opacity-20"}`}
-          style={{ backgroundImage: `url(${patternImg})`, backgroundSize: "400px" }}
-        />
+      {/* ── V3 VIDEO HERO ── */}
+      <V3Hero
+        industry={branding.industry}
+        companyName={branding.companyName}
+        logoUrl={branding.logoUrl}
+        headline={headline}
+        subtext={subtext}
+        phone={branding.phone}
+        city={branding.city}
+        onCtaClick={() =>
+          document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
+        }
+      />
 
-        <div className="container mx-auto px-4 md:px-8 relative z-10 h-full">
-          <div className="flex flex-col lg:flex-row items-center justify-between h-full gap-12">
+      {/* Thin accent line between hero and body */}
+      <div className="h-1 w-full" style={{ backgroundColor: primary }} />
 
-            {/* Left: text */}
-            <motion.div
-              className="flex-1 text-white max-w-2xl py-12 lg:py-0"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-white drop-shadow-sm">
-                {headline}
-              </h1>
-              <p className="text-xl md:text-2xl font-medium mb-10 text-white/90 max-w-lg">
-                {subtext}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  className="text-lg h-14 px-8 rounded-full shadow-lg font-semibold hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: secondary, color: "white" }}
-                  onClick={() => document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })}
-                >
-                  <MessageCircle className="h-5 w-5 mr-2" /> {t.ctaPrimary}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-transparent border-white text-white hover:bg-white/10 text-lg h-14 px-8 rounded-full"
-                >
-                  {t.ctaSecondary} <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-
-              <div className="mt-16 flex items-center gap-4 bg-black/10 p-4 rounded-2xl backdrop-blur-sm max-w-md border border-white/20">
-                <div className="flex -space-x-4">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-12 h-12 rounded-full border-2 flex items-center justify-center text-white font-bold overflow-hidden"
-                      style={{ borderColor: primary, backgroundColor: secondary }}
-                    >
-                      <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${slug}${i}&backgroundColor=${secondary.replace("#", "")}`}
-                        alt="Team member"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <p className="font-bold text-lg text-white">{t.teamLabel}</p>
-                  <p className="text-sm text-white/80">{t.teamSub}</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right: hero image + floating bot card */}
-            <motion.div
-              className="flex-1 relative h-full w-full flex items-end justify-center lg:justify-end"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <div className="relative w-full max-w-lg h-[500px] lg:h-[90%] mt-auto flex items-end">
-                {branding.heroImageUrl ? (
-                  <img
-                    src={branding.heroImageUrl}
-                    alt={branding.companyName}
-                    className="w-full h-full object-cover rounded-3xl shadow-2xl z-10"
-                  />
-                ) : CARE_INDUSTRIES.has(branding.industry ?? "other") || !branding.industry ? (
-                  <img
-                    src={heroImg}
-                    alt="Care professional"
-                    className="w-full h-full object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10"
-                  />
-                ) : (
-                  /* Non-care industry with no OG image — show decorative brand card */
-                  <div className="w-full h-full flex flex-col items-center justify-center z-10 gap-6 pb-16">
-                    {branding.logoUrl ? (
-                      <img
-                        src={branding.logoUrl}
-                        alt={branding.companyName}
-                        className="max-h-32 max-w-[280px] object-contain drop-shadow-lg"
-                      />
-                    ) : (
-                      <div
-                        className="w-32 h-32 rounded-3xl flex items-center justify-center text-white text-5xl font-extrabold shadow-2xl"
-                        style={{ backgroundColor: secondary }}
-                      >
-                        {initials}
-                      </div>
-                    )}
-                    <div className="text-center text-white/80 text-lg font-medium max-w-xs">
-                      {branding.city && <p className="text-white/60 text-sm mt-1">📍 {branding.city}</p>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Floating bot preview card */}
-                <div
-                  id="bot-demo"
-                  className="absolute bottom-12 -left-6 lg:left-0 bg-white rounded-2xl shadow-xl z-20 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700 delay-500 overflow-hidden"
-                  style={{ width: 200 }}
-                >
-                  <div className="px-3 py-2 flex items-center gap-2" style={{ backgroundColor: secondary }}>
-                    <div className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0" style={{ backgroundColor: primary }}>
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white text-[11px] font-semibold leading-tight truncate">{branding.companyName}</p>
-                      <p className="text-white/60 text-[10px]">{theme.botPersonaLabel[lang]}</p>
-                    </div>
-                    <div className="ml-auto shrink-0 h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                  </div>
-                  <div className="p-2 space-y-1.5 bg-[#ECE5DD]">
-                    {theme.botMessages[lang].slice(0, Math.min(visibleMessages, 2)).map((msg, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className="max-w-[90%] rounded-xl px-2 py-1 text-[10px] leading-relaxed shadow-sm"
-                          style={{
-                            backgroundColor: msg.from === "user" ? primary : "white",
-                            color: msg.from === "user" ? "white" : "#222",
-                          }}
-                        >
-                          {msg.text}
-                        </div>
-                      </motion.div>
-                    ))}
-                    {visibleMessages < 2 && (
-                      <div className="flex justify-start">
-                        <div className="bg-white rounded-xl px-2 py-1 text-[10px] text-gray-400 flex gap-0.5 shadow-sm">
-                          <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
-                          <span className="animate-bounce" style={{ animationDelay: "150ms" }}>·</span>
-                          <span className="animate-bounce" style={{ animationDelay: "300ms" }}>·</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── TRUST BAR — primary verticals only ── */}
+      {/* ── TRUST BAR ── */}
       {isPrimary && (
         <section className="py-5 border-b bg-card">
           <div className="container mx-auto px-4 md:px-8">
@@ -460,7 +274,107 @@ export default function DemoPage() {
         </section>
       )}
 
-      <section id="leistungen" className="py-24 bg-background">
+      {/* ── BOT DEMO PREVIEW (anchor target) ── */}
+      <section id="bot-demo" className="py-20 bg-background" style={{ scrollMarginTop: "0px" }}>
+        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            {/* WhatsApp bot preview */}
+            <motion.div
+              className="flex-1 flex justify-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-72">
+                <div
+                  className="px-4 py-3 flex items-center gap-3"
+                  style={{ backgroundColor: secondary }}
+                >
+                  <div
+                    className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                    style={{ backgroundColor: primary }}
+                  >
+                    {branding.companyName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-semibold leading-tight truncate">
+                      {branding.companyName}
+                    </p>
+                    <p className="text-white/60 text-xs">{theme.botPersonaLabel[lang]}</p>
+                  </div>
+                  <div className="ml-auto shrink-0 h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                </div>
+                <div className="p-3 space-y-2 bg-[#ECE5DD]">
+                  {theme.botMessages[lang].slice(0, Math.min(visibleMessages, 3)).map((msg, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className="max-w-[88%] rounded-xl px-3 py-1.5 text-xs leading-relaxed shadow-sm"
+                        style={{
+                          backgroundColor: msg.from === "user" ? primary : "white",
+                          color: msg.from === "user" ? "white" : "#222",
+                        }}
+                      >
+                        {msg.text}
+                      </div>
+                    </motion.div>
+                  ))}
+                  {visibleMessages < 1 && (
+                    <div className="flex justify-start">
+                      <div className="bg-white rounded-xl px-3 py-2 text-xs text-gray-400 flex gap-0.5 shadow-sm">
+                        <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
+                        <span className="animate-bounce" style={{ animationDelay: "150ms" }}>·</span>
+                        <span className="animate-bounce" style={{ animationDelay: "300ms" }}>·</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Text */}
+            <motion.div
+              className="flex-1 max-w-lg"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <p
+                className="text-xs tracking-widest uppercase font-medium mb-4"
+                style={{ color: primary }}
+              >
+                Live Demo
+              </p>
+              <h2 className="text-3xl font-bold mb-4 leading-snug" style={{ color: secondary }}>
+                {t.howTitle(branding.companyName)}
+              </h2>
+              <p className="text-muted-foreground mb-8 leading-relaxed">{t.howSubtitle}</p>
+              <div className="flex items-center gap-3 p-4 rounded-xl border" style={{ borderColor: primary + "30" }}>
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: primary + "18" }}
+                >
+                  <MessageCircle className="w-5 h-5" style={{ color: primary }} />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-semibold" style={{ color: secondary }}>AI responds in seconds.</span>{" "}
+                  Qualifies leads, books callbacks and answers FAQs — 24/7, in any language.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SERVICES ── */}
+      <section id="leistungen" className="py-24 bg-muted/40">
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-16 max-w-3xl mx-auto">
             <h2 className="text-4xl font-bold mb-6" style={{ color: secondary }}>{t.servicesTitle}</h2>
@@ -471,10 +385,9 @@ export default function DemoPage() {
               ? content.services.slice(0, 3).map((chunk, i) => ({
                   title: chunkTitle(chunk.question),
                   desc: chunk.answer,
-                  isReal: true,
                   i,
                 }))
-              : theme.servicesFallback[lang].map(({ title, desc }, i) => ({ title, desc, isReal: false, i }))
+              : theme.servicesFallback[lang].map(({ title, desc }, i) => ({ title, desc, i }))
             ).map(({ title, desc, i }) => {
               const Icon = themeIcons[i % themeIcons.length];
               if (isPrimary) {
@@ -501,7 +414,7 @@ export default function DemoPage() {
                   className="bg-card border rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-300 group"
                 >
                   <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-colors"
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
                     style={{ backgroundColor: primary + "18" }}
                   >
                     <Icon className="w-10 h-10" style={{ color: primary }} />
@@ -516,7 +429,7 @@ export default function DemoPage() {
       </section>
 
       {/* ── INFO / IMAGE SECTION ── */}
-      <section className="py-24 overflow-hidden" style={{ backgroundColor: "hsl(var(--muted))" }}>
+      <section className="py-24 overflow-hidden bg-background">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row items-center gap-16">
             <div className="flex-1 relative">
@@ -558,7 +471,7 @@ export default function DemoPage() {
       </section>
 
       {/* ── ABOUT / STATS ── */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-muted/40">
         <div className="container mx-auto px-4 md:px-8 text-center max-w-3xl mx-auto">
           <h2 className="text-4xl font-bold mb-6" style={{ color: secondary }}>
             {t.aboutTitle(branding.companyName)}
@@ -582,7 +495,7 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF / TESTIMONIALS ── */}
+      {/* ── TESTIMONIALS ── */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 md:px-8 max-w-5xl">
           <div className="text-center mb-12">
@@ -599,26 +512,26 @@ export default function DemoPage() {
             </div>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
+            {testimonials.map((test, i) => (
               <div key={i} className="bg-card border rounded-2xl p-6 shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow">
                 <div className="flex gap-0.5">
-                  {Array.from({ length: t.rating }).map((_, j) => (
+                  {Array.from({ length: test.rating }).map((_, j) => (
                     <Star key={j} className="w-4 h-4 fill-current" style={{ color: primary }} />
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed flex-1 italic">
-                  &ldquo;{t.text[lang]}&rdquo;
+                  &ldquo;{test.text[lang]}&rdquo;
                 </p>
                 <div className="flex items-center gap-3 pt-3 border-t">
                   <div
                     className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                     style={{ backgroundColor: primary }}
                   >
-                    {t.name[0]}
+                    {test.name[0]}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold leading-tight" style={{ color: secondary }}>{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.location}</div>
+                    <div className="text-sm font-semibold leading-tight" style={{ color: secondary }}>{test.name}</div>
+                    <div className="text-xs text-muted-foreground">{test.location}</div>
                   </div>
                 </div>
               </div>
@@ -628,7 +541,7 @@ export default function DemoPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-20" style={{ backgroundColor: "hsl(var(--muted))" }}>
+      <section className="py-20 bg-muted/40">
         <div className="container mx-auto px-4 md:px-8 max-w-3xl">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-2" style={{ color: secondary }} data-speakable>
@@ -656,10 +569,13 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS (bot) ── */}
+      {/* ── HOW IT WORKS ── */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-6 md:px-12 max-w-5xl">
           <div className="text-center mb-14">
+            <p className="text-xs tracking-widest uppercase font-medium mb-3" style={{ color: primary }}>
+              The Bot
+            </p>
             <h2 className="text-3xl font-bold mb-3" style={{ color: secondary }}>
               {t.howTitle(branding.companyName)}
             </h2>
@@ -691,6 +607,7 @@ export default function DemoPage() {
             size="lg"
             className="h-12 px-8 rounded-xl gap-2 font-semibold text-white shadow-lg hover:opacity-90 transition-opacity"
             style={{ backgroundColor: primary }}
+            onClick={() => document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })}
           >
             <MessageCircle className="h-4 w-4" /> {t.ctaButton}
           </Button>
@@ -723,13 +640,11 @@ export default function DemoPage() {
             <div>
               <h4 className="font-bold text-lg mb-4 text-white">Navigation</h4>
               <ul className="space-y-3">
-                {["#leistungen"].map((href, i) => (
-                  <li key={i}>
-                    <a href={href} className="text-white/60 hover:text-white transition-colors">
-                      {t.navServices}
-                    </a>
-                  </li>
-                ))}
+                <li>
+                  <a href="#leistungen" className="text-white/60 hover:text-white transition-colors">
+                    {t.navServices}
+                  </a>
+                </li>
                 {branding.websiteUrl && (
                   <li>
                     <a
