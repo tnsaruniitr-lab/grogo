@@ -292,6 +292,32 @@ paths:
         "404":
           description: Client not found
 
+  /clients/{slug}/content:
+    get:
+      operationId: getClientContent
+      tags: [admin]
+      summary: Get crawled knowledge content grouped by category
+      description: >
+        Public endpoint used by the demo frontend to load real website content
+        extracted during the crawl. Returns knowledge chunks grouped by category
+        (service, about, contact, faq, process). Falls back gracefully when no
+        crawl has been run. Filtered by the client's primary demo language.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Content grouped by category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientContent"
+        "404":
+          description: Client not found
+
   /clients/{slug}/branding:
     get:
       operationId: getClientBranding
@@ -634,6 +660,46 @@ components:
       properties:
         url:
           type: string
+
+    KnowledgeChunk:
+      type: object
+      required: [question, answer, confidence]
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+        confidence:
+          type: number
+        sourceUrl:
+          type: ["string", "null"]
+
+    ClientContent:
+      type: object
+      required: [hasCrawlData, services, about, contact, faq, process]
+      properties:
+        hasCrawlData:
+          type: boolean
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeChunk"
+        about:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeChunk"
+        contact:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeChunk"
+        faq:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeChunk"
+        process:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeChunk"
 
     CrawlJobStatus:
       type: object

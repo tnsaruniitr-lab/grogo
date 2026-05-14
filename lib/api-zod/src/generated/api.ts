@@ -285,6 +285,59 @@ export const DeleteDemoClientParams = zod.object({
 });
 
 /**
+ * Public endpoint used by the demo frontend to load real website content extracted during the crawl. Returns knowledge chunks grouped by category (service, about, contact, faq, process). Falls back gracefully when no crawl has been run. Filtered by the client's primary demo language.
+
+ * @summary Get crawled knowledge content grouped by category
+ */
+export const GetClientContentParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetClientContentResponse = zod.object({
+  hasCrawlData: zod.boolean(),
+  services: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+      confidence: zod.number(),
+      sourceUrl: zod.string().nullish(),
+    }),
+  ),
+  about: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+      confidence: zod.number(),
+      sourceUrl: zod.string().nullish(),
+    }),
+  ),
+  contact: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+      confidence: zod.number(),
+      sourceUrl: zod.string().nullish(),
+    }),
+  ),
+  faq: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+      confidence: zod.number(),
+      sourceUrl: zod.string().nullish(),
+    }),
+  ),
+  process: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+      confidence: zod.number(),
+      sourceUrl: zod.string().nullish(),
+    }),
+  ),
+});
+
+/**
  * Public endpoint used by the branded demo frontend to load theme and assets.
  * @summary Get branding config for a demo client by slug
  */

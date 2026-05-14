@@ -18,6 +18,7 @@ import type {
 
 import type {
   BrandingConfig,
+  ClientContent,
   CrawlJobStatus,
   CrawlPageDetail,
   DashboardStats,
@@ -1039,6 +1040,95 @@ export const useDeleteDemoClient = <
 > => {
   return useMutation(getDeleteDemoClientMutationOptions(options));
 };
+
+/**
+ * Public endpoint used by the demo frontend to load real website content extracted during the crawl. Returns knowledge chunks grouped by category (service, about, contact, faq, process). Falls back gracefully when no crawl has been run. Filtered by the client's primary demo language.
+
+ * @summary Get crawled knowledge content grouped by category
+ */
+export const getGetClientContentUrl = (slug: string) => {
+  return `/api/clients/${slug}/content`;
+};
+
+export const getClientContent = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<ClientContent> => {
+  return customFetch<ClientContent>(getGetClientContentUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetClientContentQueryKey = (slug: string) => {
+  return [`/api/clients/${slug}/content`] as const;
+};
+
+export const getGetClientContentQueryOptions = <
+  TData = Awaited<ReturnType<typeof getClientContent>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClientContent>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetClientContentQueryKey(slug);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getClientContent>>
+  > = ({ signal }) => getClientContent(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getClientContent>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetClientContentQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getClientContent>>
+>;
+export type GetClientContentQueryError = ErrorType<void>;
+
+/**
+ * @summary Get crawled knowledge content grouped by category
+ */
+
+export function useGetClientContent<
+  TData = Awaited<ReturnType<typeof getClientContent>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClientContent>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetClientContentQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * Public endpoint used by the branded demo frontend to load theme and assets.

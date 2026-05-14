@@ -36,23 +36,52 @@ interface BrandingConfig {
   demoLanguage?: string | null;
 }
 
+interface KnowledgeChunk {
+  question: string;
+  answer: string;
+  confidence: number;
+  sourceUrl?: string | null;
+}
+
+interface ClientContent {
+  hasCrawlData: boolean;
+  services: KnowledgeChunk[];
+  about: KnowledgeChunk[];
+  contact: KnowledgeChunk[];
+  faq: KnowledgeChunk[];
+  process: KnowledgeChunk[];
+}
+
+function chunkTitle(q: string, max = 48): string {
+  const clean = q.replace(/\?$/, "").trim();
+  return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
+}
+
 export default function DemoPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
 
   const [branding, setBranding] = useState<BrandingConfig | null>(null);
+  const [content, setContent] = useState<ClientContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(0);
 
   useEffect(() => {
     if (!slug) return;
-    fetch(`/api/clients/${slug}/branding`)
-      .then((r) => {
+    Promise.all([
+      fetch(`/api/clients/${slug}/branding`).then((r) => {
         if (!r.ok) throw new Error("not found");
-        return r.json();
+        return r.json() as Promise<BrandingConfig>;
+      }),
+      fetch(`/api/clients/${slug}/content`)
+        .then((r) => r.ok ? r.json() as Promise<ClientContent> : null)
+        .catch(() => null),
+    ])
+      .then(([b, c]) => {
+        setBranding(b);
+        setContent(c);
       })
-      .then((data: BrandingConfig) => setBranding(data))
       .catch(() => setError("not found"))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -240,7 +269,15 @@ export default function DemoPage() {
             <p className="text-lg text-muted-foreground">{t.servicesSubtitle}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {t.services.map(({ title, desc }, i) => {
+            {(content?.hasCrawlData && content.services.length > 0
+              ? content.services.slice(0, 3).map((chunk, i) => ({
+                  title: chunkTitle(chunk.question),
+                  desc: chunk.answer,
+                  isReal: true,
+                  i,
+                }))
+              : t.services.map(({ title, desc }, i) => ({ title, desc, isReal: false, i }))
+            ).map(({ title, desc, i }) => {
               const Icon = SERVICE_ICONS[i % SERVICE_ICONS.length];
               return (
                 <div
@@ -253,8 +290,8 @@ export default function DemoPage() {
                   >
                     <Icon className="w-10 h-10" style={{ color: primary }} />
                   </div>
-                  <h3 className="text-2xl font-bold mb-4" style={{ color: secondary }}>{title}</h3>
-                  <p className="text-muted-foreground leading-relaxed text-lg">{desc}</p>
+                  <h3 className="text-xl font-bold mb-4 leading-snug" style={{ color: secondary }}>{title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               );
             })}
@@ -276,12 +313,19 @@ export default function DemoPage() {
             </div>
             <div className="flex-1">
               <h2 className="text-4xl font-bold mb-6 tracking-tight" style={{ color: secondary }}>{t.infoTitle}</h2>
-              <p className="text-lg text-muted-foreground mb-6">{t.infoBody}</p>
+              <p className="text-lg text-muted-foreground mb-6">
+                {content?.hasCrawlData && content.about.length > 0
+                  ? content.about[0].answer
+                  : t.infoBody}
+              </p>
               <ul className="space-y-4 mb-8">
-                {t.infoPoints.map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 font-medium text-lg" style={{ color: secondary }}>
-                    <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: primary }} />
-                    {item}
+                {(content?.hasCrawlData && content.about.length > 1
+                  ? content.about.slice(1, 5).map((c) => c.answer)
+                  : t.infoPoints
+                ).map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 font-medium" style={{ color: secondary }}>
+                    <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: primary }} />
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
@@ -303,7 +347,11 @@ export default function DemoPage() {
           <h2 className="text-4xl font-bold mb-6" style={{ color: secondary }}>
             {t.aboutTitle(branding.companyName)}
           </h2>
-          <p className="text-lg text-muted-foreground mb-6">{t.aboutBody}</p>
+          <p className="text-lg text-muted-foreground mb-6">
+            {content?.hasCrawlData && content.about.length > 0
+              ? content.about[content.about.length - 1].answer
+              : t.aboutBody}
+          </p>
           {branding.city && (
             <p className="text-sm text-muted-foreground mb-8">📍 {branding.city}</p>
           )}

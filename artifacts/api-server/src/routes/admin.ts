@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
-import { clientsTable } from "@workspace/db";
-import { eq, isNull, and } from "drizzle-orm";
+import { clientsTable, companyKnowledgeTable } from "@workspace/db";
+import { eq, isNull, and, inArray } from "drizzle-orm";
 import {
   ExtractBrandingBody,
   CreateDemoClientBody,
@@ -235,6 +235,65 @@ router.delete("/admin/clients/:id", async (req: Request, res: Response) => {
     .where(eq(clientsTable.id, params.data.id));
 
   res.status(204).end();
+});
+
+router.get("/clients/:slug/content", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+
+  const [client] = await db
+    .select({ id: clientsTable.id, config: clientsTable.config, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+
+  if (!client || client.deletedAt) {
+    res.status(404).json({ error: "Client not found" });
+    return;
+  }
+
+  const cfg = (client.config ?? {}) as Record<string, unknown>;
+  const lang = (cfg.demoLanguage as string | undefined) ?? "de";
+
+  const categories = ["service", "about", "contact", "faq", "process"] as const;
+
+  const rows = await db
+    .select({
+      category: companyKnowledgeTable.category,
+      question: companyKnowledgeTable.question,
+      answer: companyKnowledgeTable.answer,
+      confidence: companyKnowledgeTable.confidence,
+      sourceUrl: companyKnowledgeTable.sourceUrl,
+    })
+    .from(companyKnowledgeTable)
+    .where(
+      and(
+        eq(companyKnowledgeTable.clientId, client.id),
+        inArray(companyKnowledgeTable.category, [...categories]),
+        eq(companyKnowledgeTable.language, lang),
+      )
+    );
+
+  type Chunk = { question: string; answer: string; confidence: number | null; sourceUrl: string | null };
+  const grouped: Record<string, Chunk[]> = Object.fromEntries(categories.map((c) => [c, []]));
+  for (const row of rows) {
+    if (row.category in grouped) grouped[row.category].push(row);
+  }
+
+  // Sort each category by confidence desc, cap at 6
+  for (const cat of categories) {
+    grouped[cat] = grouped[cat]
+      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
+      .slice(0, 6);
+  }
+
+  res.json({
+    hasCrawlData: rows.length > 0,
+    services: grouped.service,
+    about: grouped.about,
+    contact: grouped.contact,
+    faq: grouped.faq,
+    process: grouped.process,
+  });
 });
 
 router.get("/clients/:slug/branding", async (req: Request, res: Response) => {

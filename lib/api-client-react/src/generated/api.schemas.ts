@@ -142,6 +142,23 @@ export interface ExtractBrandingInput {
   url: string;
 }
 
+export interface KnowledgeChunk {
+  question: string;
+  answer: string;
+  confidence: number;
+  /** @nullable */
+  sourceUrl?: string | null;
+}
+
+export interface ClientContent {
+  hasCrawlData: boolean;
+  services: KnowledgeChunk[];
+  about: KnowledgeChunk[];
+  contact: KnowledgeChunk[];
+  faq: KnowledgeChunk[];
+  process: KnowledgeChunk[];
+}
+
 export interface CrawlJobStatus {
   jobId: number;
   status: string;

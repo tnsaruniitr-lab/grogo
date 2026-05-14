@@ -8,6 +8,7 @@
 
 export * from "./appointment";
 export * from "./brandingConfig";
+export * from "./clientContent";
 export * from "./conversationMessage";
 export * from "./crawlJobStatus";
 export * from "./crawlPageDetail";
@@ -19,6 +20,7 @@ export * from "./extractBrandingInput";
 export * from "./getDashboardStatsParams";
 export * from "./getLeadParams";
 export * from "./healthStatus";
+export * from "./knowledgeChunk";
 export * from "./lead";
 export * from "./leadDetail";
 export * from "./leadsPage";
