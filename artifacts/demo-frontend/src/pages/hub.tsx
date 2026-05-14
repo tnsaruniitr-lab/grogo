@@ -221,6 +221,7 @@ function BrandLogo({ logoUrl, companyName, secondary }: { logoUrl?: string | nul
         src={logoUrl}
         alt={companyName}
         className="h-10 w-auto max-w-[120px] object-contain rounded drop-shadow"
+        style={{ mixBlendMode: "multiply" }}
         onError={() => setImgFailed(true)}
       />
     );

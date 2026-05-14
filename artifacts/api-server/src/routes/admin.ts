@@ -240,6 +240,7 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     city: (cfg.city as string | null | undefined) ?? null,
     phone: (cfg.phone as string | null | undefined) ?? null,
     websiteUrl: (cfg.websiteUrl as string | null | undefined) ?? null,
+    demoLanguage: (cfg.demoLanguage as string | null | undefined) ?? null,
   };
 }
 

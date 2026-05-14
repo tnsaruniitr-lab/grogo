@@ -517,6 +517,8 @@ components:
           type: ["string", "null"]
         websiteUrl:
           type: ["string", "null"]
+        demoLanguage:
+          type: ["string", "null"]
 
     DemoClient:
       type: object

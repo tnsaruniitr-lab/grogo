@@ -178,6 +178,7 @@ export const ExtractBrandingResponse = zod.object({
   city: zod.string().nullish(),
   phone: zod.string().nullish(),
   websiteUrl: zod.string().nullish(),
+  demoLanguage: zod.string().nullish(),
 });
 
 /**
@@ -201,6 +202,7 @@ export const ListDemoClientsResponseItem = zod.object({
     city: zod.string().nullish(),
     phone: zod.string().nullish(),
     websiteUrl: zod.string().nullish(),
+    demoLanguage: zod.string().nullish(),
   }),
 });
 export const ListDemoClientsResponse = zod.array(ListDemoClientsResponseItem);
@@ -223,6 +225,7 @@ export const CreateDemoClientBody = zod.object({
       city: zod.string().nullish(),
       phone: zod.string().nullish(),
       websiteUrl: zod.string().nullish(),
+      demoLanguage: zod.string().nullish(),
     })
     .optional(),
 });
@@ -248,6 +251,7 @@ export const UpdateDemoClientBody = zod.object({
       city: zod.string().nullish(),
       phone: zod.string().nullish(),
       websiteUrl: zod.string().nullish(),
+      demoLanguage: zod.string().nullish(),
     })
     .optional(),
 });
@@ -269,6 +273,7 @@ export const UpdateDemoClientResponse = zod.object({
     city: zod.string().nullish(),
     phone: zod.string().nullish(),
     websiteUrl: zod.string().nullish(),
+    demoLanguage: zod.string().nullish(),
   }),
 });
 
@@ -298,6 +303,7 @@ export const GetClientBrandingResponse = zod.object({
   city: zod.string().nullish(),
   phone: zod.string().nullish(),
   websiteUrl: zod.string().nullish(),
+  demoLanguage: zod.string().nullish(),
 });
 
 /**

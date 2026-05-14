@@ -114,6 +114,8 @@ export interface BrandingConfig {
   phone?: string | null;
   /** @nullable */
   websiteUrl?: string | null;
+  /** @nullable */
+  demoLanguage?: string | null;
 }
 
 export interface DemoClient {

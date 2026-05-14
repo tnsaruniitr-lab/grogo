@@ -14,7 +14,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Nav logoUrl={branding?.logoUrl} />
+      <Nav logoUrl={branding?.logoUrl} demoLanguage={branding?.demoLanguage} />
       
       {/* Hero Section */}
       <section className="relative w-full overflow-hidden bg-primary pt-12 lg:pt-0 lg:h-[calc(100vh-80px)] flex items-center">
