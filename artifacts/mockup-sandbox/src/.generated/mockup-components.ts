@@ -4,6 +4,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-heroes/Care.tsx": () => import("../components/mockups/landing-heroes/Care.tsx"),
   "./components/mockups/landing-heroes/CareV2.tsx": () => import("../components/mockups/landing-heroes/CareV2.tsx"),
   "./components/mockups/landing-heroes/CareV3.tsx": () => import("../components/mockups/landing-heroes/CareV3.tsx"),
+  "./components/mockups/landing-heroes/CareV3Trust.tsx": () => import("../components/mockups/landing-heroes/CareV3Trust.tsx"),
   "./components/mockups/landing-heroes/CosmeticSurgeryV3.tsx": () => import("../components/mockups/landing-heroes/CosmeticSurgeryV3.tsx"),
   "./components/mockups/landing-heroes/DentalV3.tsx": () => import("../components/mockups/landing-heroes/DentalV3.tsx"),
   "./components/mockups/landing-heroes/FertilityV3.tsx": () => import("../components/mockups/landing-heroes/FertilityV3.tsx"),
