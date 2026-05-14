@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Nav } from "@/components/layout/nav";
+import { AdminNav } from "@/components/layout/admin-nav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,7 +104,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Nav />
+      <AdminNav />
 
       <div className="container mx-auto px-4 md:px-8 py-10 max-w-6xl">
         <div className="flex items-center justify-between mb-8">

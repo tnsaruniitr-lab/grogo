@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { clientsTable } from "@workspace/db";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, ne, and } from "drizzle-orm";
 import {
   ExtractBrandingBody,
   CreateDemoClientBody,
@@ -97,7 +97,7 @@ router.get("/admin/clients", async (req: Request, res: Response) => {
   const clients = await db
     .select()
     .from(clientsTable)
-    .where(isNull(clientsTable.deletedAt))
+    .where(and(isNull(clientsTable.deletedAt), ne(clientsTable.id, 1)))
     .orderBy(clientsTable.createdAt);
 
   res.json(clients.map(toClientResponse));
