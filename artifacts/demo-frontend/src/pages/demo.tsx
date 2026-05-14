@@ -167,16 +167,19 @@ export default function DemoPage() {
         ? content.services.slice(0, 5).map((c) => ({ q: c.question, a: c.answer }))
         : getFAQFallbacks(branding?.industry).slice(0, 5).map((f) => ({ q: f.q[lang], a: f.a[lang] }));
 
-  // ── SEO / AI-search: inject all head elements on branding or content change ──
+  // ── Client-side SEO: update <head> after React hydrates ──────────────────
+  // The Vite middleware already injects all JSON-LD schemas server-side for bots.
+  // This effect only updates the dynamic meta tags (title, og:*, twitter:*,
+  // canonical) that browsers need, and keeps them in sync with the branding data.
+  // JSON-LD is NOT re-injected here — server-side schemas are the source of truth.
   useEffect(() => {
     if (!branding) return;
     const currentLang = getLang(branding.demoLanguage);
     const langCode = currentLang === "tr" ? "tr" : currentLang === "en" ? "en" : "de";
-    const schemaTypes = INDUSTRY_SCHEMA_TYPES[branding.industry ?? ""] ?? ["LocalBusiness"];
     const desc = branding.tagline ?? branding.heroHeadline ?? branding.companyName;
     const pageUrl = window.location.href;
 
-    // 1. <html lang> — fix hardcoded "en" for German/Turkish demos
+    // 1. <html lang>
     const prevLang = document.documentElement.lang;
     document.documentElement.lang = langCode;
 
@@ -184,10 +187,14 @@ export default function DemoPage() {
     const prevTitle = document.title;
     document.title = `${branding.companyName}${branding.city ? ` · ${branding.city}` : ""} — AI WhatsApp Bot`;
 
-    // 3. Meta, OG + Twitter Card
+    // 3. Meta tags — upsert (find existing or create)
     const setMeta = (attr: string, val: string, content: string): Element => {
       let el = document.querySelector(`meta[${attr}="${val}"]`);
-      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, val); document.head.appendChild(el); }
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, val);
+        document.head.appendChild(el);
+      }
       el.setAttribute("content", content);
       return el;
     };
@@ -201,14 +208,18 @@ export default function DemoPage() {
       setMeta("name", "twitter:card", "summary_large_image"),
       setMeta("name", "twitter:title", branding.companyName),
       setMeta("name", "twitter:description", desc ?? ""),
-      ...(branding.logoUrl ? [
-        setMeta("property", "og:image", branding.logoUrl),
-        setMeta("name", "twitter:image", branding.logoUrl),
-      ] : []),
+      ...(branding.logoUrl
+        ? [
+            setMeta("property", "og:image", branding.logoUrl),
+            setMeta("name", "twitter:image", branding.logoUrl),
+          ]
+        : []),
     ];
 
     // 4. <link rel="canonical">
-    let canonical = document.getElementById("demo-canonical") as HTMLLinkElement | null;
+    let canonical = document.getElementById(
+      "demo-canonical",
+    ) as HTMLLinkElement | null;
     if (!canonical) {
       canonical = document.createElement("link") as HTMLLinkElement;
       canonical.id = "demo-canonical";
@@ -217,66 +228,13 @@ export default function DemoPage() {
     }
     canonical.href = pageUrl;
 
-    // 5. LocalBusiness JSON-LD — speakable + sameAs + dateModified
-    const reviews = testimonials.map((t) => ({
-      "@type": "Review",
-      author: { "@type": "Person", name: t.name },
-      reviewRating: { "@type": "Rating", ratingValue: String(t.rating), bestRating: "5" },
-      reviewBody: t.text[currentLang],
-    }));
-    const jsonLd: Record<string, unknown> = {
-      "@context": "https://schema.org",
-      "@type": schemaTypes.length === 1 ? schemaTypes[0] : schemaTypes,
-      name: branding.companyName,
-      ...(branding.websiteUrl ? { url: branding.websiteUrl, sameAs: [branding.websiteUrl] } : {}),
-      ...(branding.phone ? { telephone: branding.phone } : {}),
-      ...(branding.city ? { address: { "@type": "PostalAddress", addressLocality: branding.city } } : {}),
-      ...(desc ? { description: desc } : {}),
-      ...(branding.logoUrl ? { logo: branding.logoUrl, image: branding.logoUrl } : {}),
-      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", bestRating: "5", reviewCount: "124" },
-      review: reviews,
-      speakable: { "@type": "SpeakableSpecification", cssSelector: ["h1", "[data-speakable]"] },
-      dateModified: new Date().toISOString().split("T")[0],
-    };
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.id = "demo-jsonld";
-    script.textContent = JSON.stringify(jsonLd, null, 2);
-    document.head.appendChild(script);
-
-    // 6. FAQPage JSON-LD — real Q&As preferred, fallback to industry defaults
-    const faqChunks: Array<{ q: string; a: string }> =
-      content?.hasCrawlData && content.faq.length > 0
-        ? content.faq.slice(0, 8).map((c) => ({ q: c.question, a: c.answer }))
-        : content?.hasCrawlData && content.services.length > 0
-          ? content.services.slice(0, 5).map((c) => ({ q: c.question, a: c.answer }))
-          : getFAQFallbacks(branding.industry).slice(0, 5).map((f) => ({ q: f.q[currentLang], a: f.a[currentLang] }));
-    if (faqChunks.length > 0) {
-      const faqLd = {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: faqChunks.map(({ q, a }) => ({
-          "@type": "Question",
-          name: q,
-          acceptedAnswer: { "@type": "Answer", text: a },
-        })),
-      };
-      const faqScript = document.createElement("script");
-      faqScript.type = "application/ld+json";
-      faqScript.id = "demo-faq-jsonld";
-      faqScript.textContent = JSON.stringify(faqLd, null, 2);
-      document.head.appendChild(faqScript);
-    }
-
     return () => {
       document.title = prevTitle;
       document.documentElement.lang = prevLang;
       injected.forEach((el) => el.remove());
       document.getElementById("demo-canonical")?.remove();
-      document.getElementById("demo-jsonld")?.remove();
-      document.getElementById("demo-faq-jsonld")?.remove();
     };
-  }, [branding, content]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [branding]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (

@@ -6,26 +6,11 @@ import { readFileSync } from "fs";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+if (!rawPort) throw new Error("PORT environment variable is required but was not provided.");
 const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
+if (Number.isNaN(port) || port <= 0) throw new Error(`Invalid PORT value: "${rawPort}"`);
 const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+if (!basePath) throw new Error("BASE_PATH environment variable is required but was not provided.");
 
 export default defineConfig({
   base: basePath,
@@ -34,57 +19,126 @@ export default defineConfig({
     tailwindcss(),
     runtimeErrorOverlay(),
 
-    // ── Server-side meta injection for bot crawlers ──────────────────────────
-    // Perplexity, GPTBot, ClaudeBot, Bingbot do not execute JavaScript.
-    // This middleware intercepts /demo/:slug requests and injects brand-specific
-    // meta tags, JSON-LD schemas, and visible noscript content into the HTML
-    // before it is sent — so every crawler sees correct, structured data.
+    // ── SSR middleware for AI/search bot crawlers ─────────────────────────────
+    // GPTBot, PerplexityBot, ClaudeBot, Bingbot, Googlebot do not execute JS
+    // (or defer it). This middleware:
+    //   1. Injects brand-specific <head> meta tags + correct JSON-LD schemas
+    //   2. Renders a full semantic HTML body visible to every crawler
+    //   3. Serves dynamic sitemap.xml (with image: extension) and robots.txt
+    // React loads normally and removes the SSR body via main.tsx.
     {
-      name: "demo-seo-inject",
+      name: "demo-ssr",
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           const url = req.url ?? "";
+          const proto = String(req.headers["x-forwarded-proto"] ?? "https");
+          const host = String(
+            req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "",
+          );
+          const origin = `${proto}://${host}`;
 
-          // ── /robots.txt ───────────────────────────────────────────────────
+          // ── robots.txt ────────────────────────────────────────────────────
           if (url === "/robots.txt") {
-            const proto = req.headers["x-forwarded-proto"] ?? "https";
-            const host =
-              req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "";
             res.setHeader("Content-Type", "text/plain; charset=utf-8");
             res.end(
-              `User-agent: *\nAllow: /\nSitemap: ${proto}://${host}/sitemap.xml\n`,
+              [
+                "User-agent: *",
+                "Allow: /",
+                "Disallow: /api/",
+                "",
+                "# Explicitly allow AI search crawlers to index all demo pages",
+                "User-agent: GPTBot",
+                "Allow: /",
+                "Disallow: /api/",
+                "",
+                "User-agent: PerplexityBot",
+                "Allow: /",
+                "Disallow: /api/",
+                "",
+                "User-agent: ClaudeBot",
+                "Allow: /",
+                "Disallow: /api/",
+                "",
+                "User-agent: Googlebot",
+                "Allow: /",
+                "Disallow: /api/",
+                "",
+                "User-agent: Bingbot",
+                "Allow: /",
+                "Disallow: /api/",
+                "",
+                `Sitemap: ${origin}/sitemap.xml`,
+              ].join("\n") + "\n",
             );
             return;
           }
 
-          // ── /sitemap.xml ──────────────────────────────────────────────────
+          // ── sitemap.xml ───────────────────────────────────────────────────
           if (url === "/sitemap.xml") {
             try {
               const clientsRes = await fetch(
                 "http://localhost:80/api/admin/clients",
               );
-              const clients = clientsRes.ok
+              const clients: Array<{ slug: string }> = clientsRes.ok
                 ? ((await clientsRes.json()) as Array<{ slug: string }>)
                 : [];
-              const proto = req.headers["x-forwarded-proto"] ?? "https";
-              const host =
-                req.headers["x-forwarded-host"] ??
-                req.headers["host"] ??
-                "";
-              const base = `${proto}://${host}`;
               const today = new Date().toISOString().split("T")[0];
-              const sitemap = [
+
+              // Fetch branding per client for the image: sitemap extension
+              const richClients = await Promise.all(
+                clients.map(async (c) => {
+                  try {
+                    const br = await fetch(
+                      `http://localhost:80/api/clients/${c.slug}/branding`,
+                    );
+                    const b = br.ok
+                      ? ((await br.json()) as Record<string, unknown>)
+                      : {};
+                    const rawLogo = b.logoUrl ? String(b.logoUrl) : "";
+                    // Sitemap image:loc must be absolute — resolve relative paths
+                    const logoUrl = rawLogo.startsWith("http")
+                      ? rawLogo
+                      : rawLogo.startsWith("/")
+                        ? `${origin}${rawLogo}`
+                        : "";
+                    return {
+                      slug: c.slug,
+                      name: String(b.companyName ?? c.slug),
+                      logoUrl,
+                    };
+                  } catch {
+                    return { slug: c.slug, name: c.slug, logoUrl: "" };
+                  }
+                }),
+              );
+
+              const parts = [
                 '<?xml version="1.0" encoding="UTF-8"?>',
-                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-                `  <url><loc>${base}/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`,
-                ...clients.map(
-                  (c) =>
-                    `  <url><loc>${base}/demo/${c.slug}</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`,
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+                '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
+                `  <url><loc>${origin}/</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`,
+                ...richClients.map(({ slug, name, logoUrl }) =>
+                  [
+                    `  <url>`,
+                    `    <loc>${origin}/demo/${slug}</loc>`,
+                    `    <lastmod>${today}</lastmod>`,
+                    `    <changefreq>daily</changefreq>`,
+                    `    <priority>0.9</priority>`,
+                    ...(logoUrl
+                      ? [
+                          `    <image:image>`,
+                          `      <image:loc>${logoUrl}</image:loc>`,
+                          `      <image:caption>${name}</image:caption>`,
+                          `    </image:image>`,
+                        ]
+                      : []),
+                    `  </url>`,
+                  ].join("\n"),
                 ),
                 "</urlset>",
-              ].join("\n");
+              ];
               res.setHeader("Content-Type", "application/xml; charset=utf-8");
-              res.end(sitemap);
+              res.end(parts.join("\n"));
             } catch {
               next();
             }
@@ -93,11 +147,14 @@ export default defineConfig({
 
           // ── /demo/:slug — HTML requests only ─────────────────────────────
           const match = url.match(/^\/demo\/([^/?#&]+)/);
-          if (!match || !(req.headers["accept"] ?? "").includes("text/html")) {
+          if (
+            !match ||
+            !(req.headers["accept"] ?? "").includes("text/html")
+          ) {
             return next();
           }
 
-          // Industry FAQ fallbacks — used when the client has no crawl data yet
+          // ── Industry FAQ fallbacks (used when client has no crawl data) ──
           type FaqRow = { question: string; answer: string };
           const FAQ_FALLBACKS: Record<string, FaqRow[]> = {
             aesthetics: [
@@ -153,8 +210,10 @@ export default defineConfig({
               unknown
             >;
 
-            // Fetch FAQ content — falls back to industry defaults if no crawl data
+            // Fetch all content sections for SSR body + schemas
             let faqItems: FaqRow[] = [];
+            let services: FaqRow[] = [];
+            let aboutItems: FaqRow[] = [];
             try {
               const contentRes = await fetch(
                 `http://localhost:80/api/clients/${slug}/content`,
@@ -164,8 +223,11 @@ export default defineConfig({
                   hasCrawlData?: boolean;
                   faq?: FaqRow[];
                   services?: FaqRow[];
+                  about?: FaqRow[];
                 };
                 if (content.hasCrawlData) {
+                  services = content.services?.slice(0, 6) ?? [];
+                  aboutItems = content.about?.slice(0, 5) ?? [];
                   faqItems = content.faq?.length
                     ? content.faq.slice(0, 8)
                     : (content.services?.slice(0, 5) ?? []);
@@ -174,6 +236,7 @@ export default defineConfig({
             } catch {
               /* content is optional */
             }
+            // Industry FAQ fallbacks when no crawl data
             if (faqItems.length === 0) {
               const ind = String(branding.industry ?? "");
               const key = FAQ_FALLBACKS[ind]
@@ -182,18 +245,25 @@ export default defineConfig({
               faqItems = FAQ_FALLBACKS[key] ?? FAQ_FALLBACKS["aesthetics"];
             }
 
-            // Read index.html and apply Vite's own transforms
+            // Read index.html and apply Vite transforms (injects dev client etc.)
             let html = readFileSync(
               path.resolve(server.config.root, "index.html"),
               "utf-8",
             );
             html = await server.transformIndexHtml(req.url!, html);
 
-            // HTML attribute-safe escape helper
+            // ── Escape helpers ─────────────────────────────────────────────
+            // esc(): full HTML attr escaping (for attribute values)
             const esc = (s: unknown) =>
               String(s ?? "")
                 .replace(/&/g, "&amp;")
                 .replace(/"/g, "&quot;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            // tx(): text-node escaping only (for inner text, no quote escaping)
+            const tx = (s: unknown) =>
+              String(s ?? "")
+                .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;");
 
@@ -209,24 +279,16 @@ export default defineConfig({
               : "";
             const dl = String(branding.demoLanguage ?? "de");
             const lang = dl === "tr" ? "tr" : dl === "en" ? "en" : "de";
+            const headline = String(
+              branding.heroHeadline || branding.tagline || companyName,
+            );
+            const pageUrl = `${origin}${req.url!.split("?")[0]}`;
             const title = `${companyName}${city ? ` · ${city}` : ""} — AI WhatsApp Bot`;
-            const proto = String(
-              req.headers["x-forwarded-proto"] ?? "https",
-            );
-            const host = String(
-              req.headers["x-forwarded-host"] ??
-                req.headers["host"] ??
-                "",
-            );
-            const pageUrl = `${proto}://${host}${req.url}`;
 
-            // ── Inject meta tag values ────────────────────────────────────
+            // ── Meta tag injection (replace in-place) ──────────────────────
             html = html
               .replace(/(<html[^>]*\slang=")[^"]*"/, `$1${lang}"`)
-              .replace(
-                /(<title>)[^<]*(<\/title>)/,
-                `$1${esc(title)}$2`,
-              )
+              .replace(/(<title>)[^<]*(<\/title>)/, `$1${esc(title)}$2`)
               .replace(
                 /(<meta\s+name="description"\s+content=")[^"]*(")/,
                 `$1${esc(desc)}$2`,
@@ -247,7 +309,7 @@ export default defineConfig({
                 /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,
                 `$1${esc(desc)}$2`,
               )
-              // Replace og:image and twitter:image in-place (avoids duplicate tags)
+              // Replace og:image and twitter:image in-place — no duplicate tags
               .replace(
                 /(<meta\s+property="og:image"\s+content=")[^"]*(")/,
                 `$1${esc(logoUrl || "/opengraph.jpg")}$2`,
@@ -257,10 +319,19 @@ export default defineConfig({
                 `$1${esc(logoUrl || "/opengraph.jpg")}$2`,
               );
 
-            // ── Structured data ───────────────────────────────────────────
-            const localBusinessLd = {
+            // ── Schema.org JSON-LD (correct per schema.org spec) ───────────
+            //
+            // LocalBusiness — entity definition, no aggregateRating (avoid fake data),
+            //   logo as ImageObject, @id for disambiguation, hasOfferCatalog for services
+            // WebPage — speakable + dateModified belong HERE, not on LocalBusiness
+            // BreadcrumbList — navigation path
+            // FAQPage — Q&As from real crawl data or industry fallbacks
+            const businessId = `${origin}/demo/${slug}#business`;
+
+            const localBusinessLd: Record<string, unknown> = {
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
+              "@id": businessId,
               name: companyName,
               description: desc,
               ...(websiteUrl
@@ -275,24 +346,84 @@ export default defineConfig({
                     },
                   }
                 : {}),
-              ...(logoUrl ? { logo: logoUrl, image: logoUrl } : {}),
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: "4.9",
-                bestRating: "5",
-                reviewCount: "124",
+              ...(logoUrl
+                ? {
+                    logo: { "@type": "ImageObject", url: logoUrl },
+                    image: logoUrl,
+                  }
+                : {}),
+              ...(services.length > 0
+                ? {
+                    hasOfferCatalog: {
+                      "@type": "OfferCatalog",
+                      name:
+                        lang === "de"
+                          ? "Leistungen"
+                          : lang === "tr"
+                            ? "Hizmetler"
+                            : "Services",
+                      itemListElement: services.map((s) => ({
+                        "@type": "Offer",
+                        itemOffered: {
+                          "@type": "Service",
+                          name: s.question.replace(/\?$/, "").trim().slice(0, 80),
+                          description: s.answer,
+                        },
+                      })),
+                    },
+                  }
+                : {}),
+            };
+
+            // WebPage — speakable and dateModified are WebPage properties
+            const webPageLd = {
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              "@id": pageUrl,
+              url: pageUrl,
+              name: title,
+              description: desc,
+              inLanguage: lang,
+              dateModified: new Date().toISOString().split("T")[0],
+              isPartOf: {
+                "@type": "WebSite",
+                "@id": origin,
+                url: origin,
+                name: "Dosteli",
               },
+              about: { "@type": "LocalBusiness", "@id": businessId },
               speakable: {
                 "@type": "SpeakableSpecification",
                 cssSelector: ["h1", "[data-speakable]"],
               },
-              dateModified: new Date().toISOString().split("T")[0],
+            };
+
+            // BreadcrumbList — structured navigation for SERP breadcrumb display
+            const breadcrumbLd = {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Home",
+                  item: `${origin}/`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: companyName,
+                  item: pageUrl,
+                },
+              ],
             };
 
             const extraTags: string[] = [
               `  <link rel="canonical" href="${esc(pageUrl)}" />`,
               `  <meta property="og:url" content="${esc(pageUrl)}" />`,
               `  <script type="application/ld+json">${JSON.stringify(localBusinessLd)}</script>`,
+              `  <script type="application/ld+json">${JSON.stringify(webPageLd)}</script>`,
+              `  <script type="application/ld+json">${JSON.stringify(breadcrumbLd)}</script>`,
             ];
 
             if (faqItems.length > 0) {
@@ -315,35 +446,120 @@ export default defineConfig({
               `${extraTags.join("\n")}\n</head>`,
             );
 
-            // ── Noscript body — visible to non-JS crawlers ────────────────
-            const faqLabel =
-              lang === "de"
-                ? "Häufig gestellte Fragen"
-                : lang === "tr"
-                  ? "Sık sorulan sorular"
-                  : "Frequently asked questions";
-            const noscript =
-              `<noscript><div style="font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 24px">` +
-              `<h1>${esc(companyName)}</h1>` +
-              `<p>${esc(desc)}</p>` +
-              (city ? `<p>${esc(city)}</p>` : "") +
-              (phone ? `<p>${esc(phone)}</p>` : "") +
-              (websiteUrl
-                ? `<p><a href="${esc(websiteUrl)}">${esc(websiteUrl)}</a></p>`
-                : "") +
-              (faqItems.length > 0
-                ? `<h2>${faqLabel}</h2><dl>${faqItems
-                    .map(
-                      (f) =>
-                        `<dt><strong>${esc(f.question)}</strong></dt><dd>${esc(f.answer)}</dd>`,
-                    )
-                    .join("")}</dl>`
-                : "") +
-              `</div></noscript>`;
-            html = html.replace(
-              '<div id="root">',
-              `${noscript}\n    <div id="root">`,
-            );
+            // ── Full semantic HTML body (SSR) ──────────────────────────────
+            // This renders the full page content into the DOM before React loads.
+            // Every crawler sees this — it is NOT inside a <noscript> tag.
+            // React's main.tsx removes #ssr-content once it hydrates.
+
+            type LK = "de" | "tr" | "en";
+            const lk: LK = lang === "tr" ? "tr" : lang === "en" ? "en" : "de";
+            const L = {
+              services: { de: "Unsere Leistungen", tr: "Hizmetlerimiz", en: "Our Services" },
+              about:    { de: "Über uns",           tr: "Hakkımızda",    en: "About Us" },
+              faq:      { de: "Häufig gestellte Fragen", tr: "Sık sorulan sorular", en: "Frequently asked questions" },
+              cta:      { de: "Jetzt Termin vereinbaren", tr: "Hemen randevu alın", en: "Book an appointment" },
+            } satisfies Record<string, Record<LK, string>>;
+
+            const servicesBlock =
+              services.length > 0
+                ? `<section aria-labelledby="ssr-svcs" style="padding:48px 24px;background:#f9fafb">
+  <div style="max-width:1100px;margin:0 auto">
+    <h2 id="ssr-svcs" data-speakable style="font-size:28px;font-weight:700;color:#111827;margin:0 0 32px;text-align:center">${L.services[lk]}</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px">
+      ${services
+        .map(
+          (s) => `<article style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px">
+        <h3 style="font-size:16px;font-weight:600;color:#111827;margin:0 0 8px">${tx(s.question.replace(/\?$/, "").trim())}</h3>
+        <p style="font-size:14px;color:#6b7280;margin:0;line-height:1.6">${tx(s.answer)}</p>
+      </article>`,
+        )
+        .join("")}
+    </div>
+  </div>
+</section>`
+                : "";
+
+            const aboutBlock =
+              aboutItems.length > 0
+                ? `<section aria-labelledby="ssr-about" style="padding:48px 24px">
+  <div style="max-width:800px;margin:0 auto">
+    <h2 id="ssr-about" style="font-size:28px;font-weight:700;color:#111827;margin:0 0 16px">${L.about[lk]}</h2>
+    <p style="color:#374151;line-height:1.7;margin:0 0 16px">${tx(aboutItems[0]!.answer)}</p>
+    ${
+      aboutItems.length > 1
+        ? `<ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">${aboutItems
+            .slice(1)
+            .map(
+              (a) =>
+                `<li style="display:flex;gap:10px;color:#374151"><span style="color:#059669;flex-shrink:0">✓</span><span>${tx(a.answer)}</span></li>`,
+            )
+            .join("")}</ul>`
+        : ""
+    }
+  </div>
+</section>`
+                : "";
+
+            const faqBlock =
+              faqItems.length > 0
+                ? `<section aria-labelledby="ssr-faq" style="padding:48px 24px;background:#f9fafb">
+  <div style="max-width:800px;margin:0 auto">
+    <h2 id="ssr-faq" data-speakable style="font-size:28px;font-weight:700;color:#111827;margin:0 0 32px;text-align:center">${L.faq[lk]}</h2>
+    <dl style="margin:0;display:grid;gap:12px">
+      ${faqItems
+        .map(
+          (f) => `<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:20px">
+        <dt style="font-weight:600;color:#111827;margin:0 0 8px;font-size:15px">${tx(f.question)}</dt>
+        <dd style="margin:0;color:#6b7280;font-size:14px;line-height:1.6">${tx(f.answer)}</dd>
+      </div>`,
+        )
+        .join("")}
+    </dl>
+  </div>
+</section>`
+                : "";
+
+            const ssrContent = `<main id="ssr-content" lang="${lang}">
+  <nav aria-label="Breadcrumb" style="padding:10px 24px;background:#f9fafb;border-bottom:1px solid #e5e7eb;font-size:13px">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style:none;margin:0;padding:0;max-width:1200px;margin:0 auto;display:flex;gap:6px;align-items:center">
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="${esc(origin)}/" style="color:#6b7280;text-decoration:none"><span itemprop="name">Home</span></a>
+        <meta itemprop="position" content="1" />
+      </li>
+      <li aria-hidden="true" style="color:#d1d5db">›</li>
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
+        <span itemprop="name" style="color:#111827;font-weight:500">${tx(companyName)}</span>
+        <meta itemprop="position" content="2" />
+      </li>
+    </ol>
+  </nav>
+  <header style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;padding:64px 24px;text-align:center">
+    <div style="max-width:800px;margin:0 auto">
+      ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${tx(companyName)} logo" width="200" height="72" style="max-height:72px;max-width:240px;object-fit:contain;margin-bottom:32px;display:block;margin-left:auto;margin-right:auto" />` : ""}
+      <h1 data-speakable style="font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.1;margin:0 0 16px;color:#fff">${tx(headline)}</h1>
+      <p data-speakable style="font-size:clamp(16px,2.5vw,20px);opacity:0.85;max-width:600px;margin:0 auto 32px;color:#f9fafb">${tx(desc)}</p>
+      ${
+        city || phone || websiteUrl
+          ? `<address style="font-style:normal;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;font-size:14px;opacity:0.8;color:#e5e7eb">
+        ${city ? `<span>📍 ${tx(city)}</span>` : ""}
+        ${phone ? `<a href="tel:${esc(phone)}" style="color:inherit">${tx(phone)}</a>` : ""}
+        ${websiteUrl ? `<a href="${esc(websiteUrl)}" style="color:inherit" rel="noopener noreferrer">${tx(websiteUrl)}</a>` : ""}
+      </address>`
+          : ""
+      }
+    </div>
+  </header>
+  ${servicesBlock}
+  ${aboutBlock}
+  ${faqBlock}
+  <section aria-labelledby="ssr-cta" style="padding:48px 24px;text-align:center;background:#111827;color:#fff">
+    <h2 id="ssr-cta" style="font-size:24px;font-weight:700;margin:0 0 16px;color:#fff">${L.cta[lk]}</h2>
+    ${websiteUrl ? `<p style="margin:0 0 8px"><a href="${esc(websiteUrl)}" style="color:#93c5fd;font-size:18px" rel="noopener noreferrer">${tx(websiteUrl)}</a></p>` : ""}
+    ${phone ? `<p style="margin:0"><a href="tel:${esc(phone)}" style="color:#86efac;font-size:18px">${tx(phone)}</a></p>` : ""}
+  </section>
+</main>`;
+
+            html = html.replace("<!--ssr-content-->", ssrContent);
 
             res.setHeader("Content-Type", "text/html; charset=utf-8");
             res.end(html);
