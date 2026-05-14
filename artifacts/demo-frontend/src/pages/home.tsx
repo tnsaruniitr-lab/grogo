@@ -7,11 +7,14 @@ import careImg from "@/assets/care.png";
 import { ArrowRight, CheckCircle2, Heart, Users, Home, PhoneCall, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useGetClientBranding } from "@workspace/api-client-react";
 
 export default function HomePage() {
+  const { data: branding } = useGetClientBranding("dosteli");
+
   return (
     <div className="min-h-screen bg-background">
-      <Nav />
+      <Nav logoUrl={branding?.logoUrl} />
       
       {/* Hero Section */}
       <section className="relative w-full overflow-hidden bg-primary pt-12 lg:pt-0 lg:h-[calc(100vh-80px)] flex items-center">

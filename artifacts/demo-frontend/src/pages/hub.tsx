@@ -213,6 +213,28 @@ export default function HubPage() {
   );
 }
 
+function BrandLogo({ logoUrl, companyName, secondary }: { logoUrl?: string | null; companyName: string; secondary: string }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  if (logoUrl && !imgFailed) {
+    return (
+      <img
+        src={logoUrl}
+        alt={companyName}
+        className="h-10 w-auto max-w-[120px] object-contain rounded drop-shadow"
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
+  return (
+    <div
+      className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow"
+      style={{ backgroundColor: secondary }}
+    >
+      {companyName.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
 function BrandCard({
   client,
   copied,
@@ -226,8 +248,8 @@ function BrandCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const primary = client.branding.primaryColor ?? "#A8C334";
-  const secondary = client.branding.secondaryColor ?? "#1a3a1a";
+  const primary = client.branding.primaryColor || "#A8C334";
+  const secondary = client.branding.secondaryColor || "#1a3a1a";
   const langOption = LANG_OPTIONS.find((l) => l.value === client.branding.demoLanguage);
 
   const { data: stats } = useGetDashboardStats(
@@ -239,21 +261,7 @@ function BrandCard({
     <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#1a1d26] flex flex-col hover:border-white/20 transition-colors">
       {/* Color header */}
       <div className="h-20 relative flex items-end p-4" style={{ backgroundColor: primary }}>
-        {client.branding.logoUrl ? (
-          <img
-            src={client.branding.logoUrl}
-            alt={client.branding.companyName}
-            className="h-10 w-auto max-w-[120px] object-contain rounded drop-shadow"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-        ) : (
-          <div
-            className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow"
-            style={{ backgroundColor: secondary }}
-          >
-            {client.branding.companyName.slice(0, 2).toUpperCase()}
-          </div>
-        )}
+        <BrandLogo logoUrl={client.branding.logoUrl} companyName={client.branding.companyName} secondary={secondary} />
         <div className="absolute top-3 right-3 flex items-center gap-1.5">
           {langOption && (
             <span className="text-sm" title={langOption.label}>{langOption.flag}</span>

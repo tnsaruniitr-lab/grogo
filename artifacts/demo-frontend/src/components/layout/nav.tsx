@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Nav() {
+export function Nav({ logoUrl }: { logoUrl?: string | null }) {
   const [location] = useLocation();
   const isHome = location === "/";
 
@@ -11,8 +11,14 @@ export function Nav() {
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8 relative">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <span className="text-3xl font-extrabold tracking-tight text-secondary">DOSTELI</span>
-            <Moon className="h-6 w-6 fill-destructive text-destructive" aria-hidden="true" />
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="h-10 max-w-[160px] object-contain" />
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold tracking-tight text-secondary">DOSTELI</span>
+                <Moon className="h-6 w-6 fill-destructive text-destructive" aria-hidden="true" />
+              </>
+            )}
           </Link>
         </div>
 
