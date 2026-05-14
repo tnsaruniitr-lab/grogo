@@ -10,6 +10,11 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: webhook
+    description: Inbound webhook endpoints
+  - name: leads
+    description: Lead management
+
 paths:
   /healthz:
     get:
@@ -24,13 +29,253 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /webhook/twilio:
+    post:
+      operationId: twilioWebhook
+      tags: [webhook]
+      summary: Twilio inbound webhook
+      description: >
+        Receives inbound WhatsApp messages from Twilio. Validates the Twilio
+        signature, deduplicates by MessageSid, upserts the lead, writes the
+        message event, and enqueues a processing job. Always returns 200 quickly.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/TwilioWebhookPayload"
+      responses:
+        "200":
+          description: Acknowledged
+          content:
+            application/xml:
+              schema:
+                type: string
+        "403":
+          description: Invalid Twilio signature
+
+  /leads:
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List leads
+      description: Returns paginated leads for the dashboard, scoped to a client.
+      parameters:
+        - name: clientId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: Paginated leads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadsPage"
+
+  /leads/{id}:
+    get:
+      operationId: getLead
+      tags: [leads]
+      summary: Get a single lead with conversation history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead with conversation history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadDetail"
+        "404":
+          description: Lead not found
+    patch:
+      operationId: updateLead
+      tags: [leads]
+      summary: Update lead status or notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadUpdate"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Lead not found
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    TwilioWebhookPayload:
+      type: object
+      properties:
+        MessageSid:
+          type: string
+        From:
+          type: string
+        To:
+          type: string
+        Body:
+          type: string
+        WaId:
+          type: string
+        ProfileName:
+          type: string
+        NumMedia:
+          type: string
+
+    Lead:
+      type: object
+      required: [id, clientId, phone, source, status, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        phone:
+          type: string
+        name:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+        source:
+          type: string
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        conversationSummary:
+          type: ["string", "null"]
+        lastContactAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    LeadsPage:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lead"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    ConversationMessage:
+      type: object
+      required: [id, leadId, direction, body, createdAt]
+      properties:
+        id:
+          type: integer
+        leadId:
+          type: integer
+        direction:
+          type: string
+        body:
+          type: string
+        intentDetected:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    Appointment:
+      type: object
+      required: [id, leadId, type, outcome, createdAt]
+      properties:
+        id:
+          type: integer
+        leadId:
+          type: integer
+        type:
+          type: string
+        preferredTime:
+          type: ["string", "null"]
+        confirmedAt:
+          type: ["string", "null"]
+        outcome:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    LeadDetail:
+      type: object
+      required: [lead, conversations, appointments]
+      properties:
+        lead:
+          $ref: "#/components/schemas/Lead"
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationMessage"
+        appointments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Appointment"
+
+    LeadUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        notes:
+          type: string
+        name:
+          type: string

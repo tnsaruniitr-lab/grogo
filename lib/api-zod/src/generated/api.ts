@@ -14,3 +14,112 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns paginated leads for the dashboard, scoped to a client.
+ * @summary List leads
+ */
+export const listLeadsQueryPageDefault = 1;
+export const listLeadsQueryLimitDefault = 25;
+
+export const ListLeadsQueryParams = zod.object({
+  clientId: zod.coerce.number().optional(),
+  status: zod.coerce.string().optional(),
+  source: zod.coerce.string().optional(),
+  language: zod.coerce.string().optional(),
+  page: zod.coerce.number().default(listLeadsQueryPageDefault),
+  limit: zod.coerce.number().default(listLeadsQueryLimitDefault),
+});
+
+export const ListLeadsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.number(),
+      clientId: zod.number(),
+      phone: zod.string(),
+      name: zod.string().nullish(),
+      language: zod.string().nullish(),
+      source: zod.string(),
+      status: zod.string(),
+      notes: zod.string().nullish(),
+      conversationSummary: zod.string().nullish(),
+      lastContactAt: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+});
+
+/**
+ * @summary Get a single lead with conversation history
+ */
+export const GetLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetLeadResponse = zod.object({
+  lead: zod.object({
+    id: zod.number(),
+    clientId: zod.number(),
+    phone: zod.string(),
+    name: zod.string().nullish(),
+    language: zod.string().nullish(),
+    source: zod.string(),
+    status: zod.string(),
+    notes: zod.string().nullish(),
+    conversationSummary: zod.string().nullish(),
+    lastContactAt: zod.string().nullish(),
+    createdAt: zod.string(),
+  }),
+  conversations: zod.array(
+    zod.object({
+      id: zod.number(),
+      leadId: zod.number(),
+      direction: zod.string(),
+      body: zod.string(),
+      intentDetected: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  appointments: zod.array(
+    zod.object({
+      id: zod.number(),
+      leadId: zod.number(),
+      type: zod.string(),
+      preferredTime: zod.string().nullish(),
+      confirmedAt: zod.string().nullish(),
+      outcome: zod.string(),
+      notes: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Update lead status or notes
+ */
+export const UpdateLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateLeadBody = zod.object({
+  status: zod.string().optional(),
+  notes: zod.string().optional(),
+  name: zod.string().optional(),
+});
+
+export const UpdateLeadResponse = zod.object({
+  id: zod.number(),
+  clientId: zod.number(),
+  phone: zod.string(),
+  name: zod.string().nullish(),
+  language: zod.string().nullish(),
+  source: zod.string(),
+  status: zod.string(),
+  notes: zod.string().nullish(),
+  conversationSummary: zod.string().nullish(),
+  lastContactAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});

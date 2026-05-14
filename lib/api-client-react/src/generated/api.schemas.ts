@@ -8,3 +8,84 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface TwilioWebhookPayload {
+  MessageSid?: string;
+  From?: string;
+  To?: string;
+  Body?: string;
+  WaId?: string;
+  ProfileName?: string;
+  NumMedia?: string;
+}
+
+export interface Lead {
+  id: number;
+  clientId: number;
+  phone: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  language?: string | null;
+  source: string;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  conversationSummary?: string | null;
+  /** @nullable */
+  lastContactAt?: string | null;
+  createdAt: string;
+}
+
+export interface LeadsPage {
+  data: Lead[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ConversationMessage {
+  id: number;
+  leadId: number;
+  direction: string;
+  body: string;
+  /** @nullable */
+  intentDetected?: string | null;
+  createdAt: string;
+}
+
+export interface Appointment {
+  id: number;
+  leadId: number;
+  type: string;
+  /** @nullable */
+  preferredTime?: string | null;
+  /** @nullable */
+  confirmedAt?: string | null;
+  outcome: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface LeadDetail {
+  lead: Lead;
+  conversations: ConversationMessage[];
+  appointments: Appointment[];
+}
+
+export interface LeadUpdate {
+  status?: string;
+  notes?: string;
+  name?: string;
+}
+
+export type ListLeadsParams = {
+  clientId?: number;
+  status?: string;
+  source?: string;
+  language?: string;
+  page?: number;
+  limit?: number;
+};

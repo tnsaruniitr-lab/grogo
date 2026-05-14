@@ -6,4 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./appointment";
+export * from "./conversationMessage";
 export * from "./healthStatus";
+export * from "./lead";
+export * from "./leadDetail";
+export * from "./leadsPage";
+export * from "./leadUpdate";
+export * from "./listLeadsParams";
+export * from "./twilioWebhookPayload";
