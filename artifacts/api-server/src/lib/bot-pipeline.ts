@@ -19,7 +19,9 @@ const MAX_BOT_TURNS_PER_HOUR = 10;
 
 /**
  * Detect language from user message. Falls back to client primary language.
- * Heuristic: check for Turkish-specific characters and common words.
+ * Uses word patterns and Turkish-exclusive chars (ğ,ş,ı,İ,Ğ,Ş).
+ * NOTE: ü and ö are intentionally NOT in the Turkish char set — they appear in
+ * German too (e.g. "für", "können") and would cause false-positive Turkish detection.
  */
 function detectLanguage(
   text: string,
@@ -27,7 +29,7 @@ function detectLanguage(
   clientSecondary?: string | null,
 ): string {
   const turkishPatterns =
-    /\b(merhaba|evet|hay[iı]r|te[sş]ekk[uü]r|nas[iı]l|nerede|ne zaman|bak[iı]m|aile|annem|babam|e[sş]im|yard[iı]m|bilgi|almak|lazım|gereki|için|ile|sizi|size|bizi|beni|ben|tamam|evet|lütfen|bir|var|yok|bu|ne|kim|kaç|nasıl)\b/i;
+    /\b(merhaba|evet|hay[iı]r|te[sş]ekk[uü]r|nas[iı]l|nerede|ne zaman|bak[iı]m|aile|annem|babam|e[sş]im|yard[iı]m|bilgi|almak|lazım|gereki|için|ile|sizi|size|bizi|beni|ben|tamam|lütfen|bir|var|yok|bu|ne|kim|ka[cç]|nas[iı]l)\b/i;
   // Only truly Turkish-exclusive chars — ü and ö are shared with German so excluded
   const turkishChars = /[ğşıİĞŞ]/;
 
@@ -79,11 +81,7 @@ async function checkRateLimit(lead: Lead): Promise<boolean> {
 /**
  * Send a WhatsApp message via Twilio REST API with one retry on failure.
  */
-async function sendWhatsAppReply(
-  from: string,
-  to: string,
-  body: string,
-): Promise<void> {
+async function sendWhatsAppReply(from: string, to: string, body: string): Promise<void> {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
     if (process.env.TWILIO_SANDBOX === "true") {
       logger.info({ from, to, body: body.slice(0, 120) }, "[SANDBOX] Twilio creds not set — reply logged only");
@@ -94,7 +92,6 @@ async function sendWhatsAppReply(
   }
 
   const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-
   const attempt = () => twilioClient.messages.create({ from, to, body });
 
   try {
@@ -137,21 +134,25 @@ export interface BotPipelineInput {
   leadId: number;
   messageEventId: number;
   userMessage: string;
-  userPhone: string;   // normalised, no "whatsapp:" prefix
+  userPhone: string;    // normalised, no "whatsapp:" prefix
   twilioSender: string; // e.g. "whatsapp:+14155238886"
 }
 
 /**
  * Full bot pipeline:
  * 1. Load lead
- * 2. Language detection / lock
+ * 2. Language detection / lock (explicit user switch request honoured)
  * 3. Rate limit check
  * 4. Load conversation history
  * 5. Knowledge retrieval
- * 6. GPT call (structured JSON response)
- * 7. Action execution (DB writes + lead status update)
- * 8. Write outbound conversation message
- * 9. Send Twilio reply
+ * 6. GPT call (structured JSON: { reply, action, data, intent })
+ * 7. Action execution:
+ *    - book_callback → insert appointment + write notification log + set callback_booked
+ *    - request_call_now → set status=escalated + urgent note
+ *    - escalate_human → set status=needs_human
+ * 8. Language switch persistence (if GPT indicates user explicitly requested switch)
+ * 9. Write outbound conversation + lead summary update
+ * 10. Twilio reply
  */
 export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   const { clientRecord, leadId, messageEventId, userMessage, userPhone, twilioSender } = input;
@@ -170,7 +171,8 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
 
   const lead = leads[0]!;
 
-  // 2. Language detection — detect on first message, lock thereafter
+  // 2. Language detection — detect on first message, lock thereafter.
+  // An explicit switch request (detected by GPT later) will update the lock.
   let language = lead.language;
   if (!language) {
     language = detectLanguage(userMessage, clientRecord.languagePrimary, clientRecord.languageSecondary);
@@ -204,11 +206,11 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
       ),
     )
     .orderBy(desc(conversationsTable.createdAt))
-    .limit(21); // +1 so we can drop the just-stored inbound message
+    .limit(21); // +1 to drop current inbound message
 
   const conversationHistory: ConversationMessage[] = rawHistory
     .reverse()
-    .slice(0, -1) // drop last item (current inbound message already in DB)
+    .slice(0, -1) // drop last item (current inbound message already stored)
     .map((h) => ({
       role: h.direction === "inbound" ? ("user" as const) : ("assistant" as const),
       content: h.body,
@@ -233,7 +235,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   // 7. Action execution
   const now = new Date();
 
-  // Mark the job as done
+  // Mark the pending job as done
   await db
     .update(jobQueueTable)
     .set({ status: "done", processedAt: now, updatedAt: now })
@@ -253,16 +255,16 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     conversationSummary: string;
     lastContactAt: Date;
     updatedAt: Date;
-  }> = { lastContactAt: now, updatedAt: now, language };
+  }> = { lastContactAt: now, updatedAt: now };
 
   const data = botResponse.data ?? {};
 
-  // Capture name if first time
+  // Capture name on first disclosure
   if (typeof data["name"] === "string" && data["name"] && !lead.name) {
     leadUpdates.name = data["name"] as string;
   }
 
-  // Accumulate notes from captured structured data
+  // Accumulate structured notes
   const noteParts: string[] = [];
   if (typeof data["careType"] === "string" && data["careType"])
     noteParts.push(`Pflegebedarf: ${String(data["careType"])}`);
@@ -279,8 +281,18 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   const preferredTime =
     typeof data["preferredTime"] === "string" ? (data["preferredTime"] as string) : null;
 
+  // Conversations to insert (collected, inserted in one batch at end)
+  const conversationInserts: {
+    clientId: number;
+    leadId: number;
+    direction: string;
+    body: string;
+    intentDetected?: string;
+  }[] = [];
+
   switch (botResponse.action) {
     case "book_callback": {
+      // Write appointment record
       await db.insert(appointmentsTable).values({
         clientId: clientRecord.id,
         leadId,
@@ -289,20 +301,37 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
         outcome: "pending",
         notes: `Gebucht via WhatsApp-Bot (${language})`,
       });
+
+      // Notification/audit log: system entry in conversations table
+      const notifBody =
+        language === "tr"
+          ? `[SİSTEM] Geri arama randevusu oluşturuldu. Tercih edilen zaman: ${preferredTime ?? "belirtilmedi"}`
+          : `[SYSTEM] Rückruf gebucht. Gewünschter Zeitpunkt: ${preferredTime ?? "nicht angegeben"}`;
+      conversationInserts.push({
+        clientId: clientRecord.id,
+        leadId,
+        direction: "system",
+        body: notifBody,
+        intentDetected: "book_callback_confirmed",
+      });
+
       newStatus = "callback_booked";
       break;
     }
+
     case "request_call_now": {
-      if (newStatus !== "escalated") newStatus = "qualified";
-      leadUpdates.notes = lead.notes
-        ? `${lead.notes}\n[DRINGEND: sofortiger Rückruf gewünscht]`
-        : "[DRINGEND: sofortiger Rückruf gewünscht]";
+      // Explicit urgent flag: set status to "escalated" (schema-backed urgency state)
+      newStatus = "escalated";
+      const urgentNote = "[DRINGEND] Sofortiger Rückruf gewünscht";
+      leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
       break;
     }
+
     case "escalate_human": {
       newStatus = "needs_human";
       break;
     }
+
     default: {
       if (botResponse.intent === "qualify" && newStatus === "new") {
         newStatus = "qualified";
@@ -313,10 +342,27 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   if (newStatus !== lead.status) leadUpdates.status = newStatus;
   leadUpdates.conversationSummary = buildSummary(lead, botResponse, language, preferredTime);
 
+  // 8. Language switch persistence
+  // GPT sets data.switchToLanguage only when the user EXPLICITLY requested a switch.
+  // We persist this to leads.language so all subsequent turns use the new language.
+  const requestedSwitch = data["switchToLanguage"];
+  if (
+    typeof requestedSwitch === "string" &&
+    requestedSwitch !== language &&
+    (requestedSwitch === "de" || requestedSwitch === "tr")
+  ) {
+    language = requestedSwitch;
+    leadUpdates.language = language;
+    logger.info({ leadId, newLanguage: language }, "Language switch persisted per user request");
+  } else {
+    // Keep the existing locked language
+    leadUpdates.language = lead.language ?? language;
+  }
+
   await db.update(leadsTable).set(leadUpdates).where(eq(leadsTable.id, leadId));
 
-  // 8. Write outbound conversation message
-  await db.insert(conversationsTable).values({
+  // 9. Write outbound conversation + any notification entries
+  conversationInserts.push({
     clientId: clientRecord.id,
     leadId,
     direction: "outbound",
@@ -324,7 +370,11 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
     intentDetected: botResponse.intent,
   });
 
-  // 9. Send Twilio reply
+  for (const entry of conversationInserts) {
+    await db.insert(conversationsTable).values(entry);
+  }
+
+  // 10. Twilio reply
   await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
 
   logger.info(
@@ -334,6 +384,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
       intent: botResponse.intent,
       action: botResponse.action,
       newStatus,
+      language,
     },
     "Bot pipeline complete",
   );

@@ -20,7 +20,20 @@ export type Intent = (typeof intentEnum)[number];
 export const BotResponseSchema = z.object({
   reply: z.string(),
   action: z.string(),
-  data: z.record(z.unknown()).optional().default({}),
+  data: z
+    .object({
+      // GPT may return null for unset fields — all optional fields must allow null
+      preferredTime: z.string().nullable().optional(),
+      careType: z.string().nullable().optional(),
+      name: z.string().nullable().optional(),
+      city: z.string().nullable().optional(),
+      whoNeedsCare: z.string().nullable().optional(),
+      // Populated only when user explicitly requests a language switch (e.g. "bitte auf Türkisch")
+      // Values: "de" | "tr" | null — null means no switch requested
+      switchToLanguage: z.enum(["de", "tr"]).nullable().optional(),
+    })
+    .optional()
+    .default({}),
   intent: z.enum(intentEnum),
 });
 export type BotResponse = z.infer<typeof BotResponseSchema>;
@@ -46,9 +59,10 @@ function buildSystemPrompt(
   knowledgeChunks: { question: string; answer: string }[],
 ): string {
   const isGerman = language === "de";
+  const otherLang = isGerman ? "tr" : "de";
   const langInstruction = isGerman
-    ? "Always respond in German (Deutsch). Do not switch to another language unless the user explicitly asks."
-    : "Always respond in Turkish (Türkçe). Do not switch to another language unless the user explicitly asks.";
+    ? "Always respond in German (Deutsch). Do NOT switch to another language based on how the user writes — the language is locked.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Türkisch' or 'lütfen Türkçe'), you may switch and must set data.switchToLanguage accordingly."
+    : "Always respond in Turkish (Türkçe). Do NOT switch to another language based on how the user writes — the language is locked.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Deutsch' or 'lütfen Almanca'), you may switch and must set data.switchToLanguage accordingly.";
 
   const knowledgeSection =
     knowledgeChunks.length > 0
@@ -80,9 +94,9 @@ Qualify the lead and book a callback. After gathering basic info, ALWAYS offer:
 ${isGerman ? '"Soll ich Ihnen heute oder morgen einen Rückruf einrichten? Vormittags oder nachmittags?"' : '"Bugün mü yoksa yarın mı sizi aramamızı istersiniz? Sabah mı öğleden sonra mı?"'}
 
 ## Escalation
-- If user expresses urgency or distress, set intent to "escalate_human"
-- If user explicitly requests a human, set intent to "escalate_human"
-- If topic is outside care services (legal, insurance details, billing disputes), set intent to "out_of_scope" and offer callback
+- If user expresses urgency or distress, set intent to "request_call_now" and action to "request_call_now"
+- If user explicitly requests a human agent, set intent to "escalate_human"
+- If topic is outside care services (legal, insurance disputes, billing), set intent to "out_of_scope" and offer callback
 
 ## Response Format
 Return ONLY valid JSON — no markdown, no extra text. Schema:
@@ -94,7 +108,8 @@ Return ONLY valid JSON — no markdown, no extra text. Schema:
     "careType": "<optional: type of care mentioned>",
     "name": "<optional: name if provided>",
     "city": "<optional: city/region if provided>",
-    "whoNeedsCare": "<optional: self/parent/partner/other>"
+    "whoNeedsCare": "<optional: self/parent/partner/other>",
+    "switchToLanguage": "<'${otherLang}' if user explicitly requested language switch, otherwise null>"
   },
   "intent": "<qualify | info_request | book_callback | request_call_now | escalate_human | out_of_scope>"
 }
