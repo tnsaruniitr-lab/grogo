@@ -8,6 +8,7 @@
 
 export * from "./appointment";
 export * from "./conversationMessage";
+export * from "./getLeadParams";
 export * from "./healthStatus";
 export * from "./lead";
 export * from "./leadDetail";
@@ -15,3 +16,4 @@ export * from "./leadsPage";
 export * from "./leadUpdate";
 export * from "./listLeadsParams";
 export * from "./twilioWebhookPayload";
+export * from "./updateLeadParams";

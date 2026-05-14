@@ -108,11 +108,16 @@ paths:
       tags: [leads]
       summary: Get a single lead with conversation history
       description: >
-        clientId must be supplied as a query parameter for tenant isolation.
-        The lead will only be returned if it belongs to that client.
+        clientId is required for tenant isolation. The lead is only returned
+        if it belongs to that client.
       parameters:
         - name: id
           in: path
+          required: true
+          schema:
+            type: integer
+        - name: clientId
+          in: query
           required: true
           schema:
             type: integer
@@ -130,11 +135,16 @@ paths:
       tags: [leads]
       summary: Update lead status or notes
       description: >
-        clientId must be supplied as a query parameter for tenant isolation.
-        The lead will only be updated if it belongs to that client.
+        clientId is required for tenant isolation. The lead is only updated
+        if it belongs to that client.
       parameters:
         - name: id
           in: path
+          required: true
+          schema:
+            type: integer
+        - name: clientId
+          in: query
           required: true
           schema:
             type: integer

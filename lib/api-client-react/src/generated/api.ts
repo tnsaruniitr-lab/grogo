@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  GetLeadParams,
   HealthStatus,
   Lead,
   LeadDetail,
@@ -24,6 +25,7 @@ import type {
   LeadsPage,
   ListLeadsParams,
   TwilioWebhookPayload,
+  UpdateLeadParams,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -313,26 +315,39 @@ export function useListLeads<
 }
 
 /**
- * clientId must be supplied as a query parameter for tenant isolation. The lead will only be returned if it belongs to that client.
+ * clientId is required for tenant isolation. The lead is only returned if it belongs to that client.
 
  * @summary Get a single lead with conversation history
  */
-export const getGetLeadUrl = (id: number) => {
-  return `/api/leads/${id}`;
+export const getGetLeadUrl = (id: number, params: GetLeadParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/leads/${id}?${stringifiedParams}`
+    : `/api/leads/${id}`;
 };
 
 export const getLead = async (
   id: number,
+  params: GetLeadParams,
   options?: RequestInit,
 ): Promise<LeadDetail> => {
-  return customFetch<LeadDetail>(getGetLeadUrl(id), {
+  return customFetch<LeadDetail>(getGetLeadUrl(id, params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetLeadQueryKey = (id: number) => {
-  return [`/api/leads/${id}`] as const;
+export const getGetLeadQueryKey = (id: number, params?: GetLeadParams) => {
+  return [`/api/leads/${id}`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetLeadQueryOptions = <
@@ -340,6 +355,7 @@ export const getGetLeadQueryOptions = <
   TError = ErrorType<void>,
 >(
   id: number,
+  params: GetLeadParams,
   options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getLead>>, TError, TData>;
     request?: SecondParameter<typeof customFetch>;
@@ -347,11 +363,11 @@ export const getGetLeadQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetLeadQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getGetLeadQueryKey(id, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getLead>>> = ({
     signal,
-  }) => getLead(id, { signal, ...requestOptions });
+  }) => getLead(id, params, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -377,12 +393,13 @@ export function useGetLead<
   TError = ErrorType<void>,
 >(
   id: number,
+  params: GetLeadParams,
   options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof getLead>>, TError, TData>;
     request?: SecondParameter<typeof customFetch>;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetLeadQueryOptions(id, options);
+  const queryOptions = getGetLeadQueryOptions(id, params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -392,20 +409,33 @@ export function useGetLead<
 }
 
 /**
- * clientId must be supplied as a query parameter for tenant isolation. The lead will only be updated if it belongs to that client.
+ * clientId is required for tenant isolation. The lead is only updated if it belongs to that client.
 
  * @summary Update lead status or notes
  */
-export const getUpdateLeadUrl = (id: number) => {
-  return `/api/leads/${id}`;
+export const getUpdateLeadUrl = (id: number, params: UpdateLeadParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/leads/${id}?${stringifiedParams}`
+    : `/api/leads/${id}`;
 };
 
 export const updateLead = async (
   id: number,
   leadUpdate: LeadUpdate,
+  params: UpdateLeadParams,
   options?: RequestInit,
 ): Promise<Lead> => {
-  return customFetch<Lead>(getUpdateLeadUrl(id), {
+  return customFetch<Lead>(getUpdateLeadUrl(id, params), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -420,14 +450,14 @@ export const getUpdateLeadMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateLead>>,
     TError,
-    { id: number; data: BodyType<LeadUpdate> },
+    { id: number; data: BodyType<LeadUpdate>; params: UpdateLeadParams },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateLead>>,
   TError,
-  { id: number; data: BodyType<LeadUpdate> },
+  { id: number; data: BodyType<LeadUpdate>; params: UpdateLeadParams },
   TContext
 > => {
   const mutationKey = ["updateLead"];
@@ -441,11 +471,11 @@ export const getUpdateLeadMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateLead>>,
-    { id: number; data: BodyType<LeadUpdate> }
+    { id: number; data: BodyType<LeadUpdate>; params: UpdateLeadParams }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { id, data, params } = props ?? {};
 
-    return updateLead(id, data, requestOptions);
+    return updateLead(id, data, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -467,14 +497,14 @@ export const useUpdateLead = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateLead>>,
     TError,
-    { id: number; data: BodyType<LeadUpdate> },
+    { id: number; data: BodyType<LeadUpdate>; params: UpdateLeadParams },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateLead>>,
   TError,
-  { id: number; data: BodyType<LeadUpdate> },
+  { id: number; data: BodyType<LeadUpdate>; params: UpdateLeadParams },
   TContext
 > => {
   return useMutation(getUpdateLeadMutationOptions(options));

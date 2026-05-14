@@ -53,12 +53,16 @@ export const ListLeadsResponse = zod.object({
 });
 
 /**
- * clientId must be supplied as a query parameter for tenant isolation. The lead will only be returned if it belongs to that client.
+ * clientId is required for tenant isolation. The lead is only returned if it belongs to that client.
 
  * @summary Get a single lead with conversation history
  */
 export const GetLeadParams = zod.object({
   id: zod.coerce.number(),
+});
+
+export const GetLeadQueryParams = zod.object({
+  clientId: zod.coerce.number(),
 });
 
 export const GetLeadResponse = zod.object({
@@ -102,12 +106,16 @@ export const GetLeadResponse = zod.object({
 });
 
 /**
- * clientId must be supplied as a query parameter for tenant isolation. The lead will only be updated if it belongs to that client.
+ * clientId is required for tenant isolation. The lead is only updated if it belongs to that client.
 
  * @summary Update lead status or notes
  */
 export const UpdateLeadParams = zod.object({
   id: zod.coerce.number(),
+});
+
+export const UpdateLeadQueryParams = zod.object({
+  clientId: zod.coerce.number(),
 });
 
 export const UpdateLeadBody = zod.object({

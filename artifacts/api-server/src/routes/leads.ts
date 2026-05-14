@@ -1,5 +1,4 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { z } from "zod";
 import { db } from "@workspace/db";
 import {
   leadsTable,
@@ -10,16 +9,13 @@ import { eq, and, desc, isNull, count, SQL } from "drizzle-orm";
 import {
   ListLeadsQueryParams,
   GetLeadParams,
+  GetLeadQueryParams,
   UpdateLeadParams,
+  UpdateLeadQueryParams,
   UpdateLeadBody,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-
-// Shared schema for clientId query param on detail/update endpoints
-const ClientIdQuery = z.object({
-  clientId: z.coerce.number().int().positive(),
-});
 
 router.get("/leads", async (req: Request, res: Response) => {
   const parsed = ListLeadsQueryParams.safeParse(req.query);
@@ -31,7 +27,7 @@ router.get("/leads", async (req: Request, res: Response) => {
   const { clientId, status, source, language, page, limit } = parsed.data;
   const offset = (page - 1) * limit;
 
-  // Tenant isolation: clientId is always required and enforced in every condition
+  // Tenant isolation: clientId always required and enforced in every condition
   const conditions: SQL[] = [
     eq(leadsTable.clientId, clientId),
     isNull(leadsTable.deletedAt),
@@ -80,15 +76,15 @@ router.get("/leads/:id", async (req: Request, res: Response) => {
     return;
   }
 
-  // Tenant isolation: clientId required as query param
-  const clientQuery = ClientIdQuery.safeParse(req.query);
-  if (!clientQuery.success) {
+  // Tenant isolation: clientId required via generated query schema
+  const query = GetLeadQueryParams.safeParse(req.query);
+  if (!query.success) {
     res.status(400).json({ error: "clientId query parameter is required" });
     return;
   }
 
   const { id } = params.data;
-  const { clientId } = clientQuery.data;
+  const { clientId } = query.data;
 
   const leads = await db
     .select()
@@ -141,9 +137,9 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
     return;
   }
 
-  // Tenant isolation: clientId required as query param
-  const clientQuery = ClientIdQuery.safeParse(req.query);
-  if (!clientQuery.success) {
+  // Tenant isolation: clientId required via generated query schema
+  const query = UpdateLeadQueryParams.safeParse(req.query);
+  if (!query.success) {
     res.status(400).json({ error: "clientId query parameter is required" });
     return;
   }
@@ -155,7 +151,7 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
   }
 
   const { id } = params.data;
-  const { clientId } = clientQuery.data;
+  const { clientId } = query.data;
 
   const existing = await db
     .select({ id: leadsTable.id })

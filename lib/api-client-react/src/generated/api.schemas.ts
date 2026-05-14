@@ -91,3 +91,11 @@ export type ListLeadsParams = {
   page?: number;
   limit?: number;
 };
+
+export type GetLeadParams = {
+  clientId: number;
+};
+
+export type UpdateLeadParams = {
+  clientId: number;
+};
