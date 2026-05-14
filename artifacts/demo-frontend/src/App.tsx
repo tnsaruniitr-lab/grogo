@@ -22,6 +22,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/mockups" component={Mockups} />
       <Route path="/demo/:slug/dashboard" component={DemoDashboard} />
+      <Route path="/demo/dosteli" component={Home} />
       <Route path="/demo/:slug" component={Demo} />
       <Route path="/dosteli" component={Home} />
       <Route component={NotFound} />
