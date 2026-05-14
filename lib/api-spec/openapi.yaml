@@ -617,6 +617,8 @@ components:
           type: ["string", "null"]
         demoLanguage:
           type: ["string", "null"]
+        industry:
+          type: ["string", "null"]
 
     DemoClient:
       type: object

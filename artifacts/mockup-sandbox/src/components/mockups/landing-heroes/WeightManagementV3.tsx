@@ -83,7 +83,7 @@ export function WeightManagementV3() {
               {t:'Wegovy Programme',p:'£349/mo',d:'Brand-name Semaglutide at therapeutic doses — the programme used in major clinical trials.'},
               {t:'Mounjaro Premium',p:'£399/mo',d:'Tirzepatide — the most effective GLP-1/GIP dual agonist currently available.'},
               {t:'Metabolic Reset',p:'£249/mo',d:'GLP-1 combined with a structured nutrition plan, exercise protocol and weekly coaching.'},
-              {t:'Maintenance Plan',p:'£99/mo',d:'For those who've reached their goal — stable maintenance doses with quarterly check-ins.'},
+              {t:'Maintenance Plan',p:'£99/mo',d:"For those who've reached their goal — stable maintenance doses with quarterly check-ins."},
               {t:'Bariatric Prep',p:'Bespoke',d:'Pre-surgical weight optimisation programme in partnership with our bariatric surgery partners.'},
             ].map((t,i)=>(
               <div key={i} className="p-8 border border-[#EDF5EE]/8 hover:border-[#4CAF72]/30 group transition-colors">

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
-import { getIndustryTheme, getLang, PRIMARY_VERTICALS } from "@/lib/industry-themes";
+import { getIndustryTheme, getLang, PRIMARY_VERTICALS, INDUSTRY_VIDEO_MAP } from "@/lib/industry-themes";
 import patternImg from "@/assets/pattern.png";
 import heroImg from "@/assets/hero-person.png";
 import careImg from "@/assets/care.png";
@@ -155,6 +155,7 @@ export default function DemoPage() {
   const lang = getLang(branding?.demoLanguage);
   const themeIcons = resolveIcons(theme.serviceIconNames);
   const isPrimary = PRIMARY_VERTICALS.has(branding?.industry ?? "");
+  const videoSrc = branding ? (INDUSTRY_VIDEO_MAP[branding.industry ?? ""] ?? null) : null;
 
   if (loading) {
     return (
@@ -184,8 +185,25 @@ export default function DemoPage() {
 
       {/* ── HERO ── */}
       <section className="relative w-full overflow-hidden pt-12 lg:pt-0 lg:h-[calc(100vh-80px)] flex items-center" style={{ backgroundColor: primary }}>
+        {/* Video background — shown when industry has a mapped video */}
+        {videoSrc && (
+          <video
+            autoPlay muted loop playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: "brightness(0.58) saturate(1.1)" }}
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+        )}
+        {/* Brand-color gradient overlay: strong on text side, fades right so video shows through */}
+        {videoSrc && (
+          <div
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(105deg, ${primary}DD 0%, ${primary}99 45%, ${primary}33 100%)` }}
+          />
+        )}
         <div
-          className="absolute inset-0 z-0 opacity-20 pointer-events-none mix-blend-multiply"
+          className={`absolute inset-0 z-0 pointer-events-none mix-blend-multiply ${videoSrc ? "opacity-5" : "opacity-20"}`}
           style={{ backgroundImage: `url(${patternImg})`, backgroundSize: "400px" }}
         />
 

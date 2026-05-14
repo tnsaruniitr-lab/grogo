@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
+import { INDUSTRY_OPTIONS } from "@/lib/industry-themes";
 
 interface BrandingConfig {
   clientId?: number;
@@ -63,6 +64,7 @@ interface BrandingConfig {
   phone?: string | null;
   websiteUrl?: string | null;
   demoLanguage?: string | null;
+  industry?: string | null;
 }
 
 interface DemoClient {
@@ -459,6 +461,7 @@ function CreateDemoDialog({
     websiteUrl: "",
     heroHeadline: "",
     demoLanguage: "de",
+    industry: "",
   });
 
   const primary = branding.primaryColor || "#A8C334";
@@ -496,6 +499,7 @@ function CreateDemoDialog({
         websiteUrl: data.websiteUrl ?? url,
         heroHeadline: data.heroHeadline ?? "",
         demoLanguage: prev.demoLanguage ?? "de",
+        industry: prev.industry ?? "",
       }));
       if (data.logoUrl) setLogoPreview(data.logoUrl);
       setExtracted(true);
@@ -553,7 +557,7 @@ function CreateDemoDialog({
 
   const reset = () => {
     setWebsiteUrl("");
-    setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "", demoLanguage: "de" });
+    setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "", demoLanguage: "de", industry: "" });
     setLogoFile(null);
     setLogoPreview(null);
     setExtracted(false);
@@ -636,6 +640,34 @@ function CreateDemoDialog({
                     ← Change URL
                   </button>
                 </div>
+              </div>
+
+              {/* Industry type selector */}
+              <div className="space-y-2">
+                <Label className="text-xs">Business Type</Label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {INDUSTRY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setBranding((prev) => ({ ...prev, industry: opt.value }))}
+                      className={`flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg border text-center transition-colors text-xs leading-tight ${
+                        branding.industry === opt.value
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      }`}
+                    >
+                      <span className="text-base leading-none">{opt.emoji}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+                {branding.industry && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Video theme: <span className="font-medium text-foreground">{INDUSTRY_OPTIONS.find(o => o.value === branding.industry)?.label}</span>
+                    {" "}· Colors from their brand applied automatically
+                  </p>
+                )}
               </div>
 
               {/* Editable name + slug */}

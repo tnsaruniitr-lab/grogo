@@ -27,4 +27,6 @@ export interface BrandingConfig {
   websiteUrl?: string | null;
   /** @nullable */
   demoLanguage?: string | null;
+  /** @nullable */
+  industry?: string | null;
 }

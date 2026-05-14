@@ -620,7 +620,7 @@ const defaultTheme: IndustryTheme = {
 // Exports
 // ─────────────────────────────────────────────────────────
 
-export const PRIMARY_VERTICALS = new Set(["aesthetics", "medical", "dental", "wellness"]);
+export const PRIMARY_VERTICALS = new Set(["aesthetics", "medical", "dental", "wellness", "hair_clinic", "iv_therapy", "physiotherapy", "cosmetic_surgery", "laser_eye", "fertility", "weight_management"]);
 
 const THEME_MAP: Record<string, IndustryTheme> = {
   aesthetics: aestheticsTheme,
@@ -628,7 +628,44 @@ const THEME_MAP: Record<string, IndustryTheme> = {
   dental: dentalTheme,
   wellness: wellnessTheme,
   care: careTheme,
+  hair_clinic: aestheticsTheme,
+  iv_therapy: aestheticsTheme,
+  physiotherapy: medicalTheme,
+  cosmetic_surgery: aestheticsTheme,
+  laser_eye: medicalTheme,
+  fertility: careTheme,
+  weight_management: medicalTheme,
 };
+
+/** Maps industry key → video filename served from /videos/ */
+export const INDUSTRY_VIDEO_MAP: Record<string, string> = {
+  aesthetics: "/videos/medspa-treatment.mp4",
+  wellness: "/videos/wellness-meditation.mp4",
+  care: "/videos/care-compassion.mp4",
+  dental: "/videos/dental-smile.mp4",
+  hair_clinic: "/videos/hair-clinic.mp4",
+  physiotherapy: "/videos/physio-rehab.mp4",
+  iv_therapy: "/videos/iv-therapy.mp4",
+  cosmetic_surgery: "/videos/cosmetic-surgery.mp4",
+  laser_eye: "/videos/laser-eye.mp4",
+  fertility: "/videos/fertility-ivf.mp4",
+  weight_management: "/videos/weight-management.mp4",
+};
+
+export const INDUSTRY_OPTIONS: Array<{ value: string; label: string; emoji: string }> = [
+  { value: "aesthetics",        label: "Medspa",        emoji: "✨" },
+  { value: "dental",            label: "Dental",         emoji: "🦷" },
+  { value: "wellness",          label: "Wellness",       emoji: "🌿" },
+  { value: "physiotherapy",     label: "Physio",         emoji: "🏃" },
+  { value: "hair_clinic",       label: "Hair Clinic",    emoji: "💆" },
+  { value: "iv_therapy",        label: "IV Therapy",     emoji: "⚡" },
+  { value: "cosmetic_surgery",  label: "Surgery",        emoji: "⭐" },
+  { value: "laser_eye",         label: "Laser Eye",      emoji: "👁" },
+  { value: "fertility",         label: "Fertility",      emoji: "❤️" },
+  { value: "weight_management", label: "Weight Mgmt",    emoji: "📉" },
+  { value: "care",              label: "Home Care",      emoji: "🏠" },
+  { value: "medical",           label: "Medical / GP",   emoji: "🩺" },
+];
 
 export function getIndustryTheme(industry?: string | null): IndustryTheme {
   return THEME_MAP[industry ?? ""] ?? defaultTheme;
