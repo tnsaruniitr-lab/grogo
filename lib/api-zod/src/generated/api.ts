@@ -23,7 +23,7 @@ export const listLeadsQueryPageDefault = 1;
 export const listLeadsQueryLimitDefault = 25;
 
 export const ListLeadsQueryParams = zod.object({
-  clientId: zod.coerce.number().optional(),
+  clientId: zod.coerce.number(),
   status: zod.coerce.string().optional(),
   source: zod.coerce.string().optional(),
   language: zod.coerce.string().optional(),
@@ -53,6 +53,8 @@ export const ListLeadsResponse = zod.object({
 });
 
 /**
+ * clientId must be supplied as a query parameter for tenant isolation. The lead will only be returned if it belongs to that client.
+
  * @summary Get a single lead with conversation history
  */
 export const GetLeadParams = zod.object({
@@ -76,6 +78,7 @@ export const GetLeadResponse = zod.object({
   conversations: zod.array(
     zod.object({
       id: zod.number(),
+      clientId: zod.number(),
       leadId: zod.number(),
       direction: zod.string(),
       body: zod.string(),
@@ -86,6 +89,7 @@ export const GetLeadResponse = zod.object({
   appointments: zod.array(
     zod.object({
       id: zod.number(),
+      clientId: zod.number(),
       leadId: zod.number(),
       type: zod.string(),
       preferredTime: zod.string().nullish(),
@@ -98,6 +102,8 @@ export const GetLeadResponse = zod.object({
 });
 
 /**
+ * clientId must be supplied as a query parameter for tenant isolation. The lead will only be updated if it belongs to that client.
+
  * @summary Update lead status or notes
  */
 export const UpdateLeadParams = zod.object({

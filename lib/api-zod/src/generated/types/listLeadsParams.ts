@@ -7,7 +7,7 @@
  */
 
 export type ListLeadsParams = {
-  clientId?: number;
+  clientId: number;
   status?: string;
   source?: string;
   language?: string;

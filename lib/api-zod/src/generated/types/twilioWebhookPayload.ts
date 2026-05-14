@@ -7,10 +7,10 @@
  */
 
 export interface TwilioWebhookPayload {
-  MessageSid?: string;
-  From?: string;
-  To?: string;
-  Body?: string;
+  MessageSid: string;
+  From: string;
+  To: string;
+  Body: string;
   WaId?: string;
   ProfileName?: string;
   NumMedia?: string;

@@ -10,10 +10,10 @@ export interface HealthStatus {
 }
 
 export interface TwilioWebhookPayload {
-  MessageSid?: string;
-  From?: string;
-  To?: string;
-  Body?: string;
+  MessageSid: string;
+  From: string;
+  To: string;
+  Body: string;
   WaId?: string;
   ProfileName?: string;
   NumMedia?: string;
@@ -47,6 +47,7 @@ export interface LeadsPage {
 
 export interface ConversationMessage {
   id: number;
+  clientId: number;
   leadId: number;
   direction: string;
   body: string;
@@ -57,6 +58,7 @@ export interface ConversationMessage {
 
 export interface Appointment {
   id: number;
+  clientId: number;
   leadId: number;
   type: string;
   /** @nullable */
@@ -82,7 +84,7 @@ export interface LeadUpdate {
 }
 
 export type ListLeadsParams = {
-  clientId?: number;
+  clientId: number;
   status?: string;
   source?: string;
   language?: string;

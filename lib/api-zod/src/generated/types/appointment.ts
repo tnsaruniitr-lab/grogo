@@ -8,6 +8,7 @@
 
 export interface Appointment {
   id: number;
+  clientId: number;
   leadId: number;
   type: string;
   /** @nullable */

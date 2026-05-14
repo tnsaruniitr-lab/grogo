@@ -8,6 +8,7 @@
 
 export interface ConversationMessage {
   id: number;
+  clientId: number;
   leadId: number;
   direction: string;
   body: string;

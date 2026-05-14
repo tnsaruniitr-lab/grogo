@@ -125,18 +125,10 @@ export const twilioWebhook = async (
   options?: RequestInit,
 ): Promise<string> => {
   const formUrlEncoded = new URLSearchParams();
-  if (twilioWebhookPayload.MessageSid !== undefined) {
-    formUrlEncoded.append(`MessageSid`, twilioWebhookPayload.MessageSid);
-  }
-  if (twilioWebhookPayload.From !== undefined) {
-    formUrlEncoded.append(`From`, twilioWebhookPayload.From);
-  }
-  if (twilioWebhookPayload.To !== undefined) {
-    formUrlEncoded.append(`To`, twilioWebhookPayload.To);
-  }
-  if (twilioWebhookPayload.Body !== undefined) {
-    formUrlEncoded.append(`Body`, twilioWebhookPayload.Body);
-  }
+  formUrlEncoded.append(`MessageSid`, twilioWebhookPayload.MessageSid);
+  formUrlEncoded.append(`From`, twilioWebhookPayload.From);
+  formUrlEncoded.append(`To`, twilioWebhookPayload.To);
+  formUrlEncoded.append(`Body`, twilioWebhookPayload.Body);
   if (twilioWebhookPayload.WaId !== undefined) {
     formUrlEncoded.append(`WaId`, twilioWebhookPayload.WaId);
   }
@@ -229,7 +221,7 @@ export const useTwilioWebhook = <
  * Returns paginated leads for the dashboard, scoped to a client.
  * @summary List leads
  */
-export const getListLeadsUrl = (params?: ListLeadsParams) => {
+export const getListLeadsUrl = (params: ListLeadsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -246,7 +238,7 @@ export const getListLeadsUrl = (params?: ListLeadsParams) => {
 };
 
 export const listLeads = async (
-  params?: ListLeadsParams,
+  params: ListLeadsParams,
   options?: RequestInit,
 ): Promise<LeadsPage> => {
   return customFetch<LeadsPage>(getListLeadsUrl(params), {
@@ -263,7 +255,7 @@ export const getListLeadsQueryOptions = <
   TData = Awaited<ReturnType<typeof listLeads>>,
   TError = ErrorType<unknown>,
 >(
-  params?: ListLeadsParams,
+  params: ListLeadsParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof listLeads>>,
@@ -301,7 +293,7 @@ export function useListLeads<
   TData = Awaited<ReturnType<typeof listLeads>>,
   TError = ErrorType<unknown>,
 >(
-  params?: ListLeadsParams,
+  params: ListLeadsParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof listLeads>>,
@@ -321,6 +313,8 @@ export function useListLeads<
 }
 
 /**
+ * clientId must be supplied as a query parameter for tenant isolation. The lead will only be returned if it belongs to that client.
+
  * @summary Get a single lead with conversation history
  */
 export const getGetLeadUrl = (id: number) => {
@@ -398,6 +392,8 @@ export function useGetLead<
 }
 
 /**
+ * clientId must be supplied as a query parameter for tenant isolation. The lead will only be updated if it belongs to that client.
+
  * @summary Update lead status or notes
  */
 export const getUpdateLeadUrl = (id: number) => {

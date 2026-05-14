@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { z } from "zod";
 import twilio from "twilio";
 import { db } from "@workspace/db";
 import {
@@ -12,17 +13,33 @@ import { eq, and } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN ?? "";
+// Zod schema for Twilio form-encoded webhook payload validation
+const TwilioPayloadSchema = z.object({
+  MessageSid: z.string().min(1),
+  From: z.string().min(1),
+  To: z.string().min(1),
+  Body: z.string(),
+  WaId: z.string().optional(),
+  ProfileName: z.string().optional(),
+  NumMedia: z.string().optional(),
+});
+
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const IS_DEV_SANDBOX = process.env.TWILIO_SANDBOX === "true";
 
 function validateTwilioSignature(req: Request): boolean {
-  // In sandbox/dev mode without an auth token, skip validation
+  // Explicit sandbox bypass only when TWILIO_SANDBOX=true
+  if (IS_DEV_SANDBOX) return true;
+
+  // In all other cases — including when token is missing — fail closed
   if (!TWILIO_AUTH_TOKEN) {
-    return true;
+    return false;
   }
+
   const signature = req.headers["x-twilio-signature"] as string | undefined;
   if (!signature) return false;
 
-  const protocol = req.headers["x-forwarded-proto"] ?? req.protocol;
+  const protocol = (req.headers["x-forwarded-proto"] as string) ?? req.protocol;
   const host = req.headers["host"] ?? "";
   const url = `${protocol}://${host}${req.originalUrl}`;
 
@@ -32,23 +49,24 @@ function validateTwilioSignature(req: Request): boolean {
 router.post("/webhook/twilio", async (req: Request, res: Response) => {
   const twimlEmpty = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
 
-  // Security: validate Twilio signature
+  // Security: validate Twilio signature (fails closed when token missing)
   if (!validateTwilioSignature(req)) {
-    req.log.warn("Invalid Twilio signature — rejecting request");
+    req.log.warn("Invalid or missing Twilio signature — rejecting request");
     res.status(403).json({ error: "Invalid Twilio signature" });
     return;
   }
 
+  // Validate payload shape with Zod before any processing
+  const payloadResult = TwilioPayloadSchema.safeParse(req.body);
+  if (!payloadResult.success) {
+    req.log.warn({ issues: payloadResult.error.issues }, "Twilio webhook payload failed validation");
+    res.status(200).type("text/xml").send(twimlEmpty);
+    return;
+  }
+
+  const { MessageSid, From, To, Body, ProfileName } = payloadResult.data;
+
   try {
-    const body = req.body as Record<string, string>;
-    const { MessageSid, From, To, Body, ProfileName } = body;
-
-    if (!MessageSid || !From || !To || Body === undefined) {
-      req.log.warn({ body }, "Twilio webhook missing required fields");
-      res.status(200).type("text/xml").send(twimlEmpty);
-      return;
-    }
-
     // Idempotency check — drop duplicates by MessageSid
     const existing = await db
       .select({ id: messageEventsTable.id })
@@ -77,7 +95,7 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
 
     const client = clients[0];
 
-    // Upsert lead by phone + client
+    // Upsert lead by phone + client (tenant-scoped)
     const normalizedPhone = From.replace("whatsapp:", "");
     const existingLeads = await db
       .select()
@@ -107,7 +125,7 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
       leadId = inserted[0].id;
     }
 
-    // Store raw message event (idempotency record)
+    // Store raw message event (idempotency anchor)
     const eventInserted = await db
       .insert(messageEventsTable)
       .values({
@@ -115,13 +133,13 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
         leadId,
         twilioMessageSid: MessageSid,
         direction: "inbound",
-        rawPayload: body,
+        rawPayload: req.body as Record<string, unknown>,
       })
       .returning({ id: messageEventsTable.id });
 
     const messageEventId = eventInserted[0].id;
 
-    // Store conversation message (client-scoped)
+    // Store conversation message (tenant-scoped)
     await db.insert(conversationsTable).values({
       clientId: client.id,
       leadId,
@@ -129,7 +147,7 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
       body: Body,
     });
 
-    // Enqueue processing job
+    // Enqueue async processing job
     await db.insert(jobQueueTable).values({
       clientId: client.id,
       leadId,
@@ -140,7 +158,7 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
 
     req.log.info({ leadId, clientId: client.id, MessageSid }, "Webhook processed — job enqueued");
 
-    // Respond immediately — bot reply is async
+    // Return immediately — all GPT/bot work is async
     res.status(200).type("text/xml").send(twimlEmpty);
   } catch (err) {
     req.log.error({ err }, "Webhook handler error");

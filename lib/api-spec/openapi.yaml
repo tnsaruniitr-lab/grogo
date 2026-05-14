@@ -64,7 +64,7 @@ paths:
       parameters:
         - name: clientId
           in: query
-          required: false
+          required: true
           schema:
             type: integer
         - name: status
@@ -107,6 +107,9 @@ paths:
       operationId: getLead
       tags: [leads]
       summary: Get a single lead with conversation history
+      description: >
+        clientId must be supplied as a query parameter for tenant isolation.
+        The lead will only be returned if it belongs to that client.
       parameters:
         - name: id
           in: path
@@ -126,6 +129,9 @@ paths:
       operationId: updateLead
       tags: [leads]
       summary: Update lead status or notes
+      description: >
+        clientId must be supplied as a query parameter for tenant isolation.
+        The lead will only be updated if it belongs to that client.
       parameters:
         - name: id
           in: path
@@ -159,6 +165,7 @@ components:
 
     TwilioWebhookPayload:
       type: object
+      required: [MessageSid, From, To, Body]
       properties:
         MessageSid:
           type: string
@@ -219,9 +226,11 @@ components:
 
     ConversationMessage:
       type: object
-      required: [id, leadId, direction, body, createdAt]
+      required: [id, clientId, leadId, direction, body, createdAt]
       properties:
         id:
+          type: integer
+        clientId:
           type: integer
         leadId:
           type: integer
@@ -236,9 +245,11 @@ components:
 
     Appointment:
       type: object
-      required: [id, leadId, type, outcome, createdAt]
+      required: [id, clientId, leadId, type, outcome, createdAt]
       properties:
         id:
+          type: integer
+        clientId:
           type: integer
         leadId:
           type: integer

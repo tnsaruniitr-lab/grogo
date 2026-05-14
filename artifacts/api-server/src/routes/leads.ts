@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { z } from "zod";
 import { db } from "@workspace/db";
 import {
   leadsTable,
@@ -15,18 +16,26 @@ import {
 
 const router: IRouter = Router();
 
+// Shared schema for clientId query param on detail/update endpoints
+const ClientIdQuery = z.object({
+  clientId: z.coerce.number().int().positive(),
+});
+
 router.get("/leads", async (req: Request, res: Response) => {
   const parsed = ListLeadsQueryParams.safeParse(req.query);
   if (!parsed.success) {
-    res.status(400).json({ error: "Invalid query parameters" });
+    res.status(400).json({ error: "Invalid query parameters — clientId is required" });
     return;
   }
 
   const { clientId, status, source, language, page, limit } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions: SQL[] = [isNull(leadsTable.deletedAt)];
-  if (clientId) conditions.push(eq(leadsTable.clientId, clientId));
+  // Tenant isolation: clientId is always required and enforced in every condition
+  const conditions: SQL[] = [
+    eq(leadsTable.clientId, clientId),
+    isNull(leadsTable.deletedAt),
+  ];
   if (status) conditions.push(eq(leadsTable.status, status));
   if (source) conditions.push(eq(leadsTable.source, source));
   if (language) conditions.push(eq(leadsTable.language, language));
@@ -71,12 +80,26 @@ router.get("/leads/:id", async (req: Request, res: Response) => {
     return;
   }
 
+  // Tenant isolation: clientId required as query param
+  const clientQuery = ClientIdQuery.safeParse(req.query);
+  if (!clientQuery.success) {
+    res.status(400).json({ error: "clientId query parameter is required" });
+    return;
+  }
+
   const { id } = params.data;
+  const { clientId } = clientQuery.data;
 
   const leads = await db
     .select()
     .from(leadsTable)
-    .where(and(eq(leadsTable.id, id), isNull(leadsTable.deletedAt)))
+    .where(
+      and(
+        eq(leadsTable.id, id),
+        eq(leadsTable.clientId, clientId),
+        isNull(leadsTable.deletedAt),
+      ),
+    )
     .limit(1);
 
   if (leads.length === 0) {
@@ -88,12 +111,23 @@ router.get("/leads/:id", async (req: Request, res: Response) => {
     db
       .select()
       .from(conversationsTable)
-      .where(and(eq(conversationsTable.leadId, id), isNull(conversationsTable.deletedAt)))
+      .where(
+        and(
+          eq(conversationsTable.leadId, id),
+          eq(conversationsTable.clientId, clientId),
+          isNull(conversationsTable.deletedAt),
+        ),
+      )
       .orderBy(desc(conversationsTable.createdAt)),
     db
       .select()
       .from(appointmentsTable)
-      .where(eq(appointmentsTable.leadId, id))
+      .where(
+        and(
+          eq(appointmentsTable.leadId, id),
+          eq(appointmentsTable.clientId, clientId),
+        ),
+      )
       .orderBy(desc(appointmentsTable.createdAt)),
   ]);
 
@@ -107,6 +141,13 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
     return;
   }
 
+  // Tenant isolation: clientId required as query param
+  const clientQuery = ClientIdQuery.safeParse(req.query);
+  if (!clientQuery.success) {
+    res.status(400).json({ error: "clientId query parameter is required" });
+    return;
+  }
+
   const body = UpdateLeadBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: "Invalid request body" });
@@ -114,11 +155,18 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
   }
 
   const { id } = params.data;
+  const { clientId } = clientQuery.data;
 
   const existing = await db
     .select({ id: leadsTable.id })
     .from(leadsTable)
-    .where(and(eq(leadsTable.id, id), isNull(leadsTable.deletedAt)))
+    .where(
+      and(
+        eq(leadsTable.id, id),
+        eq(leadsTable.clientId, clientId),
+        isNull(leadsTable.deletedAt),
+      ),
+    )
     .limit(1);
 
   if (existing.length === 0) {
@@ -129,7 +177,7 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
   const updated = await db
     .update(leadsTable)
     .set({ ...body.data, updatedAt: new Date() })
-    .where(eq(leadsTable.id, id))
+    .where(and(eq(leadsTable.id, id), eq(leadsTable.clientId, clientId)))
     .returning();
 
   res.json(updated[0]);
