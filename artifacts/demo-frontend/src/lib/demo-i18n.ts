@@ -10,6 +10,26 @@ export interface DemoT {
   ctaPrimary: string;
   ctaSecondary: string;
   features: string[];
+  // hero team badge
+  teamLabel: string;
+  teamSub: string;
+  // services section
+  servicesTitle: string;
+  servicesSubtitle: string;
+  services: Array<{ title: string; desc: string }>;
+  // info/image section
+  infoTitle: string;
+  infoBody: string;
+  infoPoints: string[];
+  infoButton: string;
+  // about / stats section
+  aboutTitle: (name: string) => string;
+  aboutBody: string;
+  aboutStats: Array<[string, string]>;
+  // footer nav
+  navServices: string;
+  navWebsite: string;
+  // how it works
   howTitle: (name: string) => string;
   howSubtitle: string;
   steps: Array<{ title: string; desc: string }>;
@@ -42,9 +62,27 @@ const de: DemoT = {
   botStatus: "KI-Assistent · Online",
   defaultTagline: "Qualifizieren Sie Leads automatisch, buchen Sie Rückrufe und antworten Sie in Deutsch und Türkisch — rund um die Uhr.",
   defaultSubtitle: "Qualifizieren Sie Leads automatisch, buchen Sie Rückrufe und antworten Sie in Deutsch und Türkisch — rund um die Uhr.",
-  ctaPrimary: "Live-Demo ansehen",
-  ctaSecondary: "Beratungsgespräch",
+  ctaPrimary: "Beratung anfordern",
+  ctaSecondary: "Mehr erfahren",
   features: ["Automatische Lead-Qualifizierung", "Deutsch & Türkisch", "Rückruf-Buchung"],
+  teamLabel: "Unser Team",
+  teamSub: "Mehrsprachig & kulturell kompetent",
+  servicesTitle: "Unsere Leistungen",
+  servicesSubtitle: "Wir bieten umfassende, kultursensible Pflegedienstleistungen für ein würdevolles Leben im Alter.",
+  services: [
+    { title: "Häusliche Pflege", desc: "Medizinische und pflegerische Versorgung in den eigenen vier Wänden. Vertraut, sicher und respektvoll." },
+    { title: "24h Betreuung", desc: "Rund-um-die-Uhr Betreuung für maximale Sicherheit und Geborgenheit im eigenen Zuhause." },
+    { title: "Demenzpflege WG", desc: "Eine familiäre Wohngemeinschaft für demenzerkrankte Menschen mit 24/7 Betreuung durch muttersprachliches Personal." },
+  ],
+  infoTitle: "Geborgenheit durch kulturelle Nähe",
+  infoBody: "Für Menschen mit Demenz ist die Muttersprache und eine vertraute kulturelle Umgebung essenziell. Wir schaffen ein Zuhause, das genau das bietet.",
+  infoPoints: ["Muttersprachliches Pflegepersonal", "Kulturspezifische Mahlzeiten", "Berücksichtigung religiöser Feiertage", "Familienfreundliche Besuchszeiten"],
+  infoButton: "Plätze anfragen",
+  aboutTitle: (n) => `Über ${n}`,
+  aboutBody: "Ein familiengeführter Pflegedienst, gegründet um die Versorgungslücke für mehrsprachige Familien zu schließen. Unser Team aus mehrsprachigen Fachkräften begleitet täglich Pflegebedürftige mit Respekt und kulturellem Verständnis.",
+  aboutStats: [["150+", "Pflegebedürftige"], ["30+", "Fachkräfte"], ["10+", "Jahre"]],
+  navServices: "Leistungen",
+  navWebsite: "Zur Website",
   howTitle: (n) => `Wie der Bot für ${n} arbeitet`,
   howSubtitle: "Eingehende WhatsApp-Nachrichten werden automatisch qualifiziert — auf Deutsch und Türkisch — ohne dass Ihr Team eingreifen muss.",
   steps: [
@@ -83,9 +121,27 @@ const tr: DemoT = {
   botStatus: "YZ Asistanı · Çevrimiçi",
   defaultTagline: "Müşteri adaylarını otomatik olarak niteleyin, geri aramaları planlayın ve Türkçe ile Almanca 7/24 yanıt verin.",
   defaultSubtitle: "Müşteri adaylarını otomatik olarak niteleyin, geri aramaları planlayın ve Türkçe ile Almanca 7/24 yanıt verin.",
-  ctaPrimary: "Canlı Demo İzle",
-  ctaSecondary: "Danışmanlık Görüşmesi",
+  ctaPrimary: "Danışmanlık İste",
+  ctaSecondary: "Daha Fazla Bilgi",
   features: ["Otomatik Müşteri Nitelendirme", "Türkçe & Almanca", "Geri Arama Planlama"],
+  teamLabel: "Ekibimiz",
+  teamSub: "Çok dilli & kültürel açıdan yetkin",
+  servicesTitle: "Hizmetlerimiz",
+  servicesSubtitle: "Yaşlı bireylerin onurlu bir yaşam sürmesi için kapsamlı, kültüre duyarlı bakım hizmetleri sunuyoruz.",
+  services: [
+    { title: "Evde Bakım", desc: "Kendi evinde tıbbi ve bakım hizmetleri. Güvenilir, emniyetli ve saygılı." },
+    { title: "24 Saat Bakım", desc: "Evde maksimum güvenlik ve huzur için günün her saati bakım." },
+    { title: "Demans Bakım Evi", desc: "Anadil konuşan personel tarafından 7/24 bakım sağlanan aile sıcaklığında bir yaşam ortamı." },
+  ],
+  infoTitle: "Kültürel Yakınlıkla Güven",
+  infoBody: "Demans hastaları için anadil ve tanıdık kültürel ortam çok önemlidir. Tam da bunu sunan bir yuva yaratıyoruz.",
+  infoPoints: ["Anadil konuşan bakım personeli", "Kültüre özgü yemekler", "Dini bayramların dikkate alınması", "Aile dostu ziyaret saatleri"],
+  infoButton: "Yer Sorgula",
+  aboutTitle: (n) => `${n} Hakkında`,
+  aboutBody: "Almanya'daki çok dilli aileler için bakım açığını kapatmak amacıyla kurulan aile işletmesi. Çok dilli uzman ekibimiz her gün bakım ihtiyacı olanların yanında.",
+  aboutStats: [["150+", "Bakım Alan"], ["30+", "Uzman"], ["10+", "Yıl"]],
+  navServices: "Hizmetler",
+  navWebsite: "Web Sitesi",
   howTitle: (n) => `${n} için Bot Nasıl Çalışır`,
   howSubtitle: "Gelen WhatsApp mesajları otomatik olarak nitelendirilir — Türkçe ve Almanca — ekibinizin müdahalesine gerek kalmadan.",
   steps: [
@@ -124,9 +180,27 @@ const en: DemoT = {
   botStatus: "AI Assistant · Online",
   defaultTagline: "Automatically qualify leads, book callbacks, and respond in German and Turkish — around the clock.",
   defaultSubtitle: "Automatically qualify leads, book callbacks, and respond in German and Turkish — around the clock.",
-  ctaPrimary: "Watch Live Demo",
-  ctaSecondary: "Book Consultation",
+  ctaPrimary: "Request Consultation",
+  ctaSecondary: "Learn More",
   features: ["Automatic Lead Qualification", "German & Turkish", "Callback Booking"],
+  teamLabel: "Our Team",
+  teamSub: "Multilingual & culturally competent",
+  servicesTitle: "Our Services",
+  servicesSubtitle: "Comprehensive, culturally sensitive care services for a dignified life in old age.",
+  services: [
+    { title: "Home Care", desc: "Medical and nursing care in your own home. Familiar, safe and respectful." },
+    { title: "24h Care", desc: "Around-the-clock care for maximum safety and comfort at home." },
+    { title: "Dementia Care Home", desc: "A family-style shared home for people with dementia, staffed 24/7 by native speakers." },
+  ],
+  infoTitle: "Security Through Cultural Closeness",
+  infoBody: "For people with dementia, their native language and a familiar cultural environment are essential. We create a home that offers exactly that.",
+  infoPoints: ["Native-speaking care staff", "Culturally appropriate meals", "Religious holidays respected", "Family-friendly visiting hours"],
+  infoButton: "Enquire About Availability",
+  aboutTitle: (n) => `About ${n}`,
+  aboutBody: "A family-run care service founded to close the care gap for multilingual families. Our team of multilingual professionals accompanies those in need of care every day with respect and cultural understanding.",
+  aboutStats: [["150+", "People Cared For"], ["30+", "Specialists"], ["10+", "Years"]],
+  navServices: "Services",
+  navWebsite: "Visit Website",
   howTitle: (n) => `How the Bot Works for ${n}`,
   howSubtitle: "Incoming WhatsApp messages are automatically qualified — in German and Turkish — without your team lifting a finger.",
   steps: [

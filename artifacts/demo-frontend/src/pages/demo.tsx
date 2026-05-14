@@ -4,16 +4,23 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
+import patternImg from "@/assets/pattern.png";
+import heroImg from "@/assets/hero-person.png";
+import careImg from "@/assets/care.png";
+import { Link } from "wouter";
 import {
-  MessageCircle,
   CheckCircle2,
-  Clock,
-  Zap,
-  Globe,
-  MapPin,
   Loader2,
   ArrowRight,
+  Heart,
+  Users,
+  Home as HomeIcon,
+  PhoneCall,
+  MessageCircle,
+  type LucideIcon,
 } from "lucide-react";
+
+const SERVICE_ICONS: LucideIcon[] = [HomeIcon, Heart, Users];
 
 interface BrandingConfig {
   companyName: string;
@@ -45,9 +52,7 @@ export default function DemoPage() {
         if (!r.ok) throw new Error("not found");
         return r.json();
       })
-      .then((data: BrandingConfig) => {
-        setBranding(data);
-      })
+      .then((data: BrandingConfig) => setBranding(data))
       .catch(() => setError("not found"))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -87,139 +92,131 @@ export default function DemoPage() {
   }
 
   const headline = branding.heroHeadline || branding.tagline || branding.companyName;
+  const subtext = branding.tagline && branding.heroHeadline ? branding.tagline : t.defaultSubtitle;
+  const initials = branding.companyName.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <DemoNav branding={branding} />
 
       {/* ── HERO ── */}
-      <section className="relative w-full overflow-hidden">
-        <div className="flex flex-col lg:flex-row min-h-[calc(100vh-72px)]">
+      <section className="relative w-full overflow-hidden pt-12 lg:pt-0 lg:h-[calc(100vh-80px)] flex items-center" style={{ backgroundColor: primary }}>
+        <div
+          className="absolute inset-0 z-0 opacity-20 pointer-events-none mix-blend-multiply"
+          style={{ backgroundImage: `url(${patternImg})`, backgroundSize: "400px" }}
+        />
 
-          {/* Left: text content — always light bg, always dark text */}
-          <div className="flex-1 flex flex-col justify-center px-8 md:px-16 py-16 lg:py-24 bg-white relative">
-            {/* Accent line */}
-            <div className="absolute left-0 top-0 bottom-0 w-1 hidden lg:block" style={{ backgroundColor: primary }} />
+        <div className="container mx-auto px-4 md:px-8 relative z-10 h-full">
+          <div className="flex flex-col lg:flex-row items-center justify-between h-full gap-12">
 
+            {/* Left: text */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
+              className="flex-1 text-white max-w-2xl py-12 lg:py-0"
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55 }}
-              className="max-w-xl"
+              transition={{ duration: 0.6 }}
             >
-              {/* Badge */}
-              <div
-                className="inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full mb-6"
-                style={{ backgroundColor: primary + "18", color: primary }}
-              >
-                <Zap className="h-3 w-3" />
-                {t.badge}
-              </div>
-
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] text-gray-900 mb-6">
+              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-white drop-shadow-sm">
                 {headline}
               </h1>
-
-              <p className="text-lg text-gray-500 mb-10 leading-relaxed">
-                {branding.tagline && branding.heroHeadline ? branding.tagline : t.defaultSubtitle}
+              <p className="text-xl md:text-2xl font-medium mb-10 text-white/90 max-w-lg">
+                {subtext}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 mb-12">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   size="lg"
-                  className="h-12 px-7 rounded-xl gap-2 text-white font-semibold shadow-md hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: primary }}
+                  className="text-lg h-14 px-8 rounded-full shadow-lg font-semibold hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: secondary, color: "white" }}
                   onClick={() => document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })}
                 >
-                  <MessageCircle className="h-4 w-4" /> {t.ctaPrimary}
+                  <MessageCircle className="h-5 w-5 mr-2" /> {t.ctaPrimary}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 px-7 rounded-xl gap-2 font-semibold border-gray-200 text-gray-700 hover:bg-gray-50"
+                  className="bg-transparent border-white text-white hover:bg-white/10 text-lg h-14 px-8 rounded-full"
                 >
-                  {t.ctaSecondary} <ArrowRight className="h-4 w-4" />
+                  {t.ctaSecondary} <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
 
-              {/* Feature pills */}
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { Icon: CheckCircle2, label: t.features[0] },
-                  { Icon: Clock, label: t.features[1] },
-                  { Icon: Zap, label: t.features[2] },
-                ].map(({ Icon, label }) => (
-                  <div key={label} className="flex items-center gap-1.5 text-sm text-gray-600 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg">
-                    <Icon className="h-3.5 w-3.5" style={{ color: primary }} />
-                    {label}
-                  </div>
-                ))}
+              <div className="mt-16 flex items-center gap-4 bg-black/10 p-4 rounded-2xl backdrop-blur-sm max-w-md border border-white/20">
+                <div className="flex -space-x-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="w-12 h-12 rounded-full border-2 flex items-center justify-center text-white font-bold overflow-hidden"
+                      style={{ borderColor: primary, backgroundColor: secondary }}
+                    >
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${slug}${i}&backgroundColor=${secondary.replace("#", "")}`}
+                        alt="Team member"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p className="font-bold text-lg text-white">{t.teamLabel}</p>
+                  <p className="text-sm text-white/80">{t.teamSub}</p>
+                </div>
               </div>
             </motion.div>
-          </div>
 
-          {/* Right: phone mockup on brand-colored background */}
-          <div
-            id="bot-demo"
-            className="lg:w-[45%] flex items-center justify-center px-8 py-16"
-            style={{ backgroundColor: primary }}
-          >
+            {/* Right: person photo + floating bot card */}
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="relative"
-              style={{ width: 280 }}
+              className="flex-1 relative h-full w-full flex items-end justify-center lg:justify-end"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              {/* Glow */}
-              <div className="absolute inset-0 rounded-[40px] bg-black/30 blur-3xl scale-90 translate-y-6" />
+              <div className="relative w-full max-w-lg h-[500px] lg:h-[90%] mt-auto flex items-end">
+                <img
+                  src={heroImg}
+                  alt="Care professional"
+                  className="w-full h-full object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10"
+                />
 
-              {/* Phone shell */}
-              <div className="relative bg-[#111] rounded-[40px] p-2.5 shadow-2xl border border-white/10">
-                <div className="rounded-[32px] overflow-hidden" style={{ background: "#ECE5DD", minHeight: 500 }}>
-                  {/* WhatsApp header */}
-                  <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: secondary }}>
-                    <div
-                      className="h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                      style={{ backgroundColor: primary }}
-                    >
-                      {branding.companyName.slice(0, 2).toUpperCase()}
+                {/* Floating bot preview card */}
+                <div
+                  id="bot-demo"
+                  className="absolute bottom-12 -left-6 lg:left-0 bg-white rounded-2xl shadow-xl z-20 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700 delay-500 overflow-hidden"
+                  style={{ width: 200 }}
+                >
+                  <div className="px-3 py-2 flex items-center gap-2" style={{ backgroundColor: secondary }}>
+                    <div className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0" style={{ backgroundColor: primary }}>
+                      {initials}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white text-sm font-semibold leading-tight truncate">{branding.companyName}</p>
-                      <p className="text-white/60 text-xs">{t.botStatus}</p>
+                      <p className="text-white text-[11px] font-semibold leading-tight truncate">{branding.companyName}</p>
+                      <p className="text-white/60 text-[10px]">{t.botStatus}</p>
                     </div>
-                    <div className="ml-auto shrink-0">
-                      <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                    </div>
+                    <div className="ml-auto shrink-0 h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
                   </div>
-
-                  {/* Messages */}
-                  <div className="p-3 space-y-2 min-h-[400px]">
-                    {t.botMessages.slice(0, visibleMessages).map((msg, i) => (
+                  <div className="p-2 space-y-1.5 bg-[#ECE5DD]">
+                    {t.botMessages.slice(0, Math.min(visibleMessages, 2)).map((msg, i) => (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 6 }}
+                        initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25 }}
+                        transition={{ duration: 0.2 }}
                         className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className="max-w-[82%] rounded-2xl px-3 py-2 text-[11px] leading-relaxed shadow-sm"
+                          className="max-w-[90%] rounded-xl px-2 py-1 text-[10px] leading-relaxed shadow-sm"
                           style={{
                             backgroundColor: msg.from === "user" ? primary : "white",
                             color: msg.from === "user" ? "white" : "#222",
-                            borderBottomRightRadius: msg.from === "user" ? 4 : 16,
-                            borderBottomLeftRadius: msg.from === "bot" ? 4 : 16,
                           }}
                         >
                           {msg.text}
                         </div>
                       </motion.div>
                     ))}
-                    {visibleMessages < t.botMessages.length && (
+                    {visibleMessages < 2 && (
                       <div className="flex justify-start">
-                        <div className="bg-white rounded-2xl px-3 py-2 text-xs text-gray-400 flex gap-1 shadow-sm">
+                        <div className="bg-white rounded-xl px-2 py-1 text-[10px] text-gray-400 flex gap-0.5 shadow-sm">
                           <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
                           <span className="animate-bounce" style={{ animationDelay: "150ms" }}>·</span>
                           <span className="animate-bounce" style={{ animationDelay: "300ms" }}>·</span>
@@ -230,32 +227,117 @@ export default function DemoPage() {
                 </div>
               </div>
             </motion.div>
-          </div>
 
+          </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="py-20 bg-gray-50">
+      {/* ── SERVICES ── */}
+      <section id="leistungen" className="py-24 bg-background">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold mb-6" style={{ color: secondary }}>{t.servicesTitle}</h2>
+            <p className="text-lg text-muted-foreground">{t.servicesSubtitle}</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {t.services.map(({ title, desc }, i) => {
+              const Icon = SERVICE_ICONS[i % SERVICE_ICONS.length];
+              return (
+                <div
+                  key={i}
+                  className="bg-card border rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 duration-300 group"
+                >
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-colors"
+                    style={{ backgroundColor: primary + "18" }}
+                  >
+                    <Icon className="w-10 h-10" style={{ color: primary }} />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4" style={{ color: secondary }}>{title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-lg">{desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── INFO / IMAGE SECTION ── */}
+      <section className="py-24 overflow-hidden" style={{ backgroundColor: "hsl(var(--muted))" }}>
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex flex-col md:flex-row items-center gap-16">
+            <div className="flex-1 relative">
+              <div className="absolute inset-0 transform -rotate-6 rounded-3xl" style={{ backgroundColor: primary + "33" }} />
+              <img
+                src={careImg}
+                alt="Care"
+                className="relative rounded-3xl shadow-xl w-full object-cover aspect-square md:aspect-[4/3]"
+              />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-4xl font-bold mb-6 tracking-tight" style={{ color: secondary }}>{t.infoTitle}</h2>
+              <p className="text-lg text-muted-foreground mb-6">{t.infoBody}</p>
+              <ul className="space-y-4 mb-8">
+                {t.infoPoints.map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 font-medium text-lg" style={{ color: secondary }}>
+                    <CheckCircle2 className="w-6 h-6 shrink-0" style={{ color: primary }} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                className="rounded-full h-14 px-8 text-lg group text-white hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: secondary }}
+              >
+                {t.infoButton}
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── ABOUT / STATS ── */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 md:px-8 text-center max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold mb-6" style={{ color: secondary }}>
+            {t.aboutTitle(branding.companyName)}
+          </h2>
+          <p className="text-lg text-muted-foreground mb-6">{t.aboutBody}</p>
+          {branding.city && (
+            <p className="text-sm text-muted-foreground mb-8">📍 {branding.city}</p>
+          )}
+          <div className="flex justify-center gap-12 mt-10">
+            {t.aboutStats.map(([num, label]) => (
+              <div key={label} className="text-center">
+                <div className="text-4xl font-extrabold" style={{ color: primary }}>{num}</div>
+                <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS (bot) ── */}
+      <section className="py-20" style={{ backgroundColor: "hsl(var(--muted))" }}>
         <div className="container mx-auto px-6 md:px-12 max-w-5xl">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+            <h2 className="text-3xl font-bold mb-3" style={{ color: secondary }}>
               {t.howTitle(branding.companyName)}
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">{t.howSubtitle}</p>
+            <p className="text-muted-foreground max-w-xl mx-auto">{t.howSubtitle}</p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {t.steps.map(({ title, desc }, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div key={i} className="bg-card rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div
                   className="h-11 w-11 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-5 shadow-sm"
                   style={{ backgroundColor: primary }}
                 >
                   {i + 1}
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                <h3 className="font-bold mb-2" style={{ color: secondary }}>{title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -263,46 +345,96 @@ export default function DemoPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-20" style={{ backgroundColor: secondary || "#111" }}>
+      <section className="py-20" style={{ backgroundColor: secondary }}>
         <div className="container mx-auto px-6 md:px-12 text-center max-w-2xl">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            {t.ctaTitle(branding.companyName)}
-          </h2>
+          <h2 className="text-3xl font-bold text-white mb-4">{t.ctaTitle(branding.companyName)}</h2>
           <p className="text-white/70 mb-10 leading-relaxed">{t.ctaSubtitle}</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              size="lg"
-              className="h-12 px-8 rounded-xl gap-2 font-semibold text-white shadow-lg hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: primary }}
-            >
-              <MessageCircle className="h-4 w-4" /> {t.ctaButton}
-            </Button>
-            {branding.websiteUrl && (
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 px-8 rounded-xl gap-2 border-white/20 text-white hover:bg-white/10 font-semibold"
-                onClick={() => window.open(branding.websiteUrl!, "_blank")}
-              >
-                <Globe className="h-4 w-4" />
-                {(() => { try { return new URL(branding.websiteUrl!).hostname; } catch { return branding.websiteUrl; } })()}
-              </Button>
-            )}
-          </div>
-          {branding.city && (
-            <p className="text-white/40 mt-8 text-sm flex items-center justify-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" /> {branding.city}
-            </p>
-          )}
+          <Button
+            size="lg"
+            className="h-12 px-8 rounded-xl gap-2 font-semibold text-white shadow-lg hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: primary }}
+          >
+            <MessageCircle className="h-4 w-4" /> {t.ctaButton}
+          </Button>
         </div>
       </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="py-16" style={{ backgroundColor: secondary }}>
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="grid md:grid-cols-4 gap-12">
+            <div className="col-span-2">
+              <div className="flex items-center gap-2 mb-6">
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt={branding.companyName} className="h-10 object-contain" />
+                ) : (
+                  <span className="text-3xl font-extrabold tracking-tight text-white">
+                    {branding.companyName.toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <p className="text-white/60 max-w-sm mb-6 text-lg">{subtext}</p>
+              {branding.phone && (
+                <div className="flex items-center gap-2 font-bold text-xl" style={{ color: primary }}>
+                  <PhoneCall className="w-6 h-6" />
+                  <span>{branding.phone}</span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-4 text-white">Navigation</h4>
+              <ul className="space-y-3">
+                {["#leistungen"].map((href, i) => (
+                  <li key={i}>
+                    <a href={href} className="text-white/60 hover:text-white transition-colors">
+                      {t.navServices}
+                    </a>
+                  </li>
+                ))}
+                {branding.websiteUrl && (
+                  <li>
+                    <a
+                      href={branding.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/60 hover:text-white transition-colors"
+                    >
+                      {t.navWebsite}
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-4 text-white">Demo Links</h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href={`/demo/${branding.slug}/dashboard`}
+                    className="font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    style={{ color: primary }}
+                  >
+                    Live-Dashboard <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-white/10 text-center text-white/40 text-sm font-medium">
+            © {new Date().getFullYear()} {branding.companyName}. Demo by Dosteli System.
+          </div>
+        </div>
+      </footer>
 
       {/* ── WhatsApp FAB ── */}
       <div className="fixed bottom-6 right-6 z-50">
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 2.5, type: "spring", stiffness: 300 }}
+          transition={{ delay: 2, type: "spring", stiffness: 300 }}
           className="h-14 w-14 rounded-full flex items-center justify-center shadow-xl text-white hover:scale-110 transition-transform"
           style={{ backgroundColor: "#25D366" }}
           title="WhatsApp"
