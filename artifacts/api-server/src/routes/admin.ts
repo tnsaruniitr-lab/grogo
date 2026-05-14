@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { clientsTable, companyKnowledgeTable } from "@workspace/db";
 import { eq, isNull, and, inArray } from "drizzle-orm";
+import { extractBrand } from "../lib/brand-extractor";
 import {
   ExtractBrandingBody,
   CreateDemoClientBody,
@@ -296,6 +297,36 @@ router.get("/clients/:slug/content", async (req: Request, res: Response) => {
   });
 });
 
+router.post("/admin/brand-extract/:slug", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+
+  const [client] = await db
+    .select({ id: clientsTable.id, config: clientsTable.config, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+
+  if (!client || client.deletedAt) {
+    res.status(404).json({ error: "Client not found" });
+    return;
+  }
+
+  const cfg = (client.config ?? {}) as Record<string, unknown>;
+  const websiteUrl = cfg.websiteUrl as string | undefined;
+
+  if (!websiteUrl) {
+    res.status(400).json({ error: "Client has no websiteUrl configured" });
+    return;
+  }
+
+  // Fire-and-forget — return immediately, extraction runs async
+  res.json({ status: "started", slug, websiteUrl });
+
+  extractBrand(client.id, websiteUrl).catch((err) =>
+    req.log.error({ err, slug }, "brand-extract background error"),
+  );
+});
+
 router.get("/clients/:slug/branding", async (req: Request, res: Response) => {
   const params = GetClientBrandingParams.safeParse(req.params);
   if (!params.success) {
@@ -332,6 +363,8 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     phone: (cfg.phone as string | null | undefined) ?? null,
     websiteUrl: (cfg.websiteUrl as string | null | undefined) ?? null,
     demoLanguage: (cfg.demoLanguage as string | null | undefined) ?? null,
+    industry: (cfg.industry as string | null | undefined) ?? null,
+    heroImageUrl: (cfg.heroImageUrl as string | null | undefined) ?? null,
   };
 }
 

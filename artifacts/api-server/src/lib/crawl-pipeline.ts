@@ -4,6 +4,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import { fetchPage, fetchRobotsTxt, isAllowed, withConcurrency } from "./crawler";
 import { extractKnowledge, deduplicateItems } from "./extractor";
 import { embedText, embeddingToJson } from "./embedder";
+import { extractBrand } from "./brand-extractor";
 import { logger } from "./logger";
 
 const MAX_PAGES = 50;
@@ -274,6 +275,11 @@ export async function runCrawlPipeline(
       },
       "Crawl pipeline complete",
     );
+
+    // Auto-extract brand colors + headline after successful crawl
+    if (finalStatus !== "failed") {
+      await extractBrand(clientId, websiteUrl);
+    }
   } catch (err) {
     logger.error({ err, clientId, jobId }, "Crawl pipeline fatal error");
     await db

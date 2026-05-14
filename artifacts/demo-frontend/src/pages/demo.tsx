@@ -34,6 +34,35 @@ interface BrandingConfig {
   phone?: string | null;
   websiteUrl?: string | null;
   demoLanguage?: string | null;
+  industry?: string | null;
+  heroImageUrl?: string | null;
+}
+
+const CARE_INDUSTRIES = new Set(["care", "medical", "dental", "fitness"]);
+
+function resolveColors(branding: BrandingConfig): { primary: string; secondary: string } {
+  if (branding.primaryColor && branding.secondaryColor) {
+    return { primary: branding.primaryColor, secondary: branding.secondaryColor };
+  }
+  const industry = branding.industry ?? "other";
+  const FALLBACKS: Record<string, { primary: string; secondary: string }> = {
+    care:        { primary: "#4A7C59", secondary: "#1B2B3A" },
+    aesthetics:  { primary: "#C9A84C", secondary: "#1A1A2E" },
+    dental:      { primary: "#2E86AB", secondary: "#2D3047" },
+    medical:     { primary: "#1B4F8A", secondary: "#0D1B2A" },
+    legal:       { primary: "#1C2951", secondary: "#0B0E1A" },
+    finance:     { primary: "#0D5C40", secondary: "#071C13" },
+    retail:      { primary: "#7C3AED", secondary: "#1E1B4B" },
+    hospitality: { primary: "#C1694F", secondary: "#2C1A14" },
+    education:   { primary: "#2563EB", secondary: "#1E1B4B" },
+    fitness:     { primary: "#F97316", secondary: "#1C0E05" },
+    other:       { primary: "#374151", secondary: "#111827" },
+  };
+  const fallback = FALLBACKS[industry] ?? FALLBACKS.other!;
+  return {
+    primary: branding.primaryColor || fallback.primary,
+    secondary: branding.secondaryColor || fallback.secondary,
+  };
 }
 
 interface KnowledgeChunk {
@@ -98,8 +127,9 @@ export default function DemoPage() {
     return () => clearInterval(timer);
   }, [branding]);
 
-  const primary = branding?.primaryColor || "#A8C334";
-  const secondary = branding?.secondaryColor || "#1a3a1a";
+  const { primary, secondary } = branding
+    ? resolveColors(branding)
+    : { primary: "#374151", secondary: "#111827" };
   const t = getDemoT(branding?.demoLanguage);
 
   if (loading) {
@@ -193,7 +223,7 @@ export default function DemoPage() {
               </div>
             </motion.div>
 
-            {/* Right: person photo + floating bot card */}
+            {/* Right: hero image + floating bot card */}
             <motion.div
               className="flex-1 relative h-full w-full flex items-end justify-center lg:justify-end"
               initial={{ opacity: 0, x: 50 }}
@@ -201,11 +231,40 @@ export default function DemoPage() {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className="relative w-full max-w-lg h-[500px] lg:h-[90%] mt-auto flex items-end">
-                <img
-                  src={heroImg}
-                  alt="Care professional"
-                  className="w-full h-full object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10"
-                />
+                {branding.heroImageUrl ? (
+                  <img
+                    src={branding.heroImageUrl}
+                    alt={branding.companyName}
+                    className="w-full h-full object-cover rounded-3xl shadow-2xl z-10"
+                  />
+                ) : CARE_INDUSTRIES.has(branding.industry ?? "other") || !branding.industry ? (
+                  <img
+                    src={heroImg}
+                    alt="Care professional"
+                    className="w-full h-full object-contain object-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10"
+                  />
+                ) : (
+                  /* Non-care industry with no OG image — show decorative brand card */
+                  <div className="w-full h-full flex flex-col items-center justify-center z-10 gap-6 pb-16">
+                    {branding.logoUrl ? (
+                      <img
+                        src={branding.logoUrl}
+                        alt={branding.companyName}
+                        className="max-h-32 max-w-[280px] object-contain drop-shadow-lg"
+                      />
+                    ) : (
+                      <div
+                        className="w-32 h-32 rounded-3xl flex items-center justify-center text-white text-5xl font-extrabold shadow-2xl"
+                        style={{ backgroundColor: secondary }}
+                      >
+                        {initials}
+                      </div>
+                    )}
+                    <div className="text-center text-white/80 text-lg font-medium max-w-xs">
+                      {branding.city && <p className="text-white/60 text-sm mt-1">📍 {branding.city}</p>}
+                    </div>
+                  </div>
+                )}
 
                 {/* Floating bot preview card */}
                 <div
