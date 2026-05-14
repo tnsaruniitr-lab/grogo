@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useListDemoClients,
   useDeleteDemoClient,
+  useUpdateDemoClient,
   useGetDashboardStats,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import {
   Users,
   PhoneCall,
   Settings,
+  Pencil,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
@@ -74,6 +76,7 @@ export default function HubPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingClient, setEditingClient] = useState<DemoClient | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
@@ -173,6 +176,7 @@ export default function HubPage() {
                     client={client}
                     copied={copiedSlug === client.slug}
                     onCopy={() => copyLink(client.slug)}
+                    onEdit={() => setEditingClient(client)}
                     onDelete={() => {
                       if (confirm(`Delete demo "${client.branding.companyName}"?`)) {
                         deleteMutation.mutate({ id: client.id });
@@ -194,6 +198,17 @@ export default function HubPage() {
           setShowCreate(false);
         }}
       />
+
+      {editingClient && (
+        <EditDemoDialog
+          client={editingClient}
+          onClose={() => setEditingClient(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+            setEditingClient(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -202,11 +217,13 @@ function BrandCard({
   client,
   copied,
   onCopy,
+  onEdit,
   onDelete,
 }: {
   client: DemoClient;
   copied: boolean;
   onCopy: () => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) {
   const primary = client.branding.primaryColor ?? "#A8C334";
@@ -296,6 +313,13 @@ function BrandCard({
               title="Copy link"
             >
               {copied ? <CheckCheck className="h-3.5 w-3.5 text-[#A8C334]" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={onEdit}
+              className="text-white/30 hover:text-white transition-colors"
+              title="Edit branding"
+            >
+              <Pencil className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={onDelete}
@@ -575,6 +599,247 @@ function CreateDemoDialog({
             <Button onClick={create} disabled={creating || uploading || !branding.companyName} className="gap-2">
               {(creating || uploading) && <Loader2 className="h-4 w-4 animate-spin" />}
               Create Demo
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDemoDialog({
+  client,
+  onClose,
+  onSaved,
+}: {
+  client: DemoClient;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(client.branding.logoUrl ?? null);
+  const [branding, setBranding] = useState<BrandingConfig>({
+    companyName: client.branding.companyName ?? "",
+    slug: client.branding.slug ?? client.slug,
+    tagline: client.branding.tagline ?? "",
+    heroHeadline: client.branding.heroHeadline ?? "",
+    primaryColor: client.branding.primaryColor ?? "",
+    secondaryColor: client.branding.secondaryColor ?? "",
+    logoUrl: client.branding.logoUrl ?? "",
+    city: client.branding.city ?? "",
+    phone: client.branding.phone ?? "",
+    websiteUrl: client.branding.websiteUrl ?? "",
+    demoLanguage: client.branding.demoLanguage ?? "de",
+  });
+
+  const update = (key: keyof BrandingConfig, value: string) =>
+    setBranding((prev) => ({ ...prev, [key]: value }));
+
+  const uploadLogo = async (): Promise<string | null> => {
+    if (!logoFile) return branding.logoUrl ?? null;
+    setUploading(true);
+    try {
+      const meta = await fetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: logoFile.name, size: logoFile.size, contentType: logoFile.type }),
+      });
+      const { uploadURL, objectPath } = await meta.json();
+      await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": logoFile.type }, body: logoFile });
+      return `/api/storage${objectPath}`;
+    } catch { return branding.logoUrl ?? null; }
+    finally { setUploading(false); }
+  };
+
+  const save = async () => {
+    if (!branding.companyName) {
+      toast({ title: "Company name is required", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      const finalLogoUrl = await uploadLogo();
+      const res = await fetch(`/api/admin/clients/${client.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: branding.companyName,
+          branding: { ...branding, logoUrl: finalLogoUrl },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: err.error ?? "Save failed", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Branding saved" });
+      onSaved();
+    } finally { setSaving(false); }
+  };
+
+  const primary = branding.primaryColor || "#A8C334";
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Branding — {client.branding.companyName}</DialogTitle>
+          <DialogDescription>
+            Update logo, colors, name, and language for this demo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5 mt-2">
+          {/* Logo section — prominent at top */}
+          <div className="space-y-3">
+            <Label className="text-base font-bold">Logo</Label>
+            <div className="rounded-xl p-5 border-2 border-dashed border-border flex flex-col items-center gap-4 bg-muted/30">
+              {/* Preview in brand colors */}
+              <div
+                className="w-full rounded-lg h-20 flex items-center justify-center gap-3 relative overflow-hidden"
+                style={{ backgroundColor: primary }}
+              >
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="h-12 max-w-[200px] object-contain drop-shadow-md"
+                    onError={() => setLogoPreview(null)}
+                  />
+                ) : (
+                  <span className="text-2xl font-extrabold text-white tracking-tight">
+                    {branding.companyName.toUpperCase() || "COMPANY"}
+                  </span>
+                )}
+              </div>
+
+              <div className="w-full flex flex-col sm:flex-row gap-3 items-start">
+                <div className="flex-1 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Upload image file</Label>
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="cursor-pointer"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }
+                    }}
+                  />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Or paste URL</Label>
+                  <Input
+                    placeholder="https://example.com/logo.png"
+                    value={logoFile ? "" : (branding.logoUrl ?? "")}
+                    disabled={!!logoFile}
+                    onChange={(e) => {
+                      update("logoUrl", e.target.value);
+                      setLogoPreview(e.target.value || null);
+                    }}
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+
+              {logoPreview && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive text-xs"
+                  onClick={() => { setLogoFile(null); setLogoPreview(null); update("logoUrl", ""); }}
+                >
+                  Remove logo
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label>Company Name *</Label>
+              <Input value={branding.companyName} onChange={(e) => update("companyName", e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Primary Color</Label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={branding.primaryColor || "#A8C334"}
+                  onChange={(e) => update("primaryColor", e.target.value)}
+                  className="h-10 w-14 rounded border border-input cursor-pointer"
+                />
+                <Input
+                  value={branding.primaryColor ?? ""}
+                  onChange={(e) => update("primaryColor", e.target.value)}
+                  className="font-mono text-sm"
+                  placeholder="#A8C334"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Secondary Color</Label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={branding.secondaryColor || "#1a3a1a"}
+                  onChange={(e) => update("secondaryColor", e.target.value)}
+                  className="h-10 w-14 rounded border border-input cursor-pointer"
+                />
+                <Input
+                  value={branding.secondaryColor ?? ""}
+                  onChange={(e) => update("secondaryColor", e.target.value)}
+                  className="font-mono text-sm"
+                  placeholder="#1a3a1a"
+                />
+              </div>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label>Tagline</Label>
+              <Input value={branding.tagline ?? ""} onChange={(e) => update("tagline", e.target.value)} placeholder="Professional Care with Heart" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label>Hero Headline</Label>
+              <Input value={branding.heroHeadline ?? ""} onChange={(e) => update("heroHeadline", e.target.value)} placeholder="Care you can trust." />
+            </div>
+            <div className="space-y-2">
+              <Label>City</Label>
+              <Input value={branding.city ?? ""} onChange={(e) => update("city", e.target.value)} placeholder="Munich" />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <Input value={branding.phone ?? ""} onChange={(e) => update("phone", e.target.value)} placeholder="+49 89 12345678" />
+            </div>
+            <div className="space-y-2">
+              <Label>Website URL</Label>
+              <Input value={branding.websiteUrl ?? ""} onChange={(e) => update("websiteUrl", e.target.value)} placeholder="https://example.de" className="col-span-2" />
+            </div>
+            <div className="space-y-2">
+              <Label>Demo Language</Label>
+              <Select value={branding.demoLanguage ?? "de"} onValueChange={(v) => update("demoLanguage", v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANG_OPTIONS.map((l) => (
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.flag} {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={save} disabled={saving || uploading || !branding.companyName} className="gap-2">
+              {(saving || uploading) && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save Changes
             </Button>
           </div>
         </div>
