@@ -1,0 +1,111 @@
+Here is the full ManyChat workflow configuration as it currently exists, field by field, exactly as I verified in the editor and Settings. Hand this to Replit verbatim for cross-check.
+ManyChat Workflow — Full Field-by-Field Snapshot
+Workspace
+
+Account ID: fb4928822
+Plan: Trial
+Connected channels: Instagram (active), plus TikTok/WhatsApp/Messenger/SMS/Email/Telegram listed but not used
+Connected IG account/handle: not directly visible to me; the only contact in the workspace is gentlegiantdory (Dory Weber), subscribed via Instagram
+
+Custom User Field
+
+Name: BotReply
+Type: Text
+Folder: User Fields
+Description: (empty)
+Created: this session, ~30 min ago
+Current value on Dory's profile: Not Set (this is the smoking gun)
+
+Automation: "Instagram Default Reply"
+
+Status: LIVE (red badge)
+Trigger toggle: ON (blue)
+Run counter shown in sidebar: 0 runs · 0% CTR (despite Inbox log showing 1 trigger event)
+Flow ID: content20260515204930_078828
+
+Step 1 — Trigger (When…)
+
+Type: Default Reply
+Channel: Instagram
+Event: "User sends a Direct Message"
+New Trigger: none added
+
+Step 2 — Actions block (Perform Actions)
+Contains a single action: External Request.
+External Request — full configuration
+FieldValueRequest TypePOSTRequest URLhttps://3a0ae458-388e-4499-8eb8-1f81a1a81110-00-1p4416g4evu42.pike.replit.dev/api/webhook/manychat/dostelitest1Contact for testing(empty until you select one — was Dory Weber during testing)
+Headers tab — two headers:
+KeyValueContent-Typeapplication/jsonx-api-keyb066994544c7f2e58f0a499fe6aa83b64c558eda72a16435d1817e310fea49af
+Body tab (Request Body — dynamic JSON):
+{
+  "senderId": "{{Contact Id}}",
+  "message": "{{Last Text Input}}",
+  "channel": "instagram",
+  "name": "{{Full Name}}"
+}
+ManyChat renders the variable chips visually as: [Contact Id], [Last Text Input], [Full Name]. The preview pane shows "Invalid JSON / Variables are not defined" which is normal — variables resolve at runtime.
+What ManyChat actually sent to Replit during Test Request and live trigger (verified via Test Request response panel):
+{
+  "senderId": "1739348415",
+  "message": "hello how are you doing",
+  "channel": "instagram",
+  "name": "Dory Weber"
+}
+(senderId 1739348415 is Dory's ManyChat internal Contact Id.)
+Response tab — last captured response from Replit (live Test Request a few minutes ago):
+
+HTTP status: 200 OK
+Response body: {"version":"v2","content":{"messages":[{"type":"text","text":"Hello! I'm here and ready to help you. How c…"}]}}
+Response Headers: present (collapsed)
+Earlier session captured: "Hello! How can I assist you today?" — also 200 OK
+The "No Response" placeholder appears every time the modal is reopened (sample is not persisted), but Test Request always succeeds.
+
+Response mapping tab — single mapping:
+JSONPath→Custom Field$.content.messages[0].text→BotReply (Text)
+No additional mappings. No conditions.
+Step 3 — Send Message block (Instagram)
+
+Channel: Instagram
+Send within: "within 24 hour window" (Standard Messaging — requires user to have DM'd within the last 24h, which they had just done)
+Text content: a single variable chip → {{BotReply}} (Custom User Field)
+No buttons
+No quick replies
+No additional content blocks (Image, Card, etc.)
+No "Next Step" wired after this — flow ends here
+
+Step 4 — None
+Flow terminates after Send Message.
+Connection map
+[ When… ]
+User sends a Direct Message (Default Reply, Instagram)
+        │
+        ▼
+[ Perform Actions ]
+    External Request
+      POST → Replit URL with x-api-key + JSON body
+      Response mapped: $.content.messages[0].text → BotReply
+        │
+        ▼
+[ Instagram → Send Message ]
+    Body: {{BotReply}}
+    Window: 24-hour standard messaging
+What actually happened during the live test (forensic timeline)
+
+21:24 ManyChat Inbox logs: Dory DM'd "hi how are you doing", then "hello"
+21:24 Inbox logs: "Automation Instagram Default Reply was triggered" (the trigger fired once on "hello")
+21:24:43 Replit log: received POST with body senderId=1739348415, message=hello how are you doing, processed in 2.2s, returned 200 with v2 JSON
+21:24+ Inbox: Dory's third message "hello how are you doing" recorded
+After this point: no outbound bot message appears in the ManyChat Inbox or on Instagram
+Dory's BotReply profile field: Not Set
+Settings → Logs → General tab: No errors or warnings (Dynamic Block requests reported as healthy)
+Settings → Logs → Facebook page restrictions tab: No notifications (no Meta-level block)
+
+The diagnostic contradiction Replit needs to consider
+Replit received the request and responded 200 with valid v2 JSON. ManyChat's test environment captured that 200 response perfectly and the JSONPath extracts the message text correctly when you click Test Request. But the live run did not persist the captured value to BotReply (still "Not Set") and the Send Message step did not deliver a message to Instagram.
+The three remaining hypotheses, in order of likelihood:
+
+The connected Instagram account is messaging itself. If gentlegiantdory is the same IG account that's connected to ManyChat, Meta's Graph API silently no-ops outbound automation messages back to the same account, even though the trigger logs and inbound webhook fire normally. This matches every symptom we see.
+ManyChat Trial plan limitations on Instagram outbound automation. Trial workspaces are documented to allow inbound triggers but may gate outbound automated DMs behind Pro tier. The Logs page would not necessarily surface this as an error.
+A timing/async issue between External Request completion and Custom Field write. Less likely because the same flow works in Test Request.
+
+Replit-side, the API contract is correct. Nothing to change on Replit unless you want to add a "send message" call directly via Instagram Graph API as a fallback (bypassing ManyChat's Send Message step), but that would require IG page access tokens stored on Replit, which is a larger architecture change.
