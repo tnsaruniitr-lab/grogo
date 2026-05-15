@@ -22,7 +22,7 @@ import {
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const MAX_BOT_TURNS_PER_HOUR = 10;
+const MAX_BOT_TURNS_PER_HOUR = 25;
 
 /**
  * Generic fallback profile used when no bot_profiles row exists for the client's industry.
@@ -234,9 +234,9 @@ function intentToStatus(intent: Intent, currentStatus: string): string {
  * Rate-limit reply — language-aware.
  */
 function rateLimitReply(language: string): string {
+  if (language === "de") return "Wir haben gerade viele Anfragen. Wir rufen Sie so schnell wie möglich zurück.";
   if (language === "tr") return "Şu an çok fazla mesaj geldi. En kısa sürede sizi arayacağız.";
-  if (language === "en") return "We've received a lot of messages right now. We'll call you back as soon as possible.";
-  return "Wir haben gerade viele Anfragen. Wir rufen Sie so schnell wie möglich zurück.";
+  return "We've received a lot of messages right now. We'll call you back as soon as possible.";
 }
 
 /**
@@ -244,13 +244,14 @@ function rateLimitReply(language: string): string {
  */
 function emptyKbCallbackOffer(language: string, callbackHours: string, profile: BotProfile): string {
   const offer = profile.callbackOffer[language] ?? profile.callbackOffer["en"] ?? null;
+  if (language === "de") {
+    return `Hallo! Zu dieser Frage kann ich Ihnen leider gerade keine genaue Auskunft geben. Lassen Sie uns einen Rückruf vereinbaren — soll ich Sie heute oder morgen zurückrufen lassen? Erreichbar sind wir ${callbackHours}.`;
+  }
   if (language === "tr") {
     return `Merhaba! Şu anda bu konuda size yardımcı olabilecek bilgiye sahip değilim. Sizi uzmanlarımızla buluşturalım — bugün veya yarın sizi geri aramamızı ister misiniz? Hizmet saatlerimiz: ${callbackHours}.`;
   }
-  if (language === "en") {
-    return `Hello! I don't have specific information on that right now. Let me connect you with our team — would you like us to call you back today or tomorrow? We're available ${callbackHours}.`;
-  }
-  return `Hallo! Zu dieser Frage kann ich Ihnen leider gerade keine genaue Auskunft geben. Lassen Sie uns einen Rückruf vereinbaren — soll ich Sie heute oder morgen zurückrufen lassen? Erreichbar sind wir ${callbackHours}.`;
+  // English is the universal fallback for all other languages (ar, fr, es, etc.)
+  return `Hello! I don't have specific information on that right now. Let me connect you with our team — would you like us to call you back today or tomorrow? We're available ${callbackHours}.`;
 }
 
 export interface BotPipelineInput {

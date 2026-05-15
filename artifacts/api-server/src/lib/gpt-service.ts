@@ -60,10 +60,28 @@ export interface GptCallParams {
   profile: BotProfile;
 }
 
+const LANGUAGE_LABELS: Record<string, string> = {
+  de: "German (Deutsch)",
+  tr: "Turkish (Türkçe)",
+  en: "English",
+  ar: "Arabic (العربية)",
+  fr: "French (Français)",
+  es: "Spanish (Español)",
+  ru: "Russian (Русский)",
+  zh: "Chinese (中文)",
+  pt: "Portuguese (Português)",
+  nl: "Dutch (Nederlands)",
+  it: "Italian (Italiano)",
+  pl: "Polish (Polski)",
+  hi: "Hindi (हिन्दी)",
+  ur: "Urdu (اردو)",
+  fa: "Persian (فارسی)",
+  ko: "Korean (한국어)",
+  ja: "Japanese (日本語)",
+};
+
 function langLabel(language: string): string {
-  if (language === "de") return "German (Deutsch)";
-  if (language === "tr") return "Turkish (Türkçe)";
-  return "English";
+  return LANGUAGE_LABELS[language] ?? `the language with code "${language}"`;
 }
 
 function noKnowledgePlaceholder(language: string): string {
@@ -182,15 +200,28 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
       return safeFallback(language);
     }
 
-    // Soft-correct a common GPT mistake: returning an intent value in the action field.
-    // "info_request" and "qualify" are intent-only — action for those cases must be "none".
-    if (
-      parsed !== null &&
-      typeof parsed === "object" &&
-      "action" in parsed &&
-      (parsed.action === "info_request" || parsed.action === "qualify")
-    ) {
-      (parsed as Record<string, unknown>).action = "none";
+    // Soft-correct common GPT mistakes before Zod validation so we never discard
+    // a good reply just because a metadata field is slightly off.
+    if (parsed !== null && typeof parsed === "object") {
+      const p = parsed as Record<string, unknown>;
+
+      // 1. data: null → {} (Zod .optional() accepts undefined, not null)
+      if (p["data"] === null) p["data"] = {};
+
+      // 2. action contains an intent-only value or any other free-text invention →
+      //    coerce to "none" rather than reject the whole response.
+      const validActions = new Set(actionEnum);
+      if (typeof p["action"] === "string" && !validActions.has(p["action"] as never)) {
+        logger.warn({ original: p["action"] }, "GPT returned invalid action — coercing to 'none'");
+        p["action"] = "none";
+      }
+
+      // 3. intent contains an invented value → coerce to "info_request"
+      const validIntents = new Set(intentEnum);
+      if (typeof p["intent"] === "string" && !validIntents.has(p["intent"] as never)) {
+        logger.warn({ original: p["intent"] }, "GPT returned invalid intent — coercing to 'info_request'");
+        p["intent"] = "info_request";
+      }
     }
 
     const validated = BotResponseSchema.safeParse(parsed);
