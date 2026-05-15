@@ -1,0 +1,237 @@
+All Collections >
+Product >
+Workflows >
+Step: HTTP Request
+Step: HTTP Request
+Avatar
+Shing-Yi Tan
+· 14 Nov 2025
+3 min read
+This Step enables sending HTTP Requests and saving their responses as Variables.
+
+This Step is only available for Advanced plan and above.
+
+
+Configuration
+There are two key configurations in the HTTP Request Step:
+
+HTTP Request Method
+The specific method required for the request. Choose the appropriate method from the dropdown list.
+
+
+URL
+In the URL field, enter the URL endpoint of the external API to retrieve data. To include Variables, use the "$" prefix to support the interpolation of static text and Variables.
+
+
+You can now use IP addresses and port numbers in the HTTP request step, giving you direct access to servers and flexibility to access services on non-standard ports.
+
+Please note that the respond.io domain is blacklisted. Sending an API call to this domain is not allowed, as it could cause looping issues.
+
+Body
+To ensure correct decoding by the request recipient, expand the Body section and include a body along with the Content-Type Header.
+
+
+Headers
+In the Header section, you can add headers to the HTTP request in pairs. The key represents the header name, and the value represents the header value. You can use Variables as headers by adding the prefix "$". However, remember that only up to 10 headers are allowed.
+
+
+Response Mapping
+For JSON API responses with key-value pairs, you can save specific response elements as Variables. In the Response Mapping section, input the key of the JSON object on the left and assign a name to the variable on the right. Keep in mind that only JSON responses can be saved, and you can have a maximum of 10 response mapping settings.
+
+
+Examples:
+
+To save a response in different formats, fill in the JSON key corresponding to the data you want to save.
+
+{  
+    "name": "Jason",  
+    "zip_codes": "12345",  
+    "phone": "123123"  
+}
+
+To save the phone number from the above response, use $.phone as the JSON key.
+
+{ 
+    "custom_fields": {  
+        "firstName": "John",  
+        "lastName": "Doe",  
+        "locale": "en_GB",  
+        "timezone": "5",  
+        "gender": "male",  
+        "phone": "123123",  
+        "email": "zy@respond.io",  
+        "customerid": "1"  
+    },  
+    "created_at": 1575618542  
+}
+
+To save the phone number from the above response, use $.custom_fields.phone
+
+{  
+        "data": {  
+            "id":"1776025372480910",  
+            "contacts" : [  
+                {  
+                    "firstName":"John",  
+                    "lastName":"Doe",  
+		    "locale": "en_GB"  
+                },  
+                {  
+                    "firstName":"Jane",  
+                    "lastName":"Doe",  
+		    "locale": "en_GB"  
+                }  
+	    ]  
+        }  
+    }
+
+To save the first name 'Jane' from the above response, use $.data.contacts[1].firstName.
+
+Save Response Status as Variable
+To save the response status from the HTTP request as a Variable, turn ON the Save Response Status as Variable toggle. Then, name the Variable in the field provided.
+
+
+How It Works
+When activated, this step will send an HTTP request to the specified URL, using the defined body and header.
+
+You can guide the Workflow based on the response status. For instance, you can create a Branch for "status code is equal to 200". If any other response status code is received, a Jump Step could return Contacts to the HTTP Request Step. Alternatively, the Contact could be directed to the Failure Branch if the branch conditions are not met. If there are no steps set up under the Failure Branch, the Workflow will conclude.
+
+If your HTTP request exceeds 10 seconds, it will result in a timeout, causing the request to fail.
+
+Potential Failure
+To avoid potential failures in executing HTTP requests, ensure the following conditions are met:
+
+Use the correct HTTP method and Content-Type Header.
+
+Ensure to include the required protocol http:// or https:// in your URL based on what your system supports to avoid request failure.
+
+Ensure the Content-Type is valid.
+
+Exclude the port number from the URL.
+
+Avoid using a self-signed certificate in the URL.
+
+Verify that the authorization is valid.
+
+Ensure our IP addresses (52.74.35.155, 18.138.31.163, 54.169.155.20) are not blocked.
+
+If any of the above conditions are not met, the Contact will skip this step and proceed with the remaining journey.
+
+When verifying HTTP request outputs with dynamic variables, remember that Variables without a value will return as null and undefined.
+
+Best Practices
+Here are some best practices for this step you can follow to optimize your workflow:
+
+When the HTTP Request is Successful
+Save Response Status as a Variable:
+
+Ensure the first step is to save Response Status as Variable for further actions.
+
+Branch Step:
+
+Add a Branch Step to evaluate the HTTP request status.
+
+If the status is 200, the request is successful.
+
+If not, configure an alert to notify the manager about the unsuccessful request.
+
+Google Sheetfor Monitoring:
+
+Record the Response Status in a Google Sheet for a clear visibility on the success or failure of requests.
+
+Comment:
+
+Add a comment in your workflow to document the Response Status. This will help you track and review errors more efficiently.
+
+When the HTTP Request Fails
+Save Response Status as a Variable:
+
+Similar to the successful request, save Response Status as Variable for error handling.
+
+Use Wait or Jump Step for Retries:
+
+Implement the Wait Step to pause before retrying an unsuccessful request.
+
+Alternatively, use the Jump Step to go back to the HTTP Request Step and attempt the request again.
+
+Comment:
+
+Document the error by creating a comment to record the HTTP Request error
+
+Include Contact details and tag the person in charge.
+
+Google Sheet for Monitoring:
+
+Utilize the Google Sheet Step to log the Contact information and error details for monitoring and review.
+
+Task Assignment:
+
+Assign the task to a specific user to initiate another process within the workflow and try again.
+
+Suggested Use Cases
+Here are some ways you can use the HTTP Request Step:
+
+Route VIP Contacts: Utilize the HTTP Request Step to fetch Contact details from a data warehouse like a CRM. This enables you to identify VIP Contacts, allowing for a personalized customer experience and distinguishing them from non-VIP Contacts.
+
+Configuration
+HTTP Request Method
+URL
+Body
+Headers
+Response Mapping
+Save Response Status as Variable
+How It Works
+Potential Failure
+Best Practices
+When the HTTP Request is Successful
+When the HTTP Request Fails
+Suggested Use Cases
+Share this article
+Telegram
+Facebook
+Linkedin
+Twitter
+Related articles 👩‍💻
+
+How to Migrate AI Objective (Legacy) Workflows to AI Agents
+This guide shows you how to migrate your existing AI Objective Workflows to AI Agents, our more powerful, flexible, and future-ready AI feature. You’ll learn how to move your persona, objectives, variables, and knowledge sources so a single AI Agent can replace and improve on your old AI Objective Steps.
+Step: Update Lifecycle
+Learn about best practices, use cases and how it works when implementing the Update Lifecycle Step.
+Step: Send Conversions API Event
+Learn about the configuration, how it works, best practices and more when implementing the Send Conversions API Event step.
+How to Avoid Workflow Loops
+Learn how to prevent workflow loops that cause unnecessary repetitions, system overload, and delays.
+Step: Send TikTok Lower Funnel Event
+Learn about the best practices, use cases and how it works when implementing the Send TikTok Lower Funnel Event Step.
+Can't find what you're looking for? 🔎
+
+Contact Support
+Footer
+Apple App Store
+Google Play Store
+Company
+About Us
+Roadmap
+Partner Program
+Partner Directory
+Careers
+Press
+Contact Us
+Read llms.txt
+Resources
+WhatsApp Pricing Calculator
+WhatsApp Link Generator
+WhatsApp QR Generator
+Learning Center
+Help Center
+Developer's Hub
+Status
+Security & Legal
+Privacy Policy
+Cookie Policy
+Terms of Service
+Security
+Meta Business Partner
+Meta Business Partner
+TikTok Marketing Partner
+TikTok Marketing Partner
