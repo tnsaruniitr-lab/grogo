@@ -347,6 +347,33 @@ export const CreateKnowledgeEntryBody = zod.object({
 });
 
 /**
+ * @summary Update a knowledge entry
+ */
+export const UpdateKnowledgeEntryParams = zod.object({
+  slug: zod.coerce.string(),
+  id: zod.coerce.number(),
+});
+
+export const UpdateKnowledgeEntryBody = zod.object({
+  category: zod.string().optional(),
+  question: zod.string().optional(),
+  answer: zod.string().optional(),
+  language: zod.string().optional(),
+});
+
+export const UpdateKnowledgeEntryResponse = zod.object({
+  id: zod.number(),
+  category: zod.string(),
+  question: zod.string(),
+  answer: zod.string(),
+  language: zod.string(),
+  priority: zod.number(),
+  source: zod.string(),
+  sourceUrl: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
  * @summary Delete a knowledge entry
  */
 export const DeleteKnowledgeEntryParams = zod.object({

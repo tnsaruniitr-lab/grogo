@@ -50,10 +50,12 @@ import {
   MonitorSmartphone,
   X,
   ExternalLink,
+  BookOpen,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
 import { INDUSTRY_OPTIONS } from "@/lib/industry-themes";
+import { KnowledgeDialog } from "@/components/knowledge-dialog";
 
 interface BrandingConfig {
   clientId?: number;
@@ -95,6 +97,7 @@ export default function HubPage() {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [previewClient, setPreviewClient] = useState<DemoClient | null>(null);
   const [previewMode, setPreviewMode] = useState<"demo" | "site">("demo");
+  const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -203,6 +206,7 @@ export default function HubPage() {
                       setPreviewClient(client);
                       setPreviewMode(mode);
                     }}
+                    onKnowledge={() => setKnowledgeSlug(client.slug)}
                   />
                 </motion.div>
               ))}
@@ -237,6 +241,13 @@ export default function HubPage() {
           mode={previewMode}
           onModeChange={setPreviewMode}
           onClose={() => setPreviewClient(null)}
+        />
+      )}
+
+      {knowledgeSlug && (
+        <KnowledgeDialog
+          slug={knowledgeSlug}
+          onClose={() => setKnowledgeSlug(null)}
         />
       )}
     </div>
@@ -345,6 +356,7 @@ function BrandCard({
   onEdit,
   onDelete,
   onPreview,
+  onKnowledge,
 }: {
   client: DemoClient;
   copied: boolean;
@@ -352,6 +364,7 @@ function BrandCard({
   onEdit: () => void;
   onDelete: () => void;
   onPreview: (mode: "demo" | "site") => void;
+  onKnowledge: () => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
   const secondary = client.branding.secondaryColor || "#1a3a1a";
@@ -444,6 +457,14 @@ function BrandCard({
           >
             <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
           </Link>
+
+          <button
+            onClick={onKnowledge}
+            className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-white transition-colors"
+            title="Edit knowledge base"
+          >
+            <BookOpen className="h-3.5 w-3.5" /> Knowledge
+          </button>
 
           <div className="ml-auto flex items-center gap-2">
             <button

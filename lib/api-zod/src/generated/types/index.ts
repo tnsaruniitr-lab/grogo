@@ -30,6 +30,7 @@ export * from "./leadsPage";
 export * from "./leadUpdate";
 export * from "./listLeadsParams";
 export * from "./twilioWebhookPayload";
+export * from "./updateKnowledgeEntryBody";
 export * from "./updateLeadParams";
 export * from "./uploadUrlInput";
 export * from "./uploadUrlResponse";

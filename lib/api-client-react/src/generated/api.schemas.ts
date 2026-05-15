@@ -171,6 +171,13 @@ export interface CreateKnowledgeEntryBody {
   priority?: number;
 }
 
+export interface UpdateKnowledgeEntryBody {
+  category?: string;
+  question?: string;
+  answer?: string;
+  language?: string;
+}
+
 export interface KnowledgeListResponse {
   entries: KnowledgeEntry[];
   categories: string[];

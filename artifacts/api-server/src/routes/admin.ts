@@ -438,6 +438,54 @@ router.post("/admin/clients/:slug/knowledge", async (req: Request, res: Response
   res.status(201).json({ ...created, createdAt: created.createdAt.toISOString() });
 });
 
+router.patch("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Response) => {
+  const params = KnowledgeEntryParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, params.data.slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const [existing] = await db
+    .select()
+    .from(companyKnowledgeTable)
+    .where(and(eq(companyKnowledgeTable.id, params.data.id), eq(companyKnowledgeTable.clientId, client.id)))
+    .limit(1);
+  if (!existing) { res.status(404).json({ error: "Entry not found" }); return; }
+
+  const body = z.object({
+    category: z.string().optional(),
+    question: z.string().optional(),
+    answer: z.string().optional(),
+    language: z.string().optional(),
+  }).safeParse(req.body);
+  if (!body.success) { res.status(400).json({ error: body.error.flatten() }); return; }
+
+  const updates: Record<string, unknown> = {};
+  if (body.data.category) updates.category = body.data.category;
+  if (body.data.question !== undefined) updates.question = body.data.question;
+  if (body.data.answer !== undefined) updates.answer = body.data.answer;
+  if (body.data.language) updates.language = body.data.language;
+
+  const newQuestion = body.data.question ?? existing.question;
+  const newAnswer = body.data.answer ?? existing.answer;
+  if (body.data.question !== undefined || body.data.answer !== undefined) {
+    const embedding = await embedText(`${newQuestion} ${newAnswer}`);
+    if (embedding) updates.embeddingJson = JSON.stringify(embedding);
+  }
+
+  const [updated] = await db
+    .update(companyKnowledgeTable)
+    .set(updates)
+    .where(eq(companyKnowledgeTable.id, params.data.id))
+    .returning();
+
+  res.json({ ...updated, createdAt: updated.createdAt.toISOString() });
+});
+
 router.delete("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Response) => {
   const params = KnowledgeEntryParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: "Invalid params" }); return; }

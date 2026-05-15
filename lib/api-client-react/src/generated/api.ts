@@ -38,6 +38,7 @@ import type {
   LeadsPage,
   ListLeadsParams,
   TwilioWebhookPayload,
+  UpdateKnowledgeEntryBody,
   UpdateLeadParams,
   UploadUrlInput,
   UploadUrlResponse,
@@ -1220,6 +1221,95 @@ export const useCreateKnowledgeEntry = <
   TContext
 > => {
   return useMutation(getCreateKnowledgeEntryMutationOptions(options));
+};
+
+/**
+ * @summary Update a knowledge entry
+ */
+export const getUpdateKnowledgeEntryUrl = (slug: string, id: number) => {
+  return `/api/admin/clients/${slug}/knowledge/${id}`;
+};
+
+export const updateKnowledgeEntry = async (
+  slug: string,
+  id: number,
+  updateKnowledgeEntryBody: UpdateKnowledgeEntryBody,
+  options?: RequestInit,
+): Promise<KnowledgeEntry> => {
+  return customFetch<KnowledgeEntry>(getUpdateKnowledgeEntryUrl(slug, id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateKnowledgeEntryBody),
+  });
+};
+
+export const getUpdateKnowledgeEntryMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateKnowledgeEntry>>,
+    TError,
+    { slug: string; id: number; data: BodyType<UpdateKnowledgeEntryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateKnowledgeEntry>>,
+  TError,
+  { slug: string; id: number; data: BodyType<UpdateKnowledgeEntryBody> },
+  TContext
+> => {
+  const mutationKey = ["updateKnowledgeEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateKnowledgeEntry>>,
+    { slug: string; id: number; data: BodyType<UpdateKnowledgeEntryBody> }
+  > = (props) => {
+    const { slug, id, data } = props ?? {};
+
+    return updateKnowledgeEntry(slug, id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateKnowledgeEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateKnowledgeEntry>>
+>;
+export type UpdateKnowledgeEntryMutationBody =
+  BodyType<UpdateKnowledgeEntryBody>;
+export type UpdateKnowledgeEntryMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a knowledge entry
+ */
+export const useUpdateKnowledgeEntry = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateKnowledgeEntry>>,
+    TError,
+    { slug: string; id: number; data: BodyType<UpdateKnowledgeEntryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateKnowledgeEntry>>,
+  TError,
+  { slug: string; id: number; data: BodyType<UpdateKnowledgeEntryBody> },
+  TContext
+> => {
+  return useMutation(getUpdateKnowledgeEntryMutationOptions(options));
 };
 
 /**

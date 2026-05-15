@@ -343,6 +343,36 @@ paths:
           description: Client not found
 
   /admin/clients/{slug}/knowledge/{id}:
+    patch:
+      operationId: updateKnowledgeEntry
+      tags: [admin]
+      summary: Update a knowledge entry
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateKnowledgeEntryBody"
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeEntry"
+        "404":
+          description: Entry not found
     delete:
       operationId: deleteKnowledgeEntry
       tags: [admin]
@@ -782,6 +812,18 @@ components:
         priority:
           type: integer
           default: 0
+
+    UpdateKnowledgeEntryBody:
+      type: object
+      properties:
+        category:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+        language:
+          type: string
 
     KnowledgeListResponse:
       type: object
