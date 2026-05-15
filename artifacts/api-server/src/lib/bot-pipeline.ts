@@ -51,6 +51,15 @@ function detectLanguage(
     return "de";
   }
 
+  // Detect English — common words that do not appear in German or Turkish.
+  // "hi" alone is ambiguous, but anything beyond that is a strong signal.
+  const englishPatterns =
+    /\b(hello|hi there|hey|what|which|how|when|where|services|provide|cost|price|available|appointment|book|treatment|help|please|thanks|thank you|yes|no|okay|can you|do you|are you|i am|i'm|i have|i want|i need|i would|we are|we have|would like|could you|is there|do you have|tell me|more info|information|website|contact|number|email)\b/i;
+
+  if (englishPatterns.test(text) && (clientPrimary === "en" || clientSecondary === "en")) {
+    return "en";
+  }
+
   return clientPrimary;
 }
 

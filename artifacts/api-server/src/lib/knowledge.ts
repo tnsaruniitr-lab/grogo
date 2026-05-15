@@ -9,13 +9,11 @@ export interface KnowledgeChunk {
   answer: string;
 }
 
-export async function retrieveKnowledge(
+async function fetchEntriesForLanguage(
   clientId: number,
   language: string,
-  userMessage: string,
-  topK = 5,
-): Promise<KnowledgeChunk[]> {
-  const allEntries = await db
+): Promise<Array<{ question: string; answer: string; priority: number; embeddingJson: string | null }>> {
+  return db
     .select({
       question: companyKnowledgeTable.question,
       answer: companyKnowledgeTable.answer,
@@ -30,6 +28,35 @@ export async function retrieveKnowledge(
       ),
     )
     .orderBy(desc(companyKnowledgeTable.priority));
+}
+
+export async function retrieveKnowledge(
+  clientId: number,
+  language: string,
+  userMessage: string,
+  topK = 5,
+): Promise<KnowledgeChunk[]> {
+  let allEntries = await fetchEntriesForLanguage(clientId, language);
+
+  // Language fallback: if no entries in the detected language, try English,
+  // then any language available. This prevents a silent empty-KB response
+  // when a client's knowledge base is in a different language than detected.
+  if (allEntries.length === 0 && language !== "en") {
+    allEntries = await fetchEntriesForLanguage(clientId, "en");
+  }
+  if (allEntries.length === 0) {
+    const anyEntries = await db
+      .select({
+        question: companyKnowledgeTable.question,
+        answer: companyKnowledgeTable.answer,
+        priority: companyKnowledgeTable.priority,
+        embeddingJson: companyKnowledgeTable.embeddingJson,
+      })
+      .from(companyKnowledgeTable)
+      .where(eq(companyKnowledgeTable.clientId, clientId))
+      .orderBy(desc(companyKnowledgeTable.priority));
+    allEntries = anyEntries;
+  }
 
   if (allEntries.length === 0) return [];
 

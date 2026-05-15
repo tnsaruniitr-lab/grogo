@@ -9,7 +9,7 @@ import {
   conversationsTable,
   jobQueueTable,
 } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import type { TwilioWebhookPayload } from "@workspace/api-zod";
 import { runBotPipeline } from "../lib/bot-pipeline";
 
@@ -102,6 +102,34 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
       clientRecord = bySlug[0];
       if (clientRecord) {
         req.log.info({ slug: slugTag, clientId: clientRecord.id }, "Client resolved via slug tag");
+      }
+    }
+
+    if (!clientRecord) {
+      // Session continuity: if this phone number already has a lead, route to
+      // that client so follow-up messages in the same WhatsApp thread don't
+      // need to repeat the [slug] tag. Use the most recently active lead.
+      const normalizedFromPhone = From.replace("whatsapp:", "");
+      const existingLead = await db
+        .select({ clientId: leadsTable.clientId })
+        .from(leadsTable)
+        .where(eq(leadsTable.phone, normalizedFromPhone))
+        .orderBy(desc(leadsTable.lastContactAt))
+        .limit(1);
+
+      if (existingLead.length > 0) {
+        const byExistingLead = await db
+          .select()
+          .from(clientsTable)
+          .where(and(eq(clientsTable.id, existingLead[0]!.clientId), eq(clientsTable.isActive, true)))
+          .limit(1);
+        clientRecord = byExistingLead[0];
+        if (clientRecord) {
+          req.log.info(
+            { phone: normalizedFromPhone, clientId: clientRecord.id },
+            "Client resolved via existing lead session",
+          );
+        }
       }
     }
 
