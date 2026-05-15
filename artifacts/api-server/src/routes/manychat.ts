@@ -276,12 +276,14 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       intentDetected: botResponse.intent,
     });
 
+    const responseBody = buildManychatResponse(botResponse.reply, botResponse.action);
+
     logger.info(
-      { slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent },
+      { slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent, responseBody },
       "ManyChat pipeline complete",
     );
 
-    res.json(buildManychatResponse(botResponse.reply, botResponse.action));
+    res.json(responseBody);
   } catch (err) {
     logger.error({ err }, "ManyChat pipeline error");
     const fallback =
