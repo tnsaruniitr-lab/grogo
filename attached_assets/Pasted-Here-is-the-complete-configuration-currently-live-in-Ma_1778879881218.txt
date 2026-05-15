@@ -1,0 +1,63 @@
+Here is the complete configuration currently live in ManyChat — share this with Replit to verify the endpoint contract.
+ManyChat → Replit Webhook Configuration
+Automation
+
+Name: Instagram Default Reply
+Status: LIVE (trigger toggle ON)
+Account: ManyChat workspace fb4928822 (Trial)
+Channel connected: Instagram
+
+Trigger (When…)
+
+Type: Default Reply (Instagram)
+Fires on: User sends a Direct Message that doesn't match any other automation
+
+Action (Then…) — External Request
+FieldValueMethodPOSTRequest URLhttps://3a0ae458-388e-4499-8eb8-1f81a1a81110-00-1p4416g4evu42.pike.replit.dev/api/webhook/manychat/dostelitest1
+Headers
+KeyValueContent-Typeapplication/jsonx-api-keyb066994544c7f2e58f0a499fe6aa83b64c558eda72a16435d1817e310fea49af
+Request Body (JSON, dynamic variables)
+json{
+  "senderId": "{{Contact Id}}",
+  "message": "{{Last Text Input}}",
+  "channel": "instagram",
+  "name": "{{Full Name}}"
+}
+Variable mapping (ManyChat → wire):
+
+{{Contact Id}} → ManyChat internal subscriber ID (stable, unique per person, recommended over IG username)
+{{Last Text Input}} → the latest message text the user just sent in the DM
+{{Full Name}} → subscriber's full name from the IG profile
+channel → literal string "instagram"
+
+Response handling
+
+Response mapping: none configured (no fields, no custom fields).
+ManyChat expects the response to follow its v2 schema and will auto-render messages.
+
+Required response shape from Replit (what your bot must return with HTTP 200):
+json{
+  "version": "v2",
+  "content": {
+    "messages": [
+      { "type": "text", "text": "..." }
+    ]
+  },
+  "actions": [
+    { "action": "add_tag", "tag_name": "human_needed" }
+  ]
+}
+The actions array is optional and only included when the bot wants to add the human_needed tag (used for human escalation).
+Verified test result (run from ManyChat's Test Request earlier today)
+
+Status: 200 OK
+Body returned: {"version":"v2","content":{"messages":[{"type":"text","text":"We offer home care services, which include h…"}]}} — confirms the endpoint, auth header, and v2 contract are all working.
+
+Production swap checklist (when moving off the dev URL)
+
+Replace pike.replit.dev host with the deployed .replit.app host.
+Replace slug dostelitest1 with dosteli (or whichever per-brand slug applies).
+Keep x-api-key value in sync with the RESPOND_API_KEY secret on the production Replit.
+Re-run "Test Request" inside the ManyChat External Request modal after swapping.
+
+That's the full contract — send this to Replit and they'll have everything they need to validate the request/response on their side.

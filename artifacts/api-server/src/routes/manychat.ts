@@ -98,18 +98,16 @@ function manychatTextMessage(text: string) {
 
 function buildManychatResponse(reply: string, action: string) {
   const messages = [manychatTextMessage(reply)];
-  const actions: Array<{ action: string; tag: string }> = [];
+  const actions: Array<{ action: string; tag_name: string }> = [];
 
   if (action === "escalate_human") {
-    actions.push({ action: "add_tag", tag: "human_needed" });
+    actions.push({ action: "add_tag", tag_name: "human_needed" });
   }
 
   return {
     version: "v2",
-    content: {
-      messages,
-      ...(actions.length > 0 ? { actions } : {}),
-    },
+    content: { messages },
+    ...(actions.length > 0 ? { actions } : {}),
   };
 }
 
