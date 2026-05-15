@@ -396,12 +396,7 @@ export function V3Hero({
                   <br />
                 </span>
               ))
-            : (
-              <>
-                {headline}{" "}
-                <em style={{ color: cfg.accent }}>—</em>
-              </>
-            )}
+            : headline}
         </h1>
 
         <p
