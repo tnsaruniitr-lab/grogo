@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Phone, Star } from "lucide-react";
+import { ArrowRight, CheckCircle2, Facebook, Instagram, Linkedin, Phone, Star, Twitter } from "lucide-react";
 
 interface V3HeroProps {
   industry: string;
@@ -345,6 +345,21 @@ export function V3Hero({
           {city && <span>{city}</span>}
           {city && phone && <span>·</span>}
           {phone && <span>{phone}</span>}
+        </div>
+        {/* Social icons — decorative, no links */}
+        <div className="hidden md:flex items-center gap-2">
+          {[Facebook, Instagram, Twitter, Linkedin].map((Icon, i) => (
+            <div
+              key={i}
+              className="h-8 w-8 rounded-full flex items-center justify-center cursor-default"
+              style={{
+                background: "rgba(245,238,230,0.08)",
+                border: "1px solid rgba(245,238,230,0.14)",
+              }}
+            >
+              <Icon className="h-3.5 w-3.5" style={{ color: "rgba(245,238,230,0.55)" }} />
+            </div>
+          ))}
         </div>
         <button
           onClick={onCtaClick}
