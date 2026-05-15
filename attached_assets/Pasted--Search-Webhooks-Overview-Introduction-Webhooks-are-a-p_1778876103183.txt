@@ -1,0 +1,88 @@
+
+Search Webhooks...
+Overview
+Introduction
+Webhooks are a powerful feature of respond.io, which allow for real-time communication between the platform and external systems or services. When an event occurs within respond.io, such as the creation of a new contact or the receipt of a new message, the platform will send an HTTP request to a specified URL, known as a "webhook endpoint." This URL can be set up to point to a third-party service or database, allowing for seamless integration and automation of actions in response to events within respond.io.
+
+With webhooks, users can customize how they want to receive notifications and take actions in response to events that occur within respond.io. For example, when a new contact is created, a webhook can be set up to automatically add that contact to a mailing list in a connected email marketing service. Webhooks provide a flexible and efficient way for users to integrate respond.io with other systems and services, streamlining their workflow and increasing their productivity.
+
+Configuration
+Webhooks can be configured in Settings > Integrations > Webhooks.
+
+Each organization is limited to creating a maximum of 35 webhook endpoints.
+
+Please contact us if you would like to increase your webhook endpoint limit for your organization.
+
+Events
+Event	Description
+Contact Tag Updated	Triggers when tag(s) are removed or added on a contact.
+New Contact	Triggers when new contact is created.
+Contact Updated	Triggers when any contact fields of a contact are updated.
+Conversation Opened	Triggers when a conversation is opened.
+Conversation Closed	Triggers when a conversation is closed.
+New Comment	Triggers when a new comment is posted to a conversation.
+New Outgoing Message	Triggers when a message is sent.
+New Incoming Message	Triggers when a message is received.
+Contact Assignee Updated	Triggers when the assignee of a contact is updated.
+Lifecycle Updated	Triggers when contact lifecycle is updated.
+Call Ended	Triggers when a call ends.
+Verifying Payload
+Webhook signature is a common security practice where it is used to verify whether the incoming request is from a trusted and intended party.
+
+Respond.io adds a X-Webhook-Signature to the request headers of every client endpoint call. The client can verify the authenticity of the webhook by comparing this signature. The signature is constructed using the HMAC-SHA256 algorithm and the signing key (signingKey) obtained during configuration, along with the JSON stringified version of the request body. The signature is encoded as base64.
+
+Example
+Below is a working example on how to verify the webhook signature in Node.js & Python:
+
+javascript
+python
+php
+const express = require('express');
+const bodyParser = require('body-parser');
+const { createHmac } = require('crypto');
+const app = express()
+
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post('/', (req, res) => {
+    const signature = req.get('X-Webhook-Signature');
+    const signingKey = 'my-signing-key';
+
+    const expectedSignature = createHmac('sha256', signingKey)
+        .update(JSON.stringify(req.body))
+        .digest('base64')
+
+    if (signature !== expectedSignature) {
+        return res.status(400).json({
+            message: 'Invalid signature'
+        });
+    }
+
+    res.json({
+        message: 'ok'
+    });
+});
+
+app.listen(3000, () => console.log('Listening on port 3000'));
+Error Handling
+If the client endpoint does not return a 200 response code for a request call, respond.io will consider it as an error. If the number of errors exceeds 30 per 30 minutes, the webhook endpoint will be deactivated.
+
+Ensure our IP addresses (52.74.35.155, 18.138.31.163, 54.169.155.20) are not blocked.
+
+Retry Mechanism
+If a webhook request does not yield a 200 response code within 5 seconds, it will try again. Three retries are attempted at intervals of 30 seconds, 60 seconds, and 90 seconds, respectively, until a 200 response code is received.
+
+Overview
+Introduction
+Configuration
+Events
+Verifying Payload
+Example
+Error Handling
+Retry Mechanism
+respond.io
+Home
+Webhooks
+Schemas
+powered by Stoplight
