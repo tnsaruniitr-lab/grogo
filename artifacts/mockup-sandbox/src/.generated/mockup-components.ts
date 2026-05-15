@@ -16,6 +16,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-heroes/MedSpaV2.tsx": () => import("../components/mockups/landing-heroes/MedSpaV2.tsx"),
   "./components/mockups/landing-heroes/MedSpaV3.tsx": () => import("../components/mockups/landing-heroes/MedSpaV3.tsx"),
   "./components/mockups/landing-heroes/PhysioV3.tsx": () => import("../components/mockups/landing-heroes/PhysioV3.tsx"),
+  "./components/mockups/landing-heroes/TrustMarkersHero.tsx": () => import("../components/mockups/landing-heroes/TrustMarkersHero.tsx"),
   "./components/mockups/landing-heroes/WeightManagementV3.tsx": () => import("../components/mockups/landing-heroes/WeightManagementV3.tsx"),
   "./components/mockups/landing-heroes/Wellness.tsx": () => import("../components/mockups/landing-heroes/Wellness.tsx"),
   "./components/mockups/landing-heroes/WellnessV2.tsx": () => import("../components/mockups/landing-heroes/WellnessV2.tsx"),
