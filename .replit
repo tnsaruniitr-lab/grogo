@@ -45,6 +45,7 @@ externalPort = 3000
 
 [userenv.shared]
 TWILIO_DEFAULT_SENDER = "whatsapp:+15558085030"
+RESPOND_API_KEY = "0dbb76e7e5bf03ee1a5b34cf8e59b5902d96740c14a5363e018398c99556fdb1"
 
 [nix]
 channel = "stable-25_05"
