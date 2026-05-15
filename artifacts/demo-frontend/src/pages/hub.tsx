@@ -476,11 +476,10 @@ function PreviewModal({
   onModeChange: (mode: "demo" | "site") => void;
   onClose: () => void;
 }) {
-  const demoUrl = `/demo/${client.slug}?preview=1`;
-  const cleanDemoUrl = `/demo/${client.slug}`;
+  const demoUrl = `/demo/${client.slug}`;
   const siteUrl = client.branding.websiteUrl ?? null;
   const activeUrl = mode === "demo" ? demoUrl : siteUrl;
-  const tabUrl = mode === "demo" ? cleanDemoUrl : siteUrl;
+  const tabUrl = activeUrl;
   const hasWebsite = !!siteUrl;
 
   return (
