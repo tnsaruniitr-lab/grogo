@@ -144,7 +144,7 @@ export function KnowledgeDialog({ slug, onClose }: { slug: string; onClose: () =
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" /> Knowledge Base — <span className="font-mono text-primary">{slug}</span>
@@ -189,9 +189,9 @@ export function KnowledgeDialog({ slug, onClose }: { slug: string; onClose: () =
           </div>
 
           {/* Right: entries */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <ScrollArea className="flex-1">
-              <div className="p-4 space-y-2">
+              <div className="p-4 space-y-2 min-w-0">
                 {isLoading ? (
                   <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
                 ) : shown.length === 0 ? (
@@ -204,7 +204,7 @@ export function KnowledgeDialog({ slug, onClose }: { slug: string; onClose: () =
                     const expanded = expandedIds.has(entry.id);
                     const isEditing = editingId === entry.id;
                     return (
-                      <div key={entry.id} className="border rounded-lg bg-card overflow-hidden">
+                      <div key={entry.id} className="border rounded-lg bg-card overflow-hidden min-w-0 w-full">
                         {/* Header row */}
                         <div
                           className={`flex items-start gap-2 p-3 select-none ${!isEditing ? "cursor-pointer hover:bg-muted/30" : ""}`}
@@ -298,7 +298,7 @@ export function KnowledgeDialog({ slug, onClose }: { slug: string; onClose: () =
                               </>
                             ) : (
                               <>
-                                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{entry.answer}</p>
+                                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">{entry.answer}</p>
                                 {entry.sourceUrl && (
                                   <a href={entry.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1.5 flex items-center gap-1">
                                     <ExternalLink className="h-3 w-3" /> {entry.sourceUrl}
