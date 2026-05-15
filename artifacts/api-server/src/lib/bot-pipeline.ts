@@ -322,9 +322,12 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
 
   const lead = leads[0]!;
 
-  // 2. Language detection — detect on first message, lock thereafter.
-  // But always check for an explicit switch request ("speak English", "auf Deutsch", etc.)
-  // so the bot immediately honours the user's language preference.
+  // 2. Language detection / lock.
+  // First message: detect from content and lock.
+  // Subsequent messages: check for explicit switch phrase ("speak English", etc.),
+  // then also re-detect implicitly — if the user simply starts writing in a different
+  // language (≥4 words) we honour that too, without requiring them to say "speak X".
+  // Word-count guard prevents flipping on single loanwords like "yes", "okay", "danke".
   let language = lead.language;
   if (!language) {
     language = detectLanguage(userMessage, clientRecord.languagePrimary, clientRecord.languageSecondary);
@@ -341,6 +344,20 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
         .set({ language, updatedAt: new Date() })
         .where(eq(leadsTable.id, lead.id));
       logger.info({ leadId, newLanguage: language }, "Explicit language switch detected — pipeline re-targeted");
+    } else {
+      // Implicit switch: re-detect language if message is long enough to be reliable.
+      const wordCount = userMessage.trim().split(/\s+/).length;
+      if (wordCount >= 4) {
+        const implicitLang = detectLanguage(userMessage, clientRecord.languagePrimary, clientRecord.languageSecondary);
+        if (implicitLang !== language) {
+          language = implicitLang;
+          await db
+            .update(leadsTable)
+            .set({ language, updatedAt: new Date() })
+            .where(eq(leadsTable.id, lead.id));
+          logger.info({ leadId, newLanguage: language }, "Implicit language switch — user wrote in different language");
+        }
+      }
     }
   }
 
