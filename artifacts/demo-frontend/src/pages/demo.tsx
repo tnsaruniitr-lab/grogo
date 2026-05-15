@@ -419,7 +419,7 @@ export default function DemoPage() {
             <div className="flex-1 relative">
               <div className="absolute inset-0 transform -rotate-6 rounded-3xl" style={{ backgroundColor: primary + "33" }} />
               <img
-                src={branding.heroImageUrl ?? getIndustryImage(branding.industry)}
+                src={getIndustryImage(branding.industry)}
                 alt={branding.companyName}
                 className="relative rounded-3xl shadow-xl w-full object-cover aspect-square md:aspect-[4/3]"
               />
