@@ -144,11 +144,18 @@ declare global {
   }
 }
 
+// Module-level cache: React 18 StrictMode double-invokes useState initialisers
+// in dev, which would clear window.__INITIAL_DATA__ on the first call and return
+// null on the second.  Caching here ensures both invocations see the same data.
+let _ssrData: { branding: BrandingConfig; content: ClientContent } | null = null;
+
 function getInitialData() {
   if (typeof window === "undefined") return null;
+  if (_ssrData) return _ssrData;
   const d = window.__INITIAL_DATA__;
   window.__INITIAL_DATA__ = undefined; // clear so back-navigation re-fetches fresh data
-  return d ?? null;
+  _ssrData = d ?? null;
+  return _ssrData;
 }
 
 function chunkTitle(q: string, max = 48): string {
@@ -344,7 +351,14 @@ export default function DemoPage() {
         {/* transparent — nav is inside V3Hero itself */}
       </div>
 
-      {/* ── V3 VIDEO HERO ── */}
+      {/* ── V3 VIDEO HERO ──
+           preview is intentionally hardcoded false here.
+           The ?preview=1 query param was previously forwarded to V3Hero, which
+           switches from autoplay video to a static thumbnail — that mode is only
+           meant for admin card previews (small iframes in the Hub grid where
+           autoplay video is wasteful).  Full demo websites always want the live
+           video hero.  If a static-thumbnail mode is needed here in future, add
+           a dedicated prop (e.g. thumbnailMode) rather than repurposing preview. */}
       <V3Hero
         industry={branding.industry}
         companyName={branding.companyName}
@@ -356,7 +370,7 @@ export default function DemoPage() {
         onCtaClick={() =>
           document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
         }
-        preview={isPreview}
+        preview={false}
         previewImageUrl={getIndustryImage(branding.industry)}
         lang={lang}
         brandColor={branding.primaryColor}

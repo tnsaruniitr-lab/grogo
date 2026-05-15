@@ -41,6 +41,17 @@ function getOrigin(req: Request): string {
   return `${proto}://${host}`;
 }
 
+// Returns false only when the client explicitly opts out of HTML (e.g. API
+// fetches that send Accept: application/json).  Missing Accept, */* and text/*
+// all count as "happy with HTML" — this lets headless browsers, screenshot
+// tools, and curl-without-headers all receive the SSR page.
+function wantsHtml(req: Request): boolean {
+  const accept = req.headers.accept ?? "";
+  if (!accept) return true;
+  if (accept.includes("text/html") || accept.includes("text/*") || accept.includes("*/*")) return true;
+  return false;
+}
+
 // ── Template reader ───────────────────────────────────────────────────────────
 // Tries built output first (dist/public/index.html — Vite's configured outDir),
 // then the raw source index.html for dev.
@@ -443,7 +454,20 @@ async function renderDemoPage(slug: string, origin: string): Promise<string> {
   </div>
 </section>`;
 
-  const ssrBody = `<div id="ssr-content">
+  // ── SSR overlay styles + fallback auto-fade ──────────────────────────────────
+  // #ssr-content is a fixed overlay (z-index 9999) so V3Hero renders freely in
+  // #root underneath it from the very first React paint.
+  // React's useLayoutEffect removes this element synchronously before the first
+  // browser paint — so real users NEVER see it (they go straight to V3Hero).
+  // Crawlers get the full HTML without JS execution and index all the content.
+  // The CSS animation is a safety net: if React fails or is very slow, the
+  // overlay auto-fades after 2.5 s so V3Hero is always eventually visible.
+  const ssrOverlayCss = `<style>
+  #ssr-content{position:fixed;inset:0;z-index:9999;overflow-y:auto;background:#fff;animation:__ssr_exit 0.3s ease-out 2.5s both}
+  @keyframes __ssr_exit{to{opacity:0;pointer-events:none}}
+</style>`;
+
+  const ssrBody = `${ssrOverlayCss}<div id="ssr-content">
   <header style="background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 24px;display:flex;align-items:center;gap:12px">
     ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(companyName)} logo" height="40" style="height:40px;width:auto;object-fit:contain" />` : ""}
     <span style="font-size:20px;font-weight:700;color:#111827">${tx(companyName)}</span>
@@ -479,10 +503,7 @@ async function renderDemoPage(slug: string, origin: string): Promise<string> {
 
 // ── /demo/:slug ───────────────────────────────────────────────────────────────
 router.get("/demo/:slug", async (req: Request, res: Response) => {
-  if (!(req.headers.accept ?? "").includes("text/html")) {
-    res.status(406).end();
-    return;
-  }
+  if (!wantsHtml(req)) { res.status(406).end(); return; }
   const slug = req.params.slug as string;
   try {
     const html = await renderDemoPage(slug, getOrigin(req));
@@ -507,10 +528,7 @@ router.get("/demo/:slug", async (req: Request, res: Response) => {
 // Only processes known industry verticals; unrecognised paths fall through to
 // the demo-frontend SPA shell so /admin/*, /dashboard/*, etc. still work.
 router.get("/:vertical/:slug", async (req: Request, res: Response) => {
-  if (!(req.headers.accept ?? "").includes("text/html")) {
-    res.status(406).end();
-    return;
-  }
+  if (!wantsHtml(req)) { res.status(406).end(); return; }
   const vertical = req.params.vertical as string;
   if (!KNOWN_VERTICALS.has(vertical)) {
     try {

@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -30,12 +30,18 @@ function Router() {
 }
 
 function App() {
-  // Remove the SSR shell synchronously after React renders but before the
-  // browser paints. useLayoutEffect fires at exactly that point, ensuring the
-  // user sees V3Hero on the very first paint — no blank flash, no SSR → React
-  // jump. On non-SSR pages (Hub, admin etc.) getElementById returns null, safe.
-  useLayoutEffect(() => {
-    document.getElementById("ssr-content")?.remove();
+  // Fade out the SSR overlay after React's first paint so users see a smooth
+  // SSR → V3Hero transition instead of a jarring snap or blank flash.
+  // The #ssr-content div is position:fixed z-index:9999 (injected by Express),
+  // so V3Hero is always rendered underneath it from the very first React paint.
+  // On non-SSR pages (Hub, admin etc.) getElementById returns null — no-op.
+  useEffect(() => {
+    const el = document.getElementById("ssr-content");
+    if (!el) return;
+    el.style.transition = "opacity 0.4s ease";
+    el.style.opacity = "0";
+    const t = setTimeout(() => el.remove(), 450);
+    return () => clearTimeout(t);
   }, []);
 
   return (
