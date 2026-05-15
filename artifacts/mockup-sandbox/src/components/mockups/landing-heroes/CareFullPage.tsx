@@ -109,8 +109,8 @@ export function CareFullPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#1A0E06]/90 via-[#2A1808]/55 to-[#1A0E06]/10" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1A0E06]/65 via-transparent to-[#1A0E06]/20" />
 
-        {/* Live status pill */}
-        <div className="absolute top-6 left-8 z-10 a1">
+        {/* Live status pill — top-20 clears the fixed nav */}
+        <div className="absolute top-20 left-8 z-10 a1">
           <div className="flex items-center gap-2 bg-[#E8A84C]/12 backdrop-blur-sm border border-[#E8A84C]/22 px-3 py-1.5 rounded-full">
             <div className="live w-2 h-2 rounded-full bg-[#4CAF50]" />
             <span className="text-[#F0EAE1]/85 text-[11px]">
