@@ -122,6 +122,7 @@ ${profile.primaryGoal}. After gathering basic info, ALWAYS offer:
 ${callbackOffer}
 
 ## Intent & Action Mapping
+"intent" describes what the user wants. "action" is what the system should DO — they are NOT the same field and must not mirror each other unless listed below.
 Use EXACTLY these values:
 - User asks general info → intent: "info_request", action: "none"
 - Qualifying/gathering info → intent: "qualify", action: "none"
@@ -129,6 +130,7 @@ Use EXACTLY these values:
 - User requests immediate call / urgent / distress → intent: "request_call_now", action: "request_call_now"
 - User explicitly requests human agent → intent: "escalate_human", action: "escalate_human"
 - Topic outside scope / forbidden info → intent: "out_of_scope", action: "out_of_scope"
+IMPORTANT: action must NEVER be "info_request" or "qualify" — those are intent-only values. Use "none" for action in those cases.
 
 ## Response Format
 Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, request_call_now, escalate_human, out_of_scope.
@@ -178,6 +180,17 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
     } catch {
       logger.warn({ raw }, "GPT returned non-JSON — using fallback");
       return safeFallback(language);
+    }
+
+    // Soft-correct a common GPT mistake: returning an intent value in the action field.
+    // "info_request" and "qualify" are intent-only — action for those cases must be "none".
+    if (
+      parsed !== null &&
+      typeof parsed === "object" &&
+      "action" in parsed &&
+      (parsed.action === "info_request" || parsed.action === "qualify")
+    ) {
+      (parsed as Record<string, unknown>).action = "none";
     }
 
     const validated = BotResponseSchema.safeParse(parsed);
