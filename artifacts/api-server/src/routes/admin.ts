@@ -163,6 +163,13 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
     return;
   }
 
+  const brandingCfg = branding as Record<string, unknown> | undefined;
+  const demoLangs: string[] = Array.isArray(brandingCfg?.demoLanguages)
+    ? (brandingCfg.demoLanguages as string[])
+    : brandingCfg?.demoLanguage
+      ? [brandingCfg.demoLanguage as string]
+      : ["en"];
+
   const [created] = await db
     .insert(clientsTable)
     .values({
@@ -170,6 +177,8 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
       slug,
       whatsappNumber: "",
       twilioSender: process.env.TWILIO_DEFAULT_SENDER ?? "",
+      languagePrimary: demoLangs[0] ?? "en",
+      languageSecondary: demoLangs[1] ?? null,
       config: branding ?? null,
     })
     .returning();
@@ -466,6 +475,11 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     phone: (cfg.phone as string | null | undefined) ?? null,
     websiteUrl: (cfg.websiteUrl as string | null | undefined) ?? null,
     demoLanguage: (cfg.demoLanguage as string | null | undefined) ?? null,
+    demoLanguages: Array.isArray(cfg.demoLanguages)
+      ? (cfg.demoLanguages as string[])
+      : cfg.demoLanguage
+        ? [(cfg.demoLanguage as string)]
+        : ["en"],
     industry: (cfg.industry as string | null | undefined) ?? null,
     vertical: (cfg.vertical as string | null | undefined) ?? "healthcare",
     heroImageUrl: (cfg.heroImageUrl as string | null | undefined) ?? null,

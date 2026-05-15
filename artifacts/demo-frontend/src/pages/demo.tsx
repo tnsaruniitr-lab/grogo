@@ -3,7 +3,7 @@ import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
-import { getDemoT } from "@/lib/demo-i18n";
+import { getDemoT, LANG_OPTIONS } from "@/lib/demo-i18n";
 import { getVerticalTheme } from "@/lib/vertical-themes";
 import {
   getIndustryTheme,
@@ -84,6 +84,7 @@ interface BrandingConfig {
   phone?: string | null;
   websiteUrl?: string | null;
   demoLanguage?: string | null;
+  demoLanguages?: string[] | null;
   industry?: string | null;
   vertical?: string | null;
   heroImageUrl?: string | null;
@@ -149,6 +150,7 @@ export default function DemoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(0);
+  const [activeLang, setActiveLang] = useState<string>("en");
 
   useEffect(() => {
     if (!slug) return;
@@ -181,6 +183,17 @@ export default function DemoPage() {
     return () => clearInterval(timer);
   }, [branding]);
 
+  // ── Sync activeLang from branding once loaded ────────────────────────────
+  useEffect(() => {
+    if (!branding) return;
+    const langs = branding.demoLanguages;
+    const defaultLang =
+      Array.isArray(langs) && langs.length > 0
+        ? langs[0]!
+        : (branding.demoLanguage ?? "en");
+    setActiveLang(defaultLang);
+  }, [branding?.slug]);
+
   // ── Client-side SEO: update <head> after React hydrates ──────────────────
   useEffect(() => {
     if (!branding) return;
@@ -211,7 +224,7 @@ export default function DemoPage() {
     );
   }
 
-  const t = getDemoT(branding?.demoLanguage ?? null);
+  const t = getDemoT(activeLang);
 
   if (error || !branding) {
     return (
@@ -236,7 +249,7 @@ export default function DemoPage() {
   const headline = branding.heroHeadline || branding.tagline || branding.companyName;
   const subtext = branding.tagline && branding.heroHeadline ? branding.tagline : t.defaultSubtitle;
   const { primary, secondary } = resolveColors(branding);
-  const lang = getLang(branding.demoLanguage);
+  const lang = getLang(activeLang);
   const theme = getIndustryTheme(branding.industry);
   const themeIcons = resolveIcons(theme.serviceIconNames);
   const isPrimary = PRIMARY_VERTICALS.has(branding.industry ?? "");
@@ -267,6 +280,39 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ── Language switcher — fixed pill, only shown when 2+ languages are configured ── */}
+      {(() => {
+        const langs = Array.isArray(branding.demoLanguages) && branding.demoLanguages.length > 1
+          ? branding.demoLanguages
+          : null;
+        if (!langs) return null;
+        return (
+          <div className="fixed bottom-5 right-5 z-50 flex items-center gap-1 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm rounded-full shadow-lg border border-border px-2 py-1.5">
+            {langs.map((code) => {
+              const opt = LANG_OPTIONS.find((o) => o.value === code);
+              const isActive = activeLang === code;
+              return (
+                <button
+                  key={code}
+                  onClick={() => setActiveLang(code)}
+                  title={opt?.label ?? code.toUpperCase()}
+                  className={[
+                    "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200",
+                    isActive
+                      ? "text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  ].join(" ")}
+                  style={isActive ? { backgroundColor: primary } : {}}
+                >
+                  <span className="text-base leading-none">{opt?.flag ?? "🌐"}</span>
+                  <span className="hidden sm:inline">{code.toUpperCase()}</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* DemoNav sits above the hero visually but the hero is full-bleed, so we need it as fixed */}
       <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
         {/* transparent — nav is inside V3Hero itself */}

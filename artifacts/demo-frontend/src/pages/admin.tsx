@@ -61,6 +61,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LANG_OPTIONS } from "@/lib/demo-i18n";
 
 interface BrandingConfig {
   companyName: string;
@@ -328,6 +329,7 @@ function CreateDemoDialog({
   const [creating, setCreating] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [demoLanguages, setDemoLanguages] = useState<string[]>(["en"]);
 
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: "",
@@ -341,6 +343,16 @@ function CreateDemoDialog({
     websiteUrl: "",
     heroHeadline: "",
   });
+
+  const toggleLanguage = (code: string) => {
+    setDemoLanguages((prev) => {
+      if (prev.includes(code)) {
+        const next = prev.filter((l) => l !== code);
+        return next.length === 0 ? prev : next;
+      }
+      return [...prev, code];
+    });
+  };
 
   const updateField = (key: keyof BrandingConfig, value: string) => {
     setBranding((prev) => {
@@ -433,6 +445,8 @@ function CreateDemoDialog({
           companyName: branding.companyName,
           slug: branding.slug,
           logoUrl: finalLogoUrl,
+          demoLanguage: demoLanguages[0] ?? "en",
+          demoLanguages,
         },
       };
       const res = await fetch("/api/admin/clients", {
@@ -459,6 +473,7 @@ function CreateDemoDialog({
   const reset = () => {
     setWebsiteUrl("");
     setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "" });
+    setDemoLanguages(["en"]);
     setLogoFile(null);
     setLogoPreview(null);
   };
@@ -579,6 +594,32 @@ function CreateDemoDialog({
                 value={branding.heroHeadline ?? ""}
                 onChange={(e) => updateField("heroHeadline", e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2 col-span-2">
+              <Label>Demo-Sprachen</Label>
+              <p className="text-xs text-muted-foreground">
+                Welche Sprachen soll die Demo-Seite unterstützen? Die erste ausgewählte wird die Standardsprache.
+              </p>
+              <div className="flex gap-4 flex-wrap pt-1">
+                {LANG_OPTIONS.map(({ value, label, flag }) => (
+                  <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={demoLanguages.includes(value)}
+                      onChange={() => toggleLanguage(value)}
+                      className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                    />
+                    <span className="text-sm font-medium">{flag} {label}</span>
+                  </label>
+                ))}
+              </div>
+              {demoLanguages.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Standard: {LANG_OPTIONS.find((o) => o.value === demoLanguages[0])?.flag}{" "}
+                  {LANG_OPTIONS.find((o) => o.value === demoLanguages[0])?.label}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
