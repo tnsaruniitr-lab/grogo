@@ -30,6 +30,16 @@ const tx = (s: unknown) =>
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+// safeLd(): safe JSON-LD serialisation — prevents </script> injection via client data
+const safeLd = (obj: unknown): string =>
+  JSON.stringify(obj).replace(/<\/script/gi, "<\\/script");
+
+// ── Request helpers ───────────────────────────────────────────────────────────
+function getOrigin(req: Request): string {
+  const proto = String(req.headers["x-forwarded-proto"] ?? "https");
+  const host = String(req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "");
+  return `${proto}://${host}`;
+}
 
 // ── Template reader ───────────────────────────────────────────────────────────
 // Tries built output first (dist/public/index.html — Vite's configured outDir),
@@ -123,11 +133,18 @@ const IND_ALIAS: Record<string, string> = {
   "iv-therapy": "aesthetics",
 };
 
+// ── KNOWN_VERTICALS ───────────────────────────────────────────────────────────
+// These path prefixes are routed to api-server in artifact.toml.
+// Unknown first-segment paths fall through to the demo-frontend SPA.
+const KNOWN_VERTICALS = new Set([
+  "healthcare", "care", "aesthetics", "dental", "medical", "wellness",
+  "cosmetic-surgery", "hair", "weight-management", "iv-therapy",
+  "fertility", "physiotherapy", "laser-eye",
+]);
+
 // ── robots.txt ────────────────────────────────────────────────────────────────
 router.get("/robots.txt", (req: Request, res: Response) => {
-  const proto = String(req.headers["x-forwarded-proto"] ?? "https");
-  const host = String(req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "");
-  const origin = `${proto}://${host}`;
+  const origin = getOrigin(req);
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.end(
     [
@@ -162,9 +179,7 @@ router.get("/robots.txt", (req: Request, res: Response) => {
 
 // ── sitemap.xml ───────────────────────────────────────────────────────────────
 router.get("/sitemap.xml", async (req: Request, res: Response) => {
-  const proto = String(req.headers["x-forwarded-proto"] ?? "https");
-  const host = String(req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "");
-  const origin = `${proto}://${host}`;
+  const origin = getOrigin(req);
   const today = new Date().toISOString().split("T")[0]!;
 
   try {
@@ -210,191 +225,181 @@ router.get("/sitemap.xml", async (req: Request, res: Response) => {
   }
 });
 
-// ── /demo/:slug ───────────────────────────────────────────────────────────────
-router.get("/demo/:slug", async (req: Request, res: Response) => {
-  const slug = req.params.slug as string;
+// ── renderDemoPage ────────────────────────────────────────────────────────────
+// Core SSR logic shared by /demo/:slug and /:vertical/:slug handlers.
+async function renderDemoPage(slug: string, origin: string): Promise<string> {
+  const [client] = await db
+    .select()
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
 
-  if (!(req.headers.accept ?? "").includes("text/html")) {
-    res.status(406).end();
-    return;
+  if (!client || client.deletedAt) {
+    const err = new Error(`Client not found: ${slug}`);
+    (err as NodeJS.ErrnoException).code = "NOT_FOUND";
+    throw err;
   }
 
-  try {
-    const [client] = await db
-      .select()
-      .from(clientsTable)
-      .where(eq(clientsTable.slug, slug))
-      .limit(1);
+  const branding = buildBranding(client);
 
-    if (!client || client.deletedAt) {
-      res.status(404).end();
-      return;
-    }
+  // Load content from DB (same logic as /api/clients/:slug/content)
+  const cfg = (client.config ?? {}) as Record<string, unknown>;
+  const demoLang = (cfg.demoLanguage as string | undefined) ?? "de";
+  const categories = ["service", "about", "contact", "faq", "process"] as const;
 
-    const branding = buildBranding(client);
+  const rows = await db
+    .select({
+      category: companyKnowledgeTable.category,
+      question: companyKnowledgeTable.question,
+      answer: companyKnowledgeTable.answer,
+      confidence: companyKnowledgeTable.confidence,
+      sourceUrl: companyKnowledgeTable.sourceUrl,
+    })
+    .from(companyKnowledgeTable)
+    .where(
+      and(
+        eq(companyKnowledgeTable.clientId, client.id),
+        inArray(companyKnowledgeTable.category, [...categories]),
+        eq(companyKnowledgeTable.language, demoLang),
+      ),
+    );
 
-    // Load content from DB (same logic as /api/clients/:slug/content)
-    const cfg = (client.config ?? {}) as Record<string, unknown>;
-    const demoLang = (cfg.demoLanguage as string | undefined) ?? "de";
-    const categories = ["service", "about", "contact", "faq", "process"] as const;
+  type ContentChunk = { question: string; answer: string; confidence: number | null; sourceUrl: string | null };
+  const grouped: Record<string, ContentChunk[]> = Object.fromEntries(categories.map((c) => [c, []]));
+  for (const row of rows) {
+    if (row.category in grouped) grouped[row.category]!.push(row);
+  }
+  for (const cat of categories) {
+    grouped[cat] = grouped[cat]!
+      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
+      .slice(0, 6);
+  }
 
-    const rows = await db
-      .select({
-        category: companyKnowledgeTable.category,
-        question: companyKnowledgeTable.question,
-        answer: companyKnowledgeTable.answer,
-        confidence: companyKnowledgeTable.confidence,
-        sourceUrl: companyKnowledgeTable.sourceUrl,
-      })
-      .from(companyKnowledgeTable)
-      .where(
-        and(
-          eq(companyKnowledgeTable.clientId, client.id),
-          inArray(companyKnowledgeTable.category, [...categories]),
-          eq(companyKnowledgeTable.language, demoLang),
-        ),
-      );
+  const hasCrawlData = rows.length > 0;
+  const content = {
+    hasCrawlData,
+    services: grouped.service ?? [],
+    about: grouped.about ?? [],
+    contact: grouped.contact ?? [],
+    faq: grouped.faq ?? [],
+    process: grouped.process ?? [],
+  };
 
-    type ContentChunk = { question: string; answer: string; confidence: number | null; sourceUrl: string | null };
-    const grouped: Record<string, ContentChunk[]> = Object.fromEntries(categories.map((c) => [c, []]));
-    for (const row of rows) {
-      if (row.category in grouped) grouped[row.category]!.push(row);
-    }
-    for (const cat of categories) {
-      grouped[cat] = grouped[cat]!
-        .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
-        .slice(0, 6);
-    }
+  // Page language
+  type Lang = "de" | "tr" | "en";
+  const lk: Lang = demoLang === "tr" ? "tr" : demoLang === "en" ? "en" : "de";
 
-    const hasCrawlData = rows.length > 0;
-    const content = {
-      hasCrawlData,
-      services: grouped.service ?? [],
-      about: grouped.about ?? [],
-      contact: grouped.contact ?? [],
-      faq: grouped.faq ?? [],
-      process: grouped.process ?? [],
-    };
+  const pageUrl = `${origin}/demo/${slug}`;
 
-    // Page language
-    type Lang = "de" | "tr" | "en";
-    const lk: Lang = demoLang === "tr" ? "tr" : demoLang === "en" ? "en" : "de";
+  // Resolved values
+  const companyName = String(branding.companyName ?? "");
+  const city = branding.city ?? "";
+  const desc = String(branding.tagline ?? branding.heroHeadline ?? companyName);
+  const logoUrl = branding.logoUrl ?? "";
+  const phone = branding.phone ?? "";
+  const websiteUrl = branding.websiteUrl ?? "";
+  const title = `${companyName}${city ? ` · ${city}` : ""} — AI WhatsApp Bot`;
 
-    // Origin
-    const proto = String(req.headers["x-forwarded-proto"] ?? "https");
-    const host = String(req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "");
-    const origin = `${proto}://${host}`;
-    const pageUrl = `${origin}/demo/${slug}`;
+  // Content for body
+  const ssrServices: FaqRow[] = hasCrawlData ? content.services.slice(0, 6) : [];
+  const ssrAbout: FaqRow[] = hasCrawlData ? content.about.slice(0, 3) : [];
+  let ssrFaq: FaqRow[] = hasCrawlData
+    ? content.faq.length > 0
+      ? content.faq.slice(0, 8)
+      : content.services.slice(0, 5)
+    : [];
+  if (ssrFaq.length === 0) {
+    const ind = String(branding.industry ?? "");
+    const key = FAQ_FALLBACKS[ind] ? ind : (IND_ALIAS[ind] ?? "aesthetics");
+    ssrFaq = FAQ_FALLBACKS[key] ?? FAQ_FALLBACKS["aesthetics"]!;
+  }
 
-    // Resolved values
-    const companyName = String(branding.companyName ?? "");
-    const city = branding.city ?? "";
-    const desc = String(branding.tagline ?? branding.heroHeadline ?? companyName);
-    const logoUrl = branding.logoUrl ?? "";
-    const phone = branding.phone ?? "";
-    const websiteUrl = branding.websiteUrl ?? "";
-    const title = `${companyName}${city ? ` · ${city}` : ""} — AI WhatsApp Bot`;
+  // Read template
+  let html = getIndexHtml();
 
-    // Content for body
-    const ssrServices: FaqRow[] = hasCrawlData ? content.services.slice(0, 6) : [];
-    const ssrAbout: FaqRow[] = hasCrawlData ? content.about.slice(0, 3) : [];
-    let ssrFaq: FaqRow[] = hasCrawlData
-      ? content.faq.length > 0
-        ? content.faq.slice(0, 8)
-        : content.services.slice(0, 5)
-      : [];
-    if (ssrFaq.length === 0) {
-      const ind = String(branding.industry ?? "");
-      const key = FAQ_FALLBACKS[ind] ? ind : (IND_ALIAS[ind] ?? "aesthetics");
-      ssrFaq = FAQ_FALLBACKS[key] ?? FAQ_FALLBACKS["aesthetics"]!;
-    }
+  // Inject meta tags
+  html = html
+    .replace(/(<html[^>]*\slang=")[^"]*"/, `$1${lk}"`)
+    .replace(/(<title>)[^<]*(<\/title>)/, `$1${esc(title)}$2`)
+    .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/,      `$1${esc(desc)}$2`)
+    .replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/,      `$1${esc(companyName)}$2`)
+    .replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/,`$1${esc(desc)}$2`)
+    .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*(")/,     `$1${esc(companyName)}$2`)
+    .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,`$1${esc(desc)}$2`)
+    .replace(/(<meta\s+property="og:image"\s+content=")[^"]*(")/,      `$1${esc(logoUrl || "/opengraph.jpg")}$2`)
+    .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*(")/,     `$1${esc(logoUrl || "/opengraph.jpg")}$2`);
 
-    // Read template
-    let html = getIndexHtml();
+  // JSON-LD schemas — all serialised through safeLd() to prevent </script> injection
+  const businessId = `${origin}/demo/${slug}#business`;
+  const localBusinessLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": businessId,
+    name: companyName,
+    description: desc,
+    ...(websiteUrl ? { url: websiteUrl, sameAs: [websiteUrl] } : {}),
+    ...(phone ? { telephone: phone } : {}),
+    ...(city ? { address: { "@type": "PostalAddress", addressLocality: city } } : {}),
+    ...(logoUrl ? { logo: { "@type": "ImageObject", url: logoUrl }, image: logoUrl } : {}),
+  };
+  const webPageLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": pageUrl,
+    url: pageUrl,
+    name: title,
+    description: desc,
+    inLanguage: lk,
+    dateModified: new Date().toISOString().split("T")[0],
+    isPartOf: { "@type": "WebSite", "@id": origin, url: origin, name: "Dosteli AI" },
+    about: { "@type": "LocalBusiness", "@id": businessId },
+    speakable: { "@type": "SpeakableSpecification", cssSelector: ["h1", "[data-speakable]"] },
+  };
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` },
+      { "@type": "ListItem", position: 2, name: companyName, item: pageUrl },
+    ],
+  };
 
-    // Inject meta tags (same regex patterns as Vite SSR plugin)
-    html = html
-      .replace(/(<html[^>]*\slang=")[^"]*"/, `$1${lk}"`)
-      .replace(/(<title>)[^<]*(<\/title>)/, `$1${esc(title)}$2`)
-      .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/,      `$1${esc(desc)}$2`)
-      .replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/,      `$1${esc(companyName)}$2`)
-      .replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/,`$1${esc(desc)}$2`)
-      .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*(")/,     `$1${esc(companyName)}$2`)
-      .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,`$1${esc(desc)}$2`)
-      .replace(/(<meta\s+property="og:image"\s+content=")[^"]*(")/,      `$1${esc(logoUrl || "/opengraph.jpg")}$2`)
-      .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*(")/,     `$1${esc(logoUrl || "/opengraph.jpg")}$2`);
-
-    // JSON-LD schemas
-    const businessId = `${origin}/demo/${slug}#business`;
-    const localBusinessLd: Record<string, unknown> = {
+  const extraTags: string[] = [
+    `  <link rel="canonical" href="${esc(pageUrl)}" />`,
+    `  <meta property="og:url" content="${esc(pageUrl)}" />`,
+    `  <script type="application/ld+json">${safeLd(localBusinessLd)}</script>`,
+    `  <script type="application/ld+json">${safeLd(webPageLd)}</script>`,
+    `  <script type="application/ld+json">${safeLd(breadcrumbLd)}</script>`,
+  ];
+  if (ssrFaq.length > 0) {
+    const faqLd = {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "@id": businessId,
-      name: companyName,
-      description: desc,
-      ...(websiteUrl ? { url: websiteUrl, sameAs: [websiteUrl] } : {}),
-      ...(phone ? { telephone: phone } : {}),
-      ...(city ? { address: { "@type": "PostalAddress", addressLocality: city } } : {}),
-      ...(logoUrl ? { logo: { "@type": "ImageObject", url: logoUrl }, image: logoUrl } : {}),
+      "@type": "FAQPage",
+      mainEntity: ssrFaq.map(({ question, answer }) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      })),
     };
-    const webPageLd = {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "@id": pageUrl,
-      url: pageUrl,
-      name: title,
-      description: desc,
-      inLanguage: lk,
-      dateModified: new Date().toISOString().split("T")[0],
-      isPartOf: { "@type": "WebSite", "@id": origin, url: origin, name: "Dosteli AI" },
-      about: { "@type": "LocalBusiness", "@id": businessId },
-      speakable: { "@type": "SpeakableSpecification", cssSelector: ["h1", "[data-speakable]"] },
-    };
-    const breadcrumbLd = {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` },
-        { "@type": "ListItem", position: 2, name: companyName, item: pageUrl },
-      ],
-    };
+    extraTags.push(`  <script type="application/ld+json">${safeLd(faqLd)}</script>`);
+  }
 
-    const extraTags: string[] = [
-      `  <link rel="canonical" href="${esc(pageUrl)}" />`,
-      `  <meta property="og:url" content="${esc(pageUrl)}" />`,
-      `  <script type="application/ld+json">${JSON.stringify(localBusinessLd)}</script>`,
-      `  <script type="application/ld+json">${JSON.stringify(webPageLd)}</script>`,
-      `  <script type="application/ld+json">${JSON.stringify(breadcrumbLd)}</script>`,
-    ];
-    if (ssrFaq.length > 0) {
-      const faqLd = {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: ssrFaq.map(({ question, answer }) => ({
-          "@type": "Question",
-          name: question,
-          acceptedAnswer: { "@type": "Answer", text: answer },
-        })),
-      };
-      extraTags.push(`  <script type="application/ld+json">${JSON.stringify(faqLd)}</script>`);
-    }
+  // window.__INITIAL_DATA__ — same </script> escaping applied
+  const safeJson = JSON.stringify({ branding, content }).replace(/<\/script/gi, "<\\/script");
+  extraTags.push(`  <script>window.__INITIAL_DATA__=${safeJson};</script>`);
 
-    // window.__INITIAL_DATA__ — escape </script> to prevent XSS
-    const safeJson = JSON.stringify({ branding, content }).replace(/<\/script/gi, "<\\/script");
-    extraTags.push(`  <script>window.__INITIAL_DATA__=${safeJson};</script>`);
+  html = html.replace("</head>", `${extraTags.join("\n")}\n</head>`);
 
-    html = html.replace("</head>", `${extraTags.join("\n")}\n</head>`);
+  // Semantic SSR body — visible to crawlers, replaced by React on first render
+  const L = {
+    services: { de: "Unsere Leistungen",          tr: "Hizmetlerimiz",          en: "Our Services" },
+    about:    { de: "Über uns",                    tr: "Hakkımızda",              en: "About Us" },
+    faq:      { de: "Häufig gestellte Fragen",     tr: "Sık sorulan sorular",     en: "Frequently Asked Questions" },
+    cta:      { de: "Jetzt Termin vereinbaren",    tr: "Hemen randevu alın",      en: "Book an Appointment" },
+    contact:  { de: "Kontakt",                     tr: "İletişim",                en: "Contact" },
+  };
 
-    // Semantic SSR body — visible to crawlers, replaced by React on hydration
-    const L = {
-      services: { de: "Unsere Leistungen",          tr: "Hizmetlerimiz",          en: "Our Services" },
-      about:    { de: "Über uns",                    tr: "Hakkımızda",              en: "About Us" },
-      faq:      { de: "Häufig gestellte Fragen",     tr: "Sık sorulan sorular",     en: "Frequently Asked Questions" },
-      cta:      { de: "Jetzt Termin vereinbaren",    tr: "Hemen randevu alın",      en: "Book an Appointment" },
-      contact:  { de: "Kontakt",                     tr: "İletişim",                en: "Contact" },
-    };
-
-    const servicesBlock = ssrServices.length > 0 ? `
+  const servicesBlock = ssrServices.length > 0 ? `
 <section aria-labelledby="ssr-svcs" style="padding:48px 24px;background:#f9fafb">
   <div style="max-width:1100px;margin:0 auto">
     <h2 id="ssr-svcs" data-speakable style="font-size:28px;font-weight:700;color:#111827;margin:0 0 32px;text-align:center">${L.services[lk]}</h2>
@@ -407,7 +412,7 @@ router.get("/demo/:slug", async (req: Request, res: Response) => {
   </div>
 </section>` : "";
 
-    const aboutBlock = ssrAbout.length > 0 ? `
+  const aboutBlock = ssrAbout.length > 0 ? `
 <section aria-labelledby="ssr-about" style="padding:48px 24px;background:#fff">
   <div style="max-width:900px;margin:0 auto">
     <h2 id="ssr-about" data-speakable style="font-size:28px;font-weight:700;color:#111827;margin:0 0 24px">${L.about[lk]}</h2>
@@ -415,7 +420,7 @@ router.get("/demo/:slug", async (req: Request, res: Response) => {
   </div>
 </section>` : "";
 
-    const faqBlock = ssrFaq.length > 0 ? `
+  const faqBlock = ssrFaq.length > 0 ? `
 <section aria-labelledby="ssr-faq" style="padding:48px 24px;background:#f9fafb">
   <div style="max-width:900px;margin:0 auto">
     <h2 id="ssr-faq" data-speakable style="font-size:28px;font-weight:700;color:#111827;margin:0 0 32px">${L.faq[lk]}</h2>
@@ -428,7 +433,7 @@ router.get("/demo/:slug", async (req: Request, res: Response) => {
   </div>
 </section>` : "";
 
-    const contactBlock = `
+  const contactBlock = `
 <section aria-labelledby="ssr-contact" style="padding:64px 24px;background:#111827;text-align:center">
   <div style="max-width:700px;margin:0 auto">
     <h2 id="ssr-contact" data-speakable style="font-size:32px;font-weight:700;color:#fff;margin:0 0 24px">${L.cta[lk]}</h2>
@@ -438,7 +443,7 @@ router.get("/demo/:slug", async (req: Request, res: Response) => {
   </div>
 </section>`;
 
-    const ssrBody = `<div id="ssr-content">
+  const ssrBody = `<div id="ssr-content">
   <header style="background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 24px;display:flex;align-items:center;gap:12px">
     ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(companyName)} logo" height="40" style="height:40px;width:auto;object-fit:contain" />` : ""}
     <span style="font-size:20px;font-weight:700;color:#111827">${tx(companyName)}</span>
@@ -461,24 +466,74 @@ router.get("/demo/:slug", async (req: Request, res: Response) => {
   </footer>
 </div>`;
 
-    // Inject SSR body — replace placeholder comment if present, else inject before #root
-    if (html.includes("<!--ssr-content-->")) {
-      html = html.replace("<!--ssr-content-->", ssrBody);
-    } else {
-      html = html.replace('<div id="root">', `${ssrBody}\n  <div id="root">`);
-    }
+  // Inject SSR body — replace placeholder comment if present, else inject before #root
+  if (html.includes("<!--ssr-content-->")) {
+    html = html.replace("<!--ssr-content-->", ssrBody);
+  } else {
+    html = html.replace('<div id="root">', `${ssrBody}\n  <div id="root">`);
+  }
 
+  logger.info({ slug, hasCrawlData, faqCount: ssrFaq.length }, "SSR demo page served");
+  return html;
+}
+
+// ── /demo/:slug ───────────────────────────────────────────────────────────────
+router.get("/demo/:slug", async (req: Request, res: Response) => {
+  if (!(req.headers.accept ?? "").includes("text/html")) {
+    res.status(406).end();
+    return;
+  }
+  const slug = req.params.slug as string;
+  try {
+    const html = await renderDemoPage(slug, getOrigin(req));
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.end(html);
-
-    logger.info({ slug, hasCrawlData, faqCount: ssrFaq.length }, "SSR demo page served");
   } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "NOT_FOUND") { res.status(404).end(); return; }
     logger.error({ err, slug }, "SSR render error — falling back to bare SPA shell");
     try {
-      const html = getIndexHtml();
       res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.end(html);
+      res.end(getIndexHtml());
+    } catch {
+      res.status(500).end("Internal Server Error");
+    }
+  }
+});
+
+// ── /:vertical/:slug ──────────────────────────────────────────────────────────
+// Handles industry-prefixed sample website URLs, e.g. /healthcare/dosteli
+// Only processes known industry verticals; unrecognised paths fall through to
+// the demo-frontend SPA shell so /admin/*, /dashboard/*, etc. still work.
+router.get("/:vertical/:slug", async (req: Request, res: Response) => {
+  if (!(req.headers.accept ?? "").includes("text/html")) {
+    res.status(406).end();
+    return;
+  }
+  const vertical = req.params.vertical as string;
+  if (!KNOWN_VERTICALS.has(vertical)) {
+    try {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.end(getIndexHtml());
+    } catch {
+      res.status(404).end();
+    }
+    return;
+  }
+  const slug = req.params.slug as string;
+  try {
+    const html = await renderDemoPage(slug, getOrigin(req));
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    res.end(html);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "NOT_FOUND") { res.status(404).end(); return; }
+    logger.error({ err, slug, vertical }, "SSR render error — falling back to bare SPA shell");
+    try {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.end(getIndexHtml());
     } catch {
       res.status(500).end("Internal Server Error");
     }

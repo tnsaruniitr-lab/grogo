@@ -1,0 +1,48 @@
+I fetched and fast-forwarded to the latest origin/main. The changes are a real improvement: Vite configureServer SSR was removed, and there is now an Express SSR route at ssr.ts (line 213). So /demo/:slug, /robots.txt, and /sitemap.xml are now production-routed through the API service.
+
+But it is not perfect SSR yet. Main findings:
+
+P1
+Vertical demo routes are still not SSR rendered
+Dismiss
+The frontend supports /:vertical/:slug, but the API artifact only routes /demo, /robots.txt, /sitemap.xml, and /api to Express. That means URLs like /healthcare/foo or /aesthetics/foo still fall back to the static SPA and will not get the server-rendered HTML, meta tags, or JSON-LD. If these are public sample website URLs, they need to be routed to the SSR service too.
+
+
+/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/.replit-artifact/artifact.toml:10-10
+P1
+JSON-LD scripts can be broken by client-controlled content
+Dismiss
+The page escapes normal HTML body/meta fields, but JSON-LD is inserted with raw JSON.stringify output. If client branding or knowledge text contains a closing script tag, it can break out of the application/ld+json script block. The INITIAL_DATA script handles this with a </script replacement; the JSON-LD blocks need the same safe serialization helper.
+
+
+/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/routes/ssr.ts:362-362
+P2
+This is SSR shell injection, not React hydration
+Dismiss
+The client still uses createRoot into an empty #root and removes the separate #ssr-content node on the next animation frame. That gives crawlers readable HTML, which is good, but React is not hydrating the server-rendered DOM. For 'perfect SSR', use renderToString/renderToPipeableStream for the React app and hydrateRoot on the same root, or accept this as crawler-focused pre-rendering rather than true React SSR.
+
+
+/Users/arunsharma/Documents/New project/grogo/artifacts/demo-frontend/src/main.tsx:12-12
+P2
+SSR initial language can flash to English
+Dismiss
+DemoPage initializes activeLang as 'en' even when SSR data says the page language is German or Turkish, then corrects it in an effect. Because the SSR body is removed after the first frame, users may briefly see the React app render English text before the effect switches language. Initialize activeLang from initialData.branding.demoLanguages/demoLanguage instead.
+
+
+/Users/arunsharma/Documents/New project/grogo/artifacts/demo-frontend/src/pages/demo.tsx:168-168
+What’s now good
+
+/demo/:slug has production Express-rendered HTML.
+View Source should contain real content for /demo/:slug.
+SSR now queries DB directly instead of calling /api/admin/clients.
+sitemap.xml and robots.txt moved to Express.
+The Vite dev-only SSR middleware was removed.
+window.__INITIAL_DATA__ exists, so the client avoids the loading spinner for /demo/:slug.
+Still missing for “perfect”
+
+SSR for /:vertical/:slug.
+Safe JSON serialization for all JSON-LD scripts.
+True React SSR + hydrateRoot, or at least acknowledge this is pre-rendered SEO HTML plus client replacement.
+Initialize language synchronously from SSR data.
+I couldn’t run pnpm run typecheck because pnpm is not installed on this machine’s PATH.
+Net: big step forward, but not perfect yet. For SEO/AEO, /demo/:slug is now much closer. For the whole sample-site system, fix the vertical routes and JSON-LD escaping next.

@@ -170,7 +170,13 @@ export default function DemoPage() {
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(0);
-  const [activeLang, setActiveLang] = useState<string>("en");
+  const [activeLang, setActiveLang] = useState<string>(() => {
+    if (!initialData?.branding) return "en";
+    const { demoLanguages, demoLanguage } = initialData.branding;
+    return Array.isArray(demoLanguages) && demoLanguages.length > 0
+      ? demoLanguages[0]!
+      : (demoLanguage ?? "en");
+  });
 
   useEffect(() => {
     if (!slug || initialData) return; // skip fetch when SSR data is present
