@@ -187,7 +187,7 @@ export default function DemoPage() {
     );
   }
 
-  const t = getDemoT(null);
+  const t = getDemoT(branding?.demoLanguage ?? null);
 
   if (error || !branding) {
     return (
@@ -267,105 +267,6 @@ export default function DemoPage() {
           </div>
         </section>
       )}
-
-      {/* ── BOT DEMO PREVIEW (anchor target) ── */}
-      <section id="bot-demo" className="py-20 bg-background" style={{ scrollMarginTop: "0px" }}>
-        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
-          <div className="flex flex-col md:flex-row items-center gap-12">
-            {/* WhatsApp bot preview */}
-            <motion.div
-              className="flex-1 flex justify-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-72">
-                <div
-                  className="px-4 py-3 flex items-center gap-3"
-                  style={{ backgroundColor: secondary }}
-                >
-                  <div
-                    className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-                    style={{ backgroundColor: primary }}
-                  >
-                    {branding.companyName.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white text-sm font-semibold leading-tight truncate">
-                      {branding.companyName}
-                    </p>
-                    <p className="text-white/60 text-xs">{theme.botPersonaLabel[lang]}</p>
-                  </div>
-                  <div className="ml-auto shrink-0 h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                </div>
-                <div className="p-3 space-y-2 bg-[#ECE5DD]">
-                  {theme.botMessages[lang].slice(0, Math.min(visibleMessages, 3)).map((msg, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className="max-w-[88%] rounded-xl px-3 py-1.5 text-xs leading-relaxed shadow-sm"
-                        style={{
-                          backgroundColor: msg.from === "user" ? primary : "white",
-                          color: msg.from === "user" ? "white" : "#222",
-                        }}
-                      >
-                        {msg.text}
-                      </div>
-                    </motion.div>
-                  ))}
-                  {visibleMessages < 1 && (
-                    <div className="flex justify-start">
-                      <div className="bg-white rounded-xl px-3 py-2 text-xs text-gray-400 flex gap-0.5 shadow-sm">
-                        <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
-                        <span className="animate-bounce" style={{ animationDelay: "150ms" }}>·</span>
-                        <span className="animate-bounce" style={{ animationDelay: "300ms" }}>·</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Text */}
-            <motion.div
-              className="flex-1 max-w-lg"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <p
-                className="text-xs tracking-widest uppercase font-medium mb-4"
-                style={{ color: primary }}
-              >
-                Live Demo
-              </p>
-              <h2 className="text-3xl font-bold mb-4 leading-snug" style={{ color: secondary }}>
-                {t.howTitle(branding.companyName)}
-              </h2>
-              <p className="text-muted-foreground mb-8 leading-relaxed">{t.howSubtitle}</p>
-              <div className="flex items-center gap-3 p-4 rounded-xl border" style={{ borderColor: primary + "30" }}>
-                <div
-                  className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: primary + "18" }}
-                >
-                  <MessageCircle className="w-5 h-5" style={{ color: primary }} />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-semibold" style={{ color: secondary }}>AI responds in seconds.</span>{" "}
-                  Qualifies leads, books callbacks and answers FAQs — 24/7, in any language.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
 
       {/* ── SERVICES ── */}
       <section id="leistungen" className="py-24 bg-muted/40">
@@ -478,8 +379,8 @@ export default function DemoPage() {
           {branding.city && (
             <p className="text-sm text-muted-foreground mb-8">📍 {branding.city}</p>
           )}
-          <div className="flex justify-center gap-12 mt-10">
-            {theme.stats[lang].map(([num, label]) => (
+          <div className="flex flex-wrap justify-center gap-12 mt-10">
+            {(content?.hasCrawlData ? theme.stats[lang] : theme.stats[lang]).map(([num, label]) => (
               <div key={label} className="text-center">
                 <div className="text-4xl font-extrabold" style={{ color: primary }}>{num}</div>
                 <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
@@ -500,7 +401,7 @@ export default function DemoPage() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-current" style={{ color: primary }} />
               ))}
-              <span className="ml-1 font-semibold" style={{ color: secondary }}>4.9</span>
+              <span className="ml-1 font-semibold" style={{ color: secondary }}>{theme.stats[lang][1]?.[0] ?? "4.9"}</span>
               <span>·</span>
               <span>{lang === "de" ? "124+ Bewertungen" : lang === "tr" ? "124+ değerlendirme" : "124+ reviews"}</span>
             </div>
@@ -541,9 +442,6 @@ export default function DemoPage() {
             <h2 className="text-3xl font-bold mb-2" style={{ color: secondary }} data-speakable>
               {lang === "de" ? "Häufig gestellte Fragen" : lang === "tr" ? "Sık sorulan sorular" : "Frequently asked questions"}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {lang === "de" ? "Sofortige Antworten — rund um die Uhr" : lang === "tr" ? "Anında yanıtlar — 7/24" : "Instant answers — around the clock"}
-            </p>
           </div>
           <Accordion type="single" collapsible className="space-y-2">
             {faqItems.map((item, i) => (
@@ -563,31 +461,93 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-6 md:px-12 max-w-5xl">
+      {/* ── WHATSAPP CONTACT ── */}
+      <section id="bot-demo" className="py-20 bg-background" style={{ scrollMarginTop: "0px" }}>
+        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
           <div className="text-center mb-14">
-            <p className="text-xs tracking-widest uppercase font-medium mb-3" style={{ color: primary }}>
-              The Bot
-            </p>
             <h2 className="text-3xl font-bold mb-3" style={{ color: secondary }}>
               {t.howTitle(branding.companyName)}
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">{t.howSubtitle}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {theme.steps[lang].map(({ title, desc }, i) => (
-              <div key={i} className="bg-card rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div
-                  className="h-11 w-11 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-5 shadow-sm"
-                  style={{ backgroundColor: primary }}
-                >
-                  {i + 1}
+          <div className="flex flex-col md:flex-row items-center gap-12 mb-14">
+            {/* WhatsApp chat mockup */}
+            <motion.div
+              className="flex-1 flex justify-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-72">
+                <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: secondary }}>
+                  <div
+                    className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                    style={{ backgroundColor: primary }}
+                  >
+                    {branding.companyName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-semibold leading-tight truncate">{branding.companyName}</p>
+                    <p className="text-white/60 text-xs">{theme.botPersonaLabel[lang]}</p>
+                  </div>
+                  <div className="ml-auto shrink-0 h-2 w-2 rounded-full bg-green-400 animate-pulse" />
                 </div>
-                <h3 className="font-bold mb-2" style={{ color: secondary }}>{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                <div className="p-3 space-y-2 bg-[#ECE5DD]">
+                  {theme.botMessages[lang].slice(0, Math.min(visibleMessages, 3)).map((msg, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className="max-w-[88%] rounded-xl px-3 py-1.5 text-xs leading-relaxed shadow-sm"
+                        style={{
+                          backgroundColor: msg.from === "user" ? primary : "white",
+                          color: msg.from === "user" ? "white" : "#222",
+                        }}
+                      >
+                        {msg.text}
+                      </div>
+                    </motion.div>
+                  ))}
+                  {visibleMessages < 1 && (
+                    <div className="flex justify-start">
+                      <div className="bg-white rounded-xl px-3 py-2 text-xs text-gray-400 flex gap-0.5 shadow-sm">
+                        <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
+                        <span className="animate-bounce" style={{ animationDelay: "150ms" }}>·</span>
+                        <span className="animate-bounce" style={{ animationDelay: "300ms" }}>·</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
+            </motion.div>
+            {/* Steps */}
+            <motion.div
+              className="flex-1 space-y-5"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {theme.steps[lang].map(({ title, desc }, i) => (
+                <div key={i} className="flex gap-4 items-start">
+                  <div
+                    className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm"
+                    style={{ backgroundColor: primary }}
+                  >
+                    {i + 1}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1" style={{ color: secondary }}>{title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
