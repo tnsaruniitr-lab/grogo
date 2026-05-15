@@ -1,0 +1,33 @@
+I’d make two clarifications:
+
+The current demo page content is fetched mostly with useEffect, not fully React Query, so SSR must refactor the data-loading boundary. The server needs to load branding/content first, pass it into React, and the client must hydrate from that same initial data.
+
+Hydration is the real danger zone. If the server renders a full demo page but the client initially renders the current loading state, React will mismatch or wipe the useful HTML. Phase 1 should include window.__INITIAL_DATA__ or equivalent so the client’s first render matches the server render.
+
+My recommendation: proceed with Phase 1 first.
+
+Instruction to Replit:
+
+Proceed with Phase 1 only.
+
+Implement production SSR for public demo routes in the Express server.
+
+Scope:
+- SSR /demo/:slug and /:vertical/:slug using react-dom/server.
+- Load branding and public content from the database/server-side before rendering.
+- Inject the data into the HTML as window.__INITIAL_DATA__.
+- Refactor the demo page so the client hydrates from the injected initial data and does not render a loading state on first paint when SSR data exists.
+- Add unique title, meta description, html lang, canonical, OG, and Twitter tags server-side.
+- Serve the built Vite client assets so the SSR page hydrates normally.
+- View Source for /demo/:slug must show real company/page content, not just <div id="root"></div>.
+- Do not implement full JSON-LD, sitemap, robots, or caching yet except where minimally required to avoid regressions.
+- Escape/sanitize all client-controlled values inserted into HTML or script tags.
+
+Acceptance checks:
+- pnpm run build succeeds.
+- curl /demo/:slug returns an h1, company name, description, services/FAQ content if available, canonical, and OG tags.
+- Disabling JavaScript still shows a readable page.
+- Hydration has no visible flash and no React mismatch warnings.
+Then Phase 2 can do semantic sections and JSON-LD properly. Phase 3 can do sitemap, robots, and caching.
+
+That sequence is right: get real production HTML first, then polish the AEO layer.

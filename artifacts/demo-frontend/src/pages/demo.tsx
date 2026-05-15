@@ -134,6 +134,23 @@ interface ClientContent {
   process: KnowledgeChunk[];
 }
 
+// ── Server-side initial data (injected by Express SSR into window.__INITIAL_DATA__) ──
+declare global {
+  interface Window {
+    __INITIAL_DATA__?: {
+      branding: BrandingConfig;
+      content: ClientContent;
+    };
+  }
+}
+
+function getInitialData() {
+  if (typeof window === "undefined") return null;
+  const d = window.__INITIAL_DATA__;
+  window.__INITIAL_DATA__ = undefined; // clear so back-navigation re-fetches fresh data
+  return d ?? null;
+}
+
 function chunkTitle(q: string, max = 48): string {
   const clean = q.replace(/\?$/, "").trim();
   return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
@@ -145,15 +162,18 @@ export default function DemoPage() {
   const urlVertical = params.vertical;
   const isPreview = new URLSearchParams(window.location.search).get("preview") === "1";
 
-  const [branding, setBranding] = useState<BrandingConfig | null>(null);
-  const [content, setContent] = useState<ClientContent | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialise from window.__INITIAL_DATA__ if Express SSR injected it —
+  // this avoids the loading spinner and duplicate network fetches on first paint.
+  const [initialData] = useState(() => getInitialData());
+  const [branding, setBranding] = useState<BrandingConfig | null>(initialData?.branding ?? null);
+  const [content, setContent] = useState<ClientContent | null>(initialData?.content ?? null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(0);
   const [activeLang, setActiveLang] = useState<string>("en");
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug || initialData) return; // skip fetch when SSR data is present
     Promise.all([
       fetch(`/api/clients/${slug}/branding`).then((r) => {
         if (!r.ok) throw new Error("not found");
@@ -169,7 +189,7 @@ export default function DemoPage() {
       })
       .catch(() => setError("not found"))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, initialData]);
 
   useEffect(() => {
     if (!branding) return;
