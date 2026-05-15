@@ -21,6 +21,8 @@ export const leadsTable = pgTable(
     language: text("language"),
     source: text("source").notNull().default("unknown"),
     status: text("status").notNull().default("new"),
+    email: text("email"),
+    contactPhone: text("contact_phone"),
     notes: text("notes"),
     conversationSummary: text("conversation_summary"),
     botTurnsThisHour: integer("bot_turns_this_hour").notNull().default(0),

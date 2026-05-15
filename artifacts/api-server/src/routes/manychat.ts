@@ -118,6 +118,8 @@ const ManychatPayloadSchema = z.object({
   message: z.string(),
   channel: z.string().default("instagram"),
   name: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  email: z.string().optional().nullable(),
 });
 
 router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
@@ -137,7 +139,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       return;
     }
 
-    const { senderId, message, channel, name } = parsed.data;
+    const { senderId, message, channel, name, phone: contactPhone, email } = parsed.data;
 
     const clients = await db
       .select()
@@ -162,10 +164,11 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
     let lead: Lead;
     if (existingLeads.length > 0) {
       lead = existingLeads[0]!;
-      await db
-        .update(leadsTable)
-        .set({ lastContactAt: new Date() })
-        .where(eq(leadsTable.id, lead.id));
+      const updates: Record<string, unknown> = { lastContactAt: new Date() };
+      if (name && !lead.name) updates["name"] = name;
+      if (email && !lead.email) updates["email"] = email;
+      if (contactPhone && !lead.contactPhone) updates["contactPhone"] = contactPhone;
+      await db.update(leadsTable).set(updates).where(eq(leadsTable.id, lead.id));
     } else {
       const inserted = await db
         .insert(leadsTable)
@@ -175,6 +178,8 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
           source: channel,
           status: "new",
           name: name ?? null,
+          email: email ?? null,
+          contactPhone: contactPhone ?? null,
           lastContactAt: new Date(),
         })
         .returning();
