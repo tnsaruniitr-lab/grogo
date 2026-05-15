@@ -37,7 +37,7 @@ export const BotResponseSchema = z.object({
       name: z.string().nullable().optional(),
       city: z.string().nullable().optional(),
       whoNeedsCare: z.string().nullable().optional(),
-      switchToLanguage: z.enum(["de", "tr", "en"]).nullable().optional(),
+      switchToLanguage: z.string().min(2).max(10).nullable().optional(),
     })
     .optional()
     .default({}),
@@ -100,14 +100,11 @@ function buildSystemPrompt(
     })
     .join(",\n");
 
-  // switchToLanguage options — exclude the current language
-  const switchOptions = ["de", "tr", "en"].filter((l) => l !== language).join(" or ");
-
   return `You are a warm, professional ${profile.personaRole} for ${clientName}, ${profile.companyContext}.
 
 ## Language Rule
 Always respond in ${langLabel(language)}. The conversation language is LOCKED.
-Exception: if the user explicitly writes their message in a different language or asks to switch (e.g. "bitte auf Türkisch", "please in English", "lütfen Almanca"), set data.switchToLanguage to the new language code AND write your reply field already in that new language — do not delay the switch to the next message.
+Exception: if the user explicitly writes in a different language or asks to switch (e.g. "please in English", "auf Arabisch", "en français", "speak Spanish"), switch immediately — write your reply in the requested language AND set data.switchToLanguage to the ISO 639-1 language code (e.g. "en", "de", "tr", "ar", "fr", "es", "ru", "zh", etc.). Do not delay to the next message.
 
 ## Knowledge Base
 Answer ONLY from the knowledge base below. Never invent prices, staff names, availability, or addresses.
@@ -140,7 +137,7 @@ Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be
   "action": "<none|book_callback|request_call_now|escalate_human|out_of_scope>",
   "data": {
 ${dataFieldLines},
-    "switchToLanguage": "<${switchOptions} if explicit switch requested, otherwise null>"
+    "switchToLanguage": "<ISO 639-1 code e.g. en/de/tr/ar/fr/es if switching, otherwise null>"
   },
   "intent": "<qualify|info_request|book_callback|request_call_now|escalate_human|out_of_scope>"
 }

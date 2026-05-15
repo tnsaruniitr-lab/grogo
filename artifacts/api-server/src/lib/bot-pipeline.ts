@@ -519,12 +519,13 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
   }
 
-  // 8. Language switch persistence
+  // 8. Language switch persistence — accept any valid ISO 639-1 code GPT returns
   const requestedSwitch = data["switchToLanguage"];
   if (
     typeof requestedSwitch === "string" &&
     requestedSwitch !== language &&
-    (requestedSwitch === "de" || requestedSwitch === "tr" || requestedSwitch === "en")
+    requestedSwitch.length >= 2 &&
+    requestedSwitch.length <= 10
   ) {
     language = requestedSwitch;
     leadUpdates.language = language;
