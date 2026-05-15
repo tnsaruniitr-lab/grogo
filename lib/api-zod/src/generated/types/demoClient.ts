@@ -13,5 +13,6 @@ export interface DemoClient {
   slug: string;
   isActive: boolean;
   createdAt: string;
+  twilioSender?: string;
   branding: BrandingConfig;
 }

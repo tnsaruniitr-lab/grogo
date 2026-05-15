@@ -193,6 +193,7 @@ export const ListDemoClientsResponseItem = zod.object({
   slug: zod.string(),
   isActive: zod.boolean(),
   createdAt: zod.string(),
+  twilioSender: zod.string().optional(),
   branding: zod.object({
     companyName: zod.string(),
     slug: zod.string(),
@@ -245,6 +246,7 @@ export const UpdateDemoClientParams = zod.object({
 
 export const UpdateDemoClientBody = zod.object({
   name: zod.string().optional(),
+  twilioSender: zod.string().optional(),
   branding: zod
     .object({
       companyName: zod.string(),
@@ -270,6 +272,7 @@ export const UpdateDemoClientResponse = zod.object({
   slug: zod.string(),
   isActive: zod.boolean(),
   createdAt: zod.string(),
+  twilioSender: zod.string().optional(),
   branding: zod.object({
     companyName: zod.string(),
     slug: zod.string(),

@@ -9,5 +9,6 @@ import type { BrandingConfig } from "./brandingConfig";
 
 export interface DemoClientUpdate {
   name?: string;
+  twilioSender?: string;
   branding?: BrandingConfig;
 }

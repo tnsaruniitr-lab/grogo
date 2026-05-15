@@ -636,6 +636,8 @@ components:
           type: boolean
         createdAt:
           type: string
+        twilioSender:
+          type: string
         branding:
           $ref: "#/components/schemas/BrandingConfig"
 
@@ -654,6 +656,8 @@ components:
       type: object
       properties:
         name:
+          type: string
+        twilioSender:
           type: string
         branding:
           $ref: "#/components/schemas/BrandingConfig"

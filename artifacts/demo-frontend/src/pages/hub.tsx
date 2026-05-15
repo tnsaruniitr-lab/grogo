@@ -77,6 +77,7 @@ interface DemoClient {
   slug: string;
   isActive: boolean;
   createdAt: string;
+  twilioSender?: string;
   branding: BrandingConfig;
 }
 
@@ -958,6 +959,7 @@ function EditDemoDialog({
   const [uploading, setUploading] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(client.branding.logoUrl ?? null);
+  const [twilioSender, setTwilioSender] = useState(client.twilioSender ?? "");
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: client.branding.companyName ?? "",
     slug: client.branding.slug ?? client.slug,
@@ -1004,6 +1006,7 @@ function EditDemoDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: branding.companyName,
+          twilioSender: twilioSender.trim(),
           branding: { ...branding, logoUrl: finalLogoUrl },
         }),
       });
@@ -1154,6 +1157,16 @@ function EditDemoDialog({
             <div className="space-y-2">
               <Label>Website URL</Label>
               <Input value={branding.websiteUrl ?? ""} onChange={(e) => update("websiteUrl", e.target.value)} placeholder="https://example.de" className="col-span-2" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label>WhatsApp Number (Twilio sender)</Label>
+              <Input
+                value={twilioSender}
+                onChange={(e) => setTwilioSender(e.target.value)}
+                placeholder="whatsapp:+15558085030"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">Format: <code>whatsapp:+&lt;number&gt;</code>. Each brand can have a unique number; defaults to the shared sandbox number.</p>
             </div>
             <div className="space-y-2">
               <Label>Demo Language</Label>

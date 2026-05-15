@@ -154,7 +154,7 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
       name,
       slug,
       whatsappNumber: "",
-      twilioSender: "",
+      twilioSender: process.env.TWILIO_DEFAULT_SENDER ?? "",
       config: branding ?? null,
     })
     .returning();
@@ -196,6 +196,7 @@ router.patch("/admin/clients/:id", async (req: Request, res: Response) => {
 
   const updates: Partial<typeof clientsTable.$inferInsert> = {};
   if (body.data.name) updates.name = body.data.name;
+  if (body.data.twilioSender !== undefined) updates.twilioSender = body.data.twilioSender;
   if (body.data.branding !== undefined) updates.config = body.data.branding as Record<string, unknown>;
 
   const [updated] = await db
@@ -376,6 +377,7 @@ function toClientResponse(client: typeof clientsTable.$inferSelect) {
     slug: client.slug,
     isActive: client.isActive,
     createdAt: client.createdAt.toISOString(),
+    twilioSender: client.twilioSender ?? "",
     branding: buildBranding(client),
   };
 }
