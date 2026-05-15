@@ -61,7 +61,7 @@ export default function MockupsPage() {
                     
                     <TabsContent value="de" className="flex flex-col gap-3 mt-0">
                       <OutboundMsg text="Hallo, ich suche Pflege für meine Mutter in Berlin." time="10:42" />
-                      <InboundMsg text="Hallo! Ich helfe Ihnen gerne. Welche Art von Pflege suchen Sie — häusliche Pflege oder eine Demenzpflege-WG?" time="10:42" />
+                      <InboundMsg text="Hallo! Ich helfe Ihnen gerne. Welche Art von Pflege suchen Sie: häusliche Pflege oder eine Demenzpflege-WG?" time="10:42" />
                       <OutboundMsg text="Sie hat Demenz. Wir suchen eine Demenz-WG in Berlin." time="10:44" />
                       <InboundMsg text="Verstanden. Unsere Demenz-WG in Berlin bietet eine kulturell vertraute Umgebung und türkischsprachiges Personal. Soll ich Ihnen einen Rückruf von unserem Team einrichten?" time="10:44" />
                       <OutboundMsg text="Ja, bitte. Morgen früh wäre gut." time="10:45" />
@@ -70,7 +70,7 @@ export default function MockupsPage() {
 
                     <TabsContent value="tr" className="flex flex-col gap-3 mt-0">
                       <OutboundMsg text="Merhaba, annem için bakım arıyorum." time="11:15" />
-                      <InboundMsg text="Merhaba! Size yardımcı olmaktan memnuniyet duyarım. Hangi tür bakımı arıyorsunuz — evde bakım mı yoksa demans hastaları için özel bakım evimiz mi?" time="11:15" />
+                      <InboundMsg text="Merhaba! Size yardımcı olmaktan memnuniyet duyarım. Hangi tür bakımı arıyorsunuz: evde bakım mı yoksa demans hastaları için özel bakım evimiz mi?" time="11:15" />
                       <OutboundMsg text="Demans hastası. Berlin'de bir demans bakım evi arıyoruz." time="11:17" />
                       <InboundMsg text="Anlıyorum. Berlin'deki demans bakım evimiz kültürel olarak tanıdık bir ortam ve Türkçe konuşan personel sunmaktadır. Ekibimizin sizi araması için bir randevu ayarlayayım mı?" time="11:17" />
                     </TabsContent>

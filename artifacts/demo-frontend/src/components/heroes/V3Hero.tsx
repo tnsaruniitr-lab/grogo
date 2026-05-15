@@ -524,7 +524,7 @@ export function V3Hero({
             className="text-xs"
             style={{ color: "rgba(245,238,230,0.35)" }}
           >
-            — {cfg.reviewName}
+            {cfg.reviewName}
           </span>
         </div>
       </div>
