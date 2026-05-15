@@ -246,11 +246,11 @@ export default function DemoPage() {
     );
   }
 
-  const headline = branding.heroHeadline || branding.tagline || branding.companyName;
-  const subtext = branding.tagline && branding.heroHeadline ? branding.tagline : t.defaultSubtitle;
   const { primary, secondary } = resolveColors(branding);
   const lang = getLang(activeLang);
   const theme = getIndustryTheme(branding.industry);
+  const headline = theme.heroHeadlineI18n?.[lang] ?? branding.heroHeadline ?? branding.tagline ?? branding.companyName;
+  const subtext = branding.tagline && branding.heroHeadline ? branding.tagline : t.defaultSubtitle;
   const themeIcons = resolveIcons(theme.serviceIconNames);
   const isPrimary = PRIMARY_VERTICALS.has(branding.industry ?? "");
   const testimonials: Testimonial[] = getTestimonials(branding.industry, branding.city, lang);
@@ -287,7 +287,7 @@ export default function DemoPage() {
           : null;
         if (!langs) return null;
         return (
-          <div className="fixed bottom-5 right-5 z-50 flex items-center gap-1 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm rounded-full shadow-lg border border-border px-2 py-1.5">
+          <div className="fixed bottom-[88px] right-5 z-50 flex items-center gap-1 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm rounded-full shadow-lg border border-border px-2 py-1.5">
             {langs.map((code) => {
               const opt = LANG_OPTIONS.find((o) => o.value === code);
               const isActive = activeLang === code;

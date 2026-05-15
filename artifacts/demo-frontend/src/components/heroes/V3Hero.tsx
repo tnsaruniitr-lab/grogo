@@ -24,8 +24,10 @@ interface HeroConfig {
   seriffontImport: string;
   serifClass: string;
   categoryLabel: string;
+  categoryLabelI18n?: Record<string, string>;
   subcategoryLabel: string;
   ctaLabel: string;
+  ctaLabelI18n?: Record<string, string>;
   reviewQuote: string;
   reviewName: string;
   trustItems: string[];
@@ -86,8 +88,10 @@ const CONFIGS: Record<string, HeroConfig> = {
       "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap",
     serifClass: "v3hero-serif",
     categoryLabel: "Premium Home Care",
+    categoryLabelI18n: { de: "Professionelle Hauspflege", tr: "Profesyonel Ev Bakımı" },
     subcategoryLabel: "Live-in · Dementia · Respite · Nursing",
     ctaLabel: "Book Free Assessment",
+    ctaLabelI18n: { de: "Kostenlose Beratung", tr: "Ücretsiz Değerlendirme" },
     reviewQuote: '"Margaret\'s carer became part of the family. Life-changing."',
     reviewName: "James H.",
     trustItems: ["Fully Licensed", "Vetted Carers", "3,500+ Families", "24/7 Support"],
@@ -323,6 +327,8 @@ export function V3Hero({
 }: V3HeroProps) {
   const cfg = CONFIGS[industry] ?? DEFAULT_CONFIG;
   const activeTrustItems = (lang ? cfg.trustItemsI18n?.[lang] : undefined) ?? cfg.trustItems;
+  const activeCategoryLabel = (lang ? cfg.categoryLabelI18n?.[lang] : undefined) ?? cfg.categoryLabel;
+  const activeCtaLabel = (lang ? cfg.ctaLabelI18n?.[lang] : undefined) ?? cfg.ctaLabel;
 
   return (
     <section
@@ -412,7 +418,7 @@ export function V3Hero({
           className="border px-5 py-2.5 text-xs tracking-wider font-light transition-colors hover:bg-white/10"
           style={{ borderColor: `${cfg.accent}80`, color: cfg.accent }}
         >
-          {cfg.ctaLabel}
+          {activeCtaLabel}
         </button>
       </nav>
 
@@ -425,7 +431,7 @@ export function V3Hero({
               className="text-[11px] tracking-[0.3em] uppercase font-medium"
               style={{ color: cfg.accent }}
             >
-              {cfg.categoryLabel}
+              {activeCategoryLabel}
               {city ? ` · ${city}` : ""}
             </span>
           </div>
@@ -458,7 +464,7 @@ export function V3Hero({
             className="px-8 py-4 text-sm font-semibold flex items-center gap-2 group transition-colors"
             style={{ backgroundColor: cfg.accent, color: cfg.bg }}
           >
-            {cfg.ctaLabel}{" "}
+            {activeCtaLabel}{" "}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
           {phone && (

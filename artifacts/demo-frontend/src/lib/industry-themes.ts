@@ -22,6 +22,8 @@ export type CardStyle = "premium" | "standard";
 
 export interface IndustryTheme {
   trustBadgesI18n?: Record<string, string[]>;
+  /** Per-language hero headline (overrides stored branding.heroHeadline in demo.tsx) */
+  heroHeadlineI18n?: Record<string, string>;
   serviceIconNames: [string, string, string];
   trustBadges: string[];
   cardStyle: CardStyle;
@@ -434,6 +436,11 @@ const wellnessTheme: IndustryTheme = {
 // ─────────────────────────────────────────────────────────
 
 const careTheme: IndustryTheme = {
+  heroHeadlineI18n: {
+    de: "Kultursensible Pflege — zu Hause",
+    en: "Culturally Sensitive Home Care",
+    tr: "Kültüre Özgü Ev Bakımı",
+  },
   serviceIconNames: ["Home", "Heart", "Users"],
   trustBadges: ["Qualified Carers", "24/7 Support", "Culturally Sensitive", "Fully Insured"],
   trustBadgesI18n: {
