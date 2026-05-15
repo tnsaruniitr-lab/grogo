@@ -51,6 +51,8 @@ const INDUSTRY_IMAGES: Record<string, string> = {
   aesthetics:          "/images/industry/aesthetics.webp",
   wellness:            "/images/industry/wellness.webp",
   care:                "/images/industry/care.webp",
+  medical:             "/images/industry/care.webp",
+  healthcare:          "/images/industry/care.webp",
   "cosmetic-surgery":  "/images/industry/cosmetic-surgery.webp",
   hair:                "/images/industry/hair.webp",
   "weight-management": "/images/industry/weight-management.webp",

@@ -242,6 +242,44 @@ const CONFIGS: Record<string, HeroConfig> = {
     reviewName: "Christopher A.",
     trustItems: ["CQC Registered", "10,000+ Procedures", "Lifetime Guarantee", "0% Finance"],
   },
+  medical: {
+    video: "/__mockup/videos/care-compassion.mp4",
+    accent: "#3A9BBF",
+    bg: "#040D12",
+    overlayH:
+      "linear-gradient(to right, rgba(4,13,18,0.92) 0%, rgba(4,13,18,0.55) 50%, rgba(4,13,18,0.12) 100%)",
+    overlayV:
+      "linear-gradient(to top, rgba(4,13,18,0.72) 0%, transparent 50%, rgba(4,13,18,0.28) 100%)",
+    serif: "'Cormorant', serif",
+    seriffontImport:
+      "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap",
+    serifClass: "v3hero-serif",
+    categoryLabel: "Medical Services",
+    subcategoryLabel: "Home Visits · Nursing · Specialist Care · 24/7",
+    ctaLabel: "Book a Consultation",
+    reviewQuote: '"Professional, compassionate care delivered right to our door."',
+    reviewName: "Sarah K.",
+    trustItems: ["Fully Licensed", "Certified Professionals", "24/7 Availability", "Home Visits"],
+  },
+  healthcare: {
+    video: "/__mockup/videos/care-compassion.mp4",
+    accent: "#3A9BBF",
+    bg: "#040D12",
+    overlayH:
+      "linear-gradient(to right, rgba(4,13,18,0.92) 0%, rgba(4,13,18,0.55) 50%, rgba(4,13,18,0.12) 100%)",
+    overlayV:
+      "linear-gradient(to top, rgba(4,13,18,0.72) 0%, transparent 50%, rgba(4,13,18,0.28) 100%)",
+    serif: "'Cormorant', serif",
+    seriffontImport:
+      "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap",
+    serifClass: "v3hero-serif",
+    categoryLabel: "Healthcare Services",
+    subcategoryLabel: "Home Visits · Nursing · Specialist Care · 24/7",
+    ctaLabel: "Book a Consultation",
+    reviewQuote: '"Professional, compassionate care delivered right to our door."',
+    reviewName: "Sarah K.",
+    trustItems: ["Fully Licensed", "Certified Professionals", "24/7 Availability", "Home Visits"],
+  },
 };
 
 const DEFAULT_CONFIG: HeroConfig = {
