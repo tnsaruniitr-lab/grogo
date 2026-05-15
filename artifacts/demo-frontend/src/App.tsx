@@ -22,6 +22,8 @@ function Router() {
       <Route path="/mockups" component={Mockups} />
       <Route path="/demo/:slug/dashboard" component={DemoDashboard} />
       <Route path="/demo/:slug" component={Demo} />
+      <Route path="/:vertical/:slug/dashboard" component={DemoDashboard} />
+      <Route path="/:vertical/:slug" component={Demo} />
       <Route component={NotFound} />
     </Switch>
   );

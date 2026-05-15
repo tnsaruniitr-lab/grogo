@@ -364,6 +364,7 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     websiteUrl: (cfg.websiteUrl as string | null | undefined) ?? null,
     demoLanguage: (cfg.demoLanguage as string | null | undefined) ?? null,
     industry: (cfg.industry as string | null | undefined) ?? null,
+    vertical: (cfg.vertical as string | null | undefined) ?? "healthcare",
     heroImageUrl: (cfg.heroImageUrl as string | null | undefined) ?? null,
   };
 }

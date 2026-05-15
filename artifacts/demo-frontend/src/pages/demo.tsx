@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
+import { getVerticalTheme } from "@/lib/vertical-themes";
 import {
   getIndustryTheme,
   getLang,
@@ -82,6 +83,7 @@ interface BrandingConfig {
   websiteUrl?: string | null;
   demoLanguage?: string | null;
   industry?: string | null;
+  vertical?: string | null;
   heroImageUrl?: string | null;
 }
 
@@ -134,8 +136,9 @@ function chunkTitle(q: string, max = 48): string {
 }
 
 export default function DemoPage() {
-  const params = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string; vertical?: string }>();
   const slug = params.slug;
+  const urlVertical = params.vertical;
 
   const [branding, setBranding] = useState<BrandingConfig | null>(null);
   const [content, setContent] = useState<ClientContent | null>(null);
@@ -234,6 +237,22 @@ export default function DemoPage() {
   const themeIcons = resolveIcons(theme.serviceIconNames);
   const isPrimary = PRIMARY_VERTICALS.has(branding.industry ?? "");
   const testimonials: Testimonial[] = getTestimonials(branding.industry, branding.city, lang);
+
+  // ── Vertical theme resolution ─────────────────────────────────────────────
+  // Priority: branding.vertical (DB) → urlVertical (ignore "demo" legacy prefix) → "healthcare"
+  const effectiveVertical =
+    branding.vertical ??
+    (urlVertical && urlVertical !== "demo" ? urlVertical : null) ??
+    "healthcare";
+  const vTheme = getVerticalTheme(effectiveVertical);
+
+  const howTitleFn = vTheme?.howTitle[lang] ?? t.howTitle;
+  const howSubtitle = vTheme?.howSubtitle[lang] ?? t.howSubtitle;
+  const ctaTitleFn = vTheme?.ctaTitle[lang] ?? t.ctaTitle;
+  const ctaSubtitleText = vTheme?.ctaSubtitle[lang] ?? t.ctaSubtitle;
+  const ctaButtonText = vTheme?.ctaButton[lang] ?? t.ctaButton;
+  const botMessages = vTheme?.botMessages[lang] ?? theme.botMessages[lang];
+  const steps = vTheme?.steps[lang] ?? theme.steps[lang];
 
   const faqItems: Array<{ q: string; a: string }> =
     content?.hasCrawlData && content.faq.length > 0
@@ -483,9 +502,9 @@ export default function DemoPage() {
         <div className="container mx-auto px-4 md:px-8 max-w-5xl">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold mb-3" style={{ color: secondary }}>
-              {t.howTitle(branding.companyName)}
+              {howTitleFn(branding.companyName)}
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">{t.howSubtitle}</p>
+            <p className="text-muted-foreground max-w-xl mx-auto">{howSubtitle}</p>
           </div>
           <div className="flex flex-col md:flex-row items-center gap-12 mb-14">
             {/* WhatsApp chat mockup */}
@@ -511,7 +530,7 @@ export default function DemoPage() {
                   <div className="ml-auto shrink-0 h-2 w-2 rounded-full bg-green-400 animate-pulse" />
                 </div>
                 <div className="p-3 space-y-2 bg-[#ECE5DD]">
-                  {theme.botMessages[lang].slice(0, Math.min(visibleMessages, 3)).map((msg, i) => (
+                  {botMessages.slice(0, Math.min(visibleMessages, 3)).map((msg, i) => (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, y: 4 }}
@@ -550,7 +569,7 @@ export default function DemoPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {theme.steps[lang].map(({ title, desc }, i) => (
+              {steps.map(({ title, desc }, i) => (
                 <div key={i} className="flex gap-4 items-start">
                   <div
                     className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm"
@@ -572,15 +591,15 @@ export default function DemoPage() {
       {/* ── CTA ── */}
       <section className="py-20" style={{ backgroundColor: secondary }}>
         <div className="container mx-auto px-6 md:px-12 text-center max-w-2xl">
-          <h2 className="text-3xl font-bold text-white mb-4">{t.ctaTitle(branding.companyName)}</h2>
-          <p className="text-white/70 mb-10 leading-relaxed">{t.ctaSubtitle}</p>
+          <h2 className="text-3xl font-bold text-white mb-4">{ctaTitleFn(branding.companyName)}</h2>
+          <p className="text-white/70 mb-10 leading-relaxed">{ctaSubtitleText}</p>
           <Button
             size="lg"
             className="h-12 px-8 rounded-xl gap-2 font-semibold text-white shadow-lg hover:opacity-90 transition-opacity"
             style={{ backgroundColor: primary }}
             onClick={() => document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })}
           >
-            <MessageCircle className="h-4 w-4" /> {t.ctaButton}
+            <MessageCircle className="h-4 w-4" /> {ctaButtonText}
           </Button>
         </div>
       </section>

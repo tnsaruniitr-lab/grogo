@@ -29,4 +29,6 @@ export interface BrandingConfig {
   demoLanguage?: string | null;
   /** @nullable */
   industry?: string | null;
+  /** @nullable */
+  vertical?: string | null;
 }

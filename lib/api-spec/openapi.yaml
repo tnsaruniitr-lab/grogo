@@ -619,6 +619,8 @@ components:
           type: ["string", "null"]
         industry:
           type: ["string", "null"]
+        vertical:
+          type: ["string", "null"]
 
     DemoClient:
       type: object
