@@ -524,7 +524,11 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
   }
 
-  // 8. Language switch persistence — accept any valid ISO 639-1 code GPT returns
+  // 8. Language switch persistence — accept any valid ISO 639-1 code GPT returns.
+  // IMPORTANT: always use the local `language` variable here, NOT lead.language.
+  // lead.language holds the stale value from DB load; the local var already
+  // reflects any explicit switch (detectExplicitSwitch, lines 336-344) or
+  // initial detection. Using lead.language here would clobber those updates.
   const requestedSwitch = data["switchToLanguage"];
   if (
     typeof requestedSwitch === "string" &&
@@ -533,11 +537,9 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     requestedSwitch.length <= 10
   ) {
     language = requestedSwitch;
-    leadUpdates.language = language;
-    logger.info({ leadId, newLanguage: language }, "Language switch persisted per user request");
-  } else {
-    leadUpdates.language = lead.language ?? language;
+    logger.info({ leadId, newLanguage: language }, "Language switch persisted per GPT signal");
   }
+  leadUpdates.language = language;
 
   leadUpdates.conversationSummary = buildSummary(lead, botResponse, language, preferredTime);
 
