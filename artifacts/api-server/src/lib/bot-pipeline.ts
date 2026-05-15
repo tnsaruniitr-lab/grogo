@@ -5,8 +5,10 @@ import {
   conversationsTable,
   appointmentsTable,
   jobQueueTable,
+  botProfilesTable,
   type Client,
   type Lead,
+  type BotProfile,
 } from "@workspace/db";
 import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { logger } from "./logger";
@@ -21,6 +23,41 @@ import {
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const MAX_BOT_TURNS_PER_HOUR = 10;
+
+/**
+ * Generic fallback profile used when no bot_profiles row exists for the client's industry.
+ * Provides safe, language-neutral behaviour for any service business.
+ */
+const GENERIC_PROFILE: BotProfile = {
+  industry: "generic",
+  personaRole: "assistant",
+  companyContext: "a professional services company",
+  primaryGoal: "understand the enquiry and book a callback",
+  callbackOffer: {
+    de: '"Wann kann ich einen Rückruf für Sie einrichten? Heute oder morgen, vormittags oder nachmittags?"',
+    tr: '"Sizi ne zaman geri arayalım? Bugün mü yarın mı — sabah mı öğleden sonra mı?"',
+    en: '"When would be a good time for a callback? Today or tomorrow — morning or afternoon?"',
+  },
+  gdprAllowedFields: {
+    de: "Name, Stadt, allgemeines Anliegen, bevorzugte Rückrufzeit",
+    tr: "İsim, şehir, genel kaygı, tercih edilen geri arama zamanı",
+    en: "Name, city, general enquiry, preferred callback time",
+  },
+  gdprRedirect: {
+    de: "Sensitive Details besprechen wir gerne persönlich",
+    tr: "Hassas detayları şahsen konuşabiliriz",
+    en: "We'd be happy to discuss sensitive details in person",
+  },
+  dataFields: [
+    { key: "name", label: { de: "Name", tr: "İsim", en: "Name" } },
+    { key: "careType", label: { de: "Art des Anliegens", tr: "Kaygı türü", en: "Nature of enquiry" } },
+    { key: "city", label: { de: "Stadt oder Region", tr: "Şehir veya bölge", en: "City or region" } },
+    { key: "preferredTime", label: { de: "Bevorzugte Rückrufzeit", tr: "Tercih edilen geri arama zamanı", en: "Preferred callback time" } },
+  ],
+  outOfScopeTopics: "medical diagnoses, legal advice, financial advice, emergency situations",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 /**
  * Detect language from user message. Falls back to client primary language.
@@ -51,8 +88,6 @@ function detectLanguage(
     return "de";
   }
 
-  // Detect English — common words that do not appear in German or Turkish.
-  // "hi" alone is ambiguous, but anything beyond that is a strong signal.
   const englishPatterns =
     /\b(hello|hi there|hey|what|which|how|when|where|services|provide|cost|price|available|appointment|book|treatment|help|please|thanks|thank you|yes|no|okay|can you|do you|are you|i am|i'm|i have|i want|i need|i would|we are|we have|would like|could you|is there|do you have|tell me|more info|information|website|contact|number|email)\b/i;
 
@@ -93,12 +128,6 @@ async function checkRateLimit(lead: Lead): Promise<boolean> {
 
 /**
  * Send a WhatsApp message via Twilio REST API with one retry on failure.
- *
- * THROWS on non-recoverable failure so the caller knows the message was not delivered
- * and can persist job failure state accordingly.
- *
- * In TWILIO_SANDBOX=true mode the message is only logged (no throw) since this is
- * intentional: dev runs without real credentials on purpose.
  */
 async function sendWhatsAppReply(from: string, to: string, body: string): Promise<void> {
   if (process.env.TWILIO_SANDBOX === "true") {
@@ -122,7 +151,6 @@ async function sendWhatsAppReply(from: string, to: string, body: string): Promis
       await attempt();
       logger.info({ from, to }, "Twilio reply sent (retry succeeded)");
     } catch (retryErr) {
-      // Re-throw so the pipeline's catch block can persist job failure state
       throw new Error(
         `Twilio send failed after retry: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`,
       );
@@ -140,14 +168,14 @@ function buildSummary(
   const parts: string[] = [];
 
   if (typeof data["name"] === "string" && data["name"]) parts.push(`Name: ${data["name"]}`);
-  if (typeof data["city"] === "string" && data["city"]) parts.push(`Stadt: ${data["city"]}`);
+  if (typeof data["city"] === "string" && data["city"]) parts.push(`City: ${data["city"]}`);
   if (typeof data["careType"] === "string" && data["careType"])
-    parts.push(`Pflege: ${data["careType"]}`);
+    parts.push(`Service: ${data["careType"]}`);
   if (typeof data["whoNeedsCare"] === "string" && data["whoNeedsCare"])
-    parts.push(`Person: ${data["whoNeedsCare"]}`);
-  if (preferredTime) parts.push(`Rückrufzeit: ${preferredTime}`);
+    parts.push(`For: ${data["whoNeedsCare"]}`);
+  if (preferredTime) parts.push(`CallbackTime: ${preferredTime}`);
   parts.push(`Intent: ${botResponse.intent}`);
-  parts.push(`Sprache: ${language}`);
+  parts.push(`Lang: ${language}`);
 
   const newLine = parts.join(" | ");
   return lead.conversationSummary ? `${lead.conversationSummary}\n${newLine}` : newLine;
@@ -155,8 +183,6 @@ function buildSummary(
 
 /**
  * Backend-controlled intent → lead status mapping.
- * GPT classifies intent; backend deterministically derives DB state from it.
- * This is intentionally decoupled from botResponse.action.
  */
 function intentToStatus(intent: Intent, currentStatus: string): string {
   switch (intent) {
@@ -175,46 +201,60 @@ function intentToStatus(intent: Intent, currentStatus: string): string {
   }
 }
 
+/**
+ * Rate-limit reply — language-aware.
+ */
+function rateLimitReply(language: string): string {
+  if (language === "tr") return "Şu an çok fazla mesaj geldi. En kısa sürede sizi arayacağız.";
+  if (language === "en") return "We've received a lot of messages right now. We'll call you back as soon as possible.";
+  return "Wir haben gerade viele Anfragen. Wir rufen Sie so schnell wie möglich zurück.";
+}
+
+/**
+ * Empty-KB callback offer — language-aware, uses profile's callback offer where possible.
+ */
+function emptyKbCallbackOffer(language: string, callbackHours: string, profile: BotProfile): string {
+  const offer = profile.callbackOffer[language] ?? profile.callbackOffer["en"] ?? null;
+  if (language === "tr") {
+    return `Merhaba! Şu anda bu konuda size yardımcı olabilecek bilgiye sahip değilim. Sizi uzmanlarımızla buluşturalım — bugün veya yarın sizi geri aramamızı ister misiniz? Hizmet saatlerimiz: ${callbackHours}.`;
+  }
+  if (language === "en") {
+    return `Hello! I don't have specific information on that right now. Let me connect you with our team — would you like us to call you back today or tomorrow? We're available ${callbackHours}.`;
+  }
+  return `Hallo! Zu dieser Frage kann ich Ihnen leider gerade keine genaue Auskunft geben. Lassen Sie uns einen Rückruf vereinbaren — soll ich Sie heute oder morgen zurückrufen lassen? Erreichbar sind wir ${callbackHours}.`;
+}
+
 export interface BotPipelineInput {
   clientRecord: Client;
   leadId: number;
   messageEventId: number;
   userMessage: string;
-  userPhone: string;    // normalised, no "whatsapp:" prefix
-  twilioSender: string; // e.g. "whatsapp:+14155238886"
+  userPhone: string;
+  twilioSender: string;
 }
 
 /**
  * Full bot pipeline:
  * 1. Load lead
  * 2. Language detection / lock
+ * 2.5. Load bot persona profile (by client industry, fallback to generic)
  * 3. Rate limit check
  * 4. Load conversation history
  * 5. Knowledge retrieval
  * 6. GPT call (structured JSON: { reply, action, data, intent })
- * 7. Intent-driven action execution (backend-controlled, not action string):
- *    - book_callback  → insert appointment + notification log + set callback_booked
- *    - request_call_now → set status=escalated + urgent note
- *    - escalate_human → set status=needs_human
- *    - out_of_scope   → intentDetected logged on outbound, no status change
- *    - qualify / info_request → update status only if progressing
+ * 7. Intent-driven action execution
  * 8. Language switch persistence
- * 9. Write outbound conversation + any system notification entries
- * 10. Twilio reply (throws on failure — propagates to job failure handler)
- * 11. Mark job done — ONLY if step 10 succeeded
- *
- * On ANY unhandled error: job is marked failed, attempts incremented, lastError recorded.
+ * 9. Write outbound conversation + system notification entries
+ * 10. Twilio reply
+ * 11. Mark job done
  */
 export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
-  const { clientRecord, leadId, messageEventId, userMessage, userPhone, twilioSender } = input;
-
   try {
     await executePipeline(input);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    logger.error({ err, leadId, messageEventId }, "Bot pipeline failed — persisting job failure");
+    logger.error({ err, leadId: input.leadId, messageEventId: input.messageEventId }, "Bot pipeline failed — persisting job failure");
 
-    // Persist failure so the job is retryable / visible in ops dashboards
     await db
       .update(jobQueueTable)
       .set({
@@ -225,7 +265,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
       })
       .where(
         and(
-          eq(jobQueueTable.messageEventId, messageEventId),
+          eq(jobQueueTable.messageEventId, input.messageEventId),
           eq(jobQueueTable.status, "pending"),
         ),
       );
@@ -258,15 +298,36 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       .where(eq(leadsTable.id, lead.id));
   }
 
+  // 2.5. Load bot persona profile by client industry.
+  const clientConfig = (clientRecord.config ?? {}) as Record<string, unknown>;
+  const industry = typeof clientConfig["industry"] === "string" ? clientConfig["industry"] : null;
+
+  let profile: BotProfile = GENERIC_PROFILE;
+  if (industry) {
+    const profileRows = await db
+      .select()
+      .from(botProfilesTable)
+      .where(eq(botProfilesTable.industry, industry))
+      .limit(1);
+    if (profileRows.length > 0) {
+      profile = profileRows[0]!;
+      logger.info({ leadId, industry, persona: profile.personaRole }, "Bot persona loaded");
+    } else {
+      logger.warn({ leadId, industry }, "No bot profile found for industry — using generic fallback");
+    }
+  }
+
+  // Allow client config to override callbackHours (per-client setting)
+  const callbackHours =
+    typeof clientConfig["callbackHours"] === "string"
+      ? clientConfig["callbackHours"]
+      : "Mo–Fr 8–18 Uhr";
+
   // 3. Rate limit
   const allowed = await checkRateLimit(lead);
   if (!allowed) {
-    const msg =
-      language === "tr"
-        ? "Şu an çok fazla mesaj geldi. En kısa sürede sizi arayacağız."
-        : "Wir haben gerade viele Anfragen. Wir rufen Sie so schnell wie möglich zurück.";
+    const msg = rateLimitReply(language);
     await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, msg);
-    // Persist outbound conversation row so audit trail is complete
     await db.insert(conversationsTable).values({
       clientId: clientRecord.id,
       leadId,
@@ -279,7 +340,6 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       .set({ lastContactAt: new Date(), updatedAt: new Date() })
       .where(eq(leadsTable.id, leadId));
     logger.warn({ leadId }, "Rate limit hit — pipeline short-circuited");
-    // Rate-limit short-circuit: mark done (reply was sent, nothing to retry)
     await markJobDone(messageEventId);
     return;
   }
@@ -310,9 +370,6 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   const knowledgeChunks = await retrieveKnowledge(clientRecord.id, language, userMessage);
 
   // 6. GPT call
-  const config = (clientRecord.config ?? {}) as { callbackHours?: string };
-  const callbackHours = config.callbackHours ?? "Mo–Fr 8–18 Uhr";
-
   const botResponse = await callGpt({
     language,
     clientName: clientRecord.name,
@@ -320,31 +377,27 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     knowledgeChunks,
     conversationHistory,
     userMessage,
+    profile,
   });
 
   // 6a. Backend post-validation: if knowledge base is empty and GPT did not
-  // escalate or book a callback, override reply with a controlled callback-offer
-  // template. This prevents hallucinated answers when there is no grounding data.
+  // escalate or book a callback, override with a controlled callback-offer template.
   if (
     knowledgeChunks.length === 0 &&
     botResponse.intent !== "book_callback" &&
     botResponse.intent !== "request_call_now" &&
     botResponse.intent !== "escalate_human"
   ) {
-    const callbackOffer =
-      language === "tr"
-        ? `Merhaba! Şu anda bu konuda size yardımcı olabilecek bilgiye sahip değilim. Sizi uzmanlarımızla buluşturalım — bugün veya yarın sizi geri aramamızı ister misiniz? Hizmet saatlerimiz: ${callbackHours}.`
-        : `Hallo! Zu dieser Frage kann ich Ihnen leider gerade keine genaue Auskunft geben. Lassen Sie uns einen Rückruf vereinbaren — soll ich Sie heute oder morgen zurückrufen lassen? Erreichbar sind wir ${callbackHours}.`;
-    botResponse.reply = callbackOffer;
+    botResponse.reply = emptyKbCallbackOffer(language, callbackHours, profile);
     botResponse.intent = "out_of_scope";
     botResponse.action = "out_of_scope";
-    logger.info({ leadId, language }, "Empty knowledge base — backend override to callback-offer template");
+    logger.info({ leadId, language, industry }, "Empty knowledge base — backend override to callback-offer template");
   }
 
   const now = new Date();
   const data = botResponse.data ?? {};
 
-  // 7. Intent-driven action execution — status derived from INTENT (backend-controlled)
+  // 7. Intent-driven action execution
   const newStatus = intentToStatus(botResponse.intent, lead.status);
 
   const leadUpdates: Partial<{
@@ -359,19 +412,17 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
 
   if (newStatus !== lead.status) leadUpdates.status = newStatus;
 
-  // Capture name on first disclosure
   if (typeof data["name"] === "string" && data["name"] && !lead.name) {
     leadUpdates.name = data["name"] as string;
   }
 
-  // Accumulate structured notes
   const noteParts: string[] = [];
   if (typeof data["careType"] === "string" && data["careType"])
-    noteParts.push(`Pflegebedarf: ${String(data["careType"])}`);
+    noteParts.push(`Service: ${String(data["careType"])}`);
   if (typeof data["city"] === "string" && data["city"])
-    noteParts.push(`Stadt: ${String(data["city"])}`);
+    noteParts.push(`City: ${String(data["city"])}`);
   if (typeof data["whoNeedsCare"] === "string" && data["whoNeedsCare"])
-    noteParts.push(`Person: ${String(data["whoNeedsCare"])}`);
+    noteParts.push(`For: ${String(data["whoNeedsCare"])}`);
   if (noteParts.length > 0) {
     leadUpdates.notes = lead.notes
       ? `${lead.notes}\n${noteParts.join(", ")}`
@@ -383,7 +434,6 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       ? (data["preferredTime"] as string)
       : null;
 
-  // System notification entries (inserted before outbound reply)
   const notificationInserts: {
     clientId: number;
     leadId: number;
@@ -392,7 +442,6 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     intentDetected?: string;
   }[] = [];
 
-  // -- book_callback: deterministic appointment write + notification log --
   if (botResponse.intent === "book_callback") {
     await db.insert(appointmentsTable).values({
       clientId: clientRecord.id,
@@ -400,13 +449,15 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       type: "callback",
       preferredTime: preferredTime ?? undefined,
       outcome: "pending",
-      notes: `Gebucht via WhatsApp-Bot (${language})`,
+      notes: `Booked via WhatsApp bot (${language}, ${industry ?? "generic"})`,
     });
 
     const notifBody =
       language === "tr"
         ? `[SİSTEM] Geri arama randevusu oluşturuldu. Tercih edilen zaman: ${preferredTime ?? "belirtilmedi"}`
-        : `[SYSTEM] Rückruf gebucht. Gewünschter Zeitpunkt: ${preferredTime ?? "nicht angegeben"}`;
+        : language === "en"
+          ? `[SYSTEM] Callback booked. Preferred time: ${preferredTime ?? "not specified"}`
+          : `[SYSTEM] Rückruf gebucht. Gewünschter Zeitpunkt: ${preferredTime ?? "nicht angegeben"}`;
 
     notificationInserts.push({
       clientId: clientRecord.id,
@@ -417,12 +468,13 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     });
   }
 
-  // -- request_call_now: urgent flag backed by schema status + note --
   if (botResponse.intent === "request_call_now") {
     const urgentNote =
       language === "tr"
         ? "[ACİL] Anında geri arama talep edildi"
-        : "[DRINGEND] Sofortiger Rückruf gewünscht";
+        : language === "en"
+          ? "[URGENT] Immediate callback requested"
+          : "[DRINGEND] Sofortiger Rückruf gewünscht";
     leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
   }
 
@@ -431,7 +483,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   if (
     typeof requestedSwitch === "string" &&
     requestedSwitch !== language &&
-    (requestedSwitch === "de" || requestedSwitch === "tr")
+    (requestedSwitch === "de" || requestedSwitch === "tr" || requestedSwitch === "en")
   ) {
     language = requestedSwitch;
     leadUpdates.language = language;
@@ -458,16 +510,18 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     intentDetected: botResponse.intent,
   });
 
-  // 10. Twilio reply — THROWS on failure; job will be marked failed by outer catch
+  // 10. Twilio reply
   await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
 
-  // 11. Mark job done — ONLY reached if step 10 succeeded
+  // 11. Mark job done
   await markJobDone(messageEventId);
 
   logger.info(
     {
       leadId,
       clientId: clientRecord.id,
+      industry: industry ?? "generic",
+      persona: profile.personaRole,
       intent: botResponse.intent,
       action: botResponse.action,
       newStatus,

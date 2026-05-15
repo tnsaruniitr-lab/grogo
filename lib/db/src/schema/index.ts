@@ -1,3 +1,4 @@
+export * from "./bot-profiles";
 export * from "./clients";
 export * from "./company-knowledge";
 export * from "./leads";

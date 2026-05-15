@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { logger } from "./logger";
+import type { BotProfile } from "@workspace/db";
 
 const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
@@ -17,7 +18,6 @@ export const intentEnum = [
 ] as const;
 export type Intent = (typeof intentEnum)[number];
 
-// Strict enum — backend rejects any action value not in this list
 export const actionEnum = [
   "none",
   "book_callback",
@@ -32,15 +32,12 @@ export const BotResponseSchema = z.object({
   action: z.enum(actionEnum),
   data: z
     .object({
-      // GPT may return null for unset fields — all optional fields must allow null
       preferredTime: z.string().nullable().optional(),
       careType: z.string().nullable().optional(),
       name: z.string().nullable().optional(),
       city: z.string().nullable().optional(),
       whoNeedsCare: z.string().nullable().optional(),
-      // Populated only when user explicitly requests a language switch (e.g. "bitte auf Türkisch")
-      // Values: "de" | "tr" | null — null means no switch requested
-      switchToLanguage: z.enum(["de", "tr"]).nullable().optional(),
+      switchToLanguage: z.enum(["de", "tr", "en"]).nullable().optional(),
     })
     .optional()
     .default({}),
@@ -60,6 +57,23 @@ export interface GptCallParams {
   knowledgeChunks: { question: string; answer: string }[];
   conversationHistory: ConversationMessage[];
   userMessage: string;
+  profile: BotProfile;
+}
+
+function langLabel(language: string): string {
+  if (language === "de") return "German (Deutsch)";
+  if (language === "tr") return "Turkish (Türkçe)";
+  return "English";
+}
+
+function noKnowledgePlaceholder(language: string): string {
+  if (language === "de") return "Keine spezifischen Informationen verfügbar. Biete einen Rückruf an.";
+  if (language === "tr") return "Belirli bilgi mevcut değil. Geri arama teklif et.";
+  return "No specific information available. Warmly offer a callback.";
+}
+
+function pickLang(map: Record<string, string>, language: string): string {
+  return map[language] ?? map["en"] ?? map["de"] ?? Object.values(map)[0] ?? "";
 }
 
 function buildSystemPrompt(
@@ -67,53 +81,57 @@ function buildSystemPrompt(
   clientName: string,
   callbackHours: string,
   knowledgeChunks: { question: string; answer: string }[],
+  profile: BotProfile,
 ): string {
-  const isGerman = language === "de";
-  const otherLang = isGerman ? "tr" : "de";
-  const langInstruction = isGerman
-    ? "Always respond in German (Deutsch). The conversation language is LOCKED.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Türkisch' or 'lütfen Türkçe'), you may switch and must set data.switchToLanguage to the new language code."
-    : "Always respond in Turkish (Türkçe). The conversation language is LOCKED.\nException: if the user EXPLICITLY requests a different language (e.g. 'bitte auf Deutsch' or 'lütfen Almanca'), you may switch and must set data.switchToLanguage to the new language code.";
-
   const knowledgeSection =
     knowledgeChunks.length > 0
-      ? knowledgeChunks
-          .map((k, i) => `[${i + 1}] Q: ${k.question}\n    A: ${k.answer}`)
-          .join("\n\n")
-      : isGerman
-        ? "Keine spezifischen Informationen verfügbar. Biete einen Rückruf an."
-        : "Belirli bilgi mevcut değil. Geri arama teklif et.";
+      ? knowledgeChunks.map((k, i) => `[${i + 1}] Q: ${k.question}\n    A: ${k.answer}`).join("\n\n")
+      : noKnowledgePlaceholder(language);
 
-  const callbackOfferDE = `"Soll ich Ihnen heute oder morgen einen Rückruf einrichten? Vormittags oder nachmittags?"`;
-  const callbackOfferTR = `"Bugün mü yoksa yarın mı sizi aramamızı istersiniz? Sabah mı öğleden sonra mı?"`;
+  const callbackOffer = pickLang(profile.callbackOffer, language);
+  const gdprAllowed = pickLang(profile.gdprAllowedFields, language);
+  const gdprRedirectMsg = pickLang(profile.gdprRedirect, language);
 
-  return `You are a warm, professional care assistant for ${clientName}, a German care company specialising in culturally-sensitive care for Turkish- and Arabic-speaking families.
+  // Build the data JSON template from the profile's data fields
+  const dataFieldLines = profile.dataFields
+    .map((f) => {
+      const label = f.label[language] ?? f.label["en"] ?? f.key;
+      return `    "${f.key}": "<${label} or null>"`;
+    })
+    .join(",\n");
+
+  // switchToLanguage options — exclude the current language
+  const switchOptions = ["de", "tr", "en"].filter((l) => l !== language).join(" or ");
+
+  return `You are a warm, professional ${profile.personaRole} for ${clientName}, ${profile.companyContext}.
 
 ## Language Rule
-${langInstruction}
+Always respond in ${langLabel(language)}. The conversation language is LOCKED.
+Exception: if the user EXPLICITLY requests a different language (e.g. "bitte auf Türkisch", "please in English", "lütfen Almanca"), you may switch and must set data.switchToLanguage to the new language code.
 
 ## Knowledge Base
 Answer ONLY from the knowledge base below. Never invent prices, staff names, availability, or addresses.
-If a question is not covered, warmly acknowledge and set action to "out_of_scope".
+If a question is not covered, warmly acknowledge it and set action to "out_of_scope".
 
 ${knowledgeSection}
 
 ## GDPR & Safe Fields
-You may ONLY collect: name, preferred language, city/region, type of care needed (e.g. dementia home, home care, 24h care), who needs care (self / parent / partner / other relative), preferred callback time.
-NEVER ask for or acknowledge: diagnosis, medication, insurance policy numbers, medical history, bank details.
-If the user volunteers forbidden information, redirect warmly: ${isGerman ? '"Medizinische Details besprechen wir gerne persönlich"' : '"Tıbbi detayları şahsen görüşürüz"'}.
+You may ONLY collect: ${gdprAllowed}
+NEVER ask for or acknowledge: diagnoses, medications, insurance policy numbers, medical history, financial or bank details.
+If the user volunteers such information, redirect warmly: "${gdprRedirectMsg}"
 
-## Primary Goal — callback-first
-Qualify the lead and book a callback. After gathering basic info, ALWAYS offer:
-${isGerman ? callbackOfferDE : callbackOfferTR}
+## Primary Goal
+${profile.primaryGoal}. After gathering basic info, ALWAYS offer:
+${callbackOffer}
 
 ## Intent & Action Mapping
 Use EXACTLY these values:
 - User asks general info → intent: "info_request", action: "none"
-- Qualifying/gathering info → intent: "qualify", action: "none"  
+- Qualifying/gathering info → intent: "qualify", action: "none"
 - User wants callback and gives time → intent: "book_callback", action: "book_callback"
 - User requests immediate call / urgent / distress → intent: "request_call_now", action: "request_call_now"
 - User explicitly requests human agent → intent: "escalate_human", action: "escalate_human"
-- Topic outside care services / forbidden medical info → intent: "out_of_scope", action: "out_of_scope"
+- Topic outside scope / forbidden info → intent: "out_of_scope", action: "out_of_scope"
 
 ## Response Format
 Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, request_call_now, escalate_human, out_of_scope.
@@ -121,12 +139,8 @@ Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be
   "reply": "<your response in the locked language>",
   "action": "<none|book_callback|request_call_now|escalate_human|out_of_scope>",
   "data": {
-    "preferredTime": "<callback time or null>",
-    "careType": "<type of care or null>",
-    "name": "<name if provided or null>",
-    "city": "<city/region or null>",
-    "whoNeedsCare": "<self/parent/partner/other or null>",
-    "switchToLanguage": "<'${otherLang}' if explicit switch requested, otherwise null>"
+${dataFieldLines},
+    "switchToLanguage": "<${switchOptions} if explicit switch requested, otherwise null>"
   },
   "intent": "<qualify|info_request|book_callback|request_call_now|escalate_human|out_of_scope>"
 }
@@ -137,13 +151,14 @@ Callback hours: ${callbackHours}`;
 const FALLBACK_REPLIES: Record<string, string> = {
   de: "Vielen Dank für Ihre Nachricht. Leider habe ich kurz ein technisches Problem. Darf ich Sie zurückrufen? Unser Team ist Montag–Freitag 8–18 Uhr erreichbar.",
   tr: "Mesajınız için teşekkür ederiz. Maalesef kısa bir teknik sorun yaşıyoruz. Sizi geri arayabilir miyiz? Ekibimiz Pazartesi–Cuma 08–18 saatleri arasında hizmet vermektedir.",
+  en: "Thank you for your message. I'm experiencing a brief technical issue. May I arrange a callback for you? Our team is available Monday–Friday 8am–6pm.",
 };
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
-  const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage } =
+  const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile } =
     params;
 
-  const systemPrompt = buildSystemPrompt(language, clientName, callbackHours, knowledgeChunks);
+  const systemPrompt = buildSystemPrompt(language, clientName, callbackHours, knowledgeChunks, profile);
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
@@ -182,6 +197,6 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
 }
 
 function safeFallback(language: string): BotResponse {
-  const reply = FALLBACK_REPLIES[language] ?? FALLBACK_REPLIES["de"]!;
+  const reply = FALLBACK_REPLIES[language] ?? FALLBACK_REPLIES["en"]!;
   return { reply, action: "none", data: {}, intent: "out_of_scope" };
 }
