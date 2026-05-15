@@ -68,6 +68,7 @@ interface BrandingConfig {
   phone?: string | null;
   websiteUrl?: string | null;
   demoLanguage?: string | null;
+  demoLanguages?: string[] | null;
   industry?: string | null;
 }
 
@@ -353,7 +354,13 @@ function BrandCard({
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
   const secondary = client.branding.secondaryColor || "#1a3a1a";
-  const langOption = LANG_OPTIONS.find((l) => l.value === client.branding.demoLanguage);
+  const activeLangs = (() => {
+    const langs = client.branding.demoLanguages;
+    const codes = Array.isArray(langs) && langs.length > 0
+      ? langs
+      : client.branding.demoLanguage ? [client.branding.demoLanguage] : [];
+    return codes.map((code) => LANG_OPTIONS.find((l) => l.value === code)).filter(Boolean);
+  })();
 
   const { data: stats } = useGetDashboardStats(
     { clientId: client.id },
@@ -366,9 +373,9 @@ function BrandCard({
       <div className="h-20 relative flex items-end p-4" style={{ backgroundColor: primary }}>
         <BrandLogo logoUrl={client.branding.logoUrl} companyName={client.branding.companyName} secondary={secondary} />
         <div className="absolute top-3 right-3 flex items-center gap-1.5">
-          {langOption && (
-            <span className="text-sm" title={langOption.label}>{langOption.flag}</span>
-          )}
+          {activeLangs.map((opt) => (
+            <span key={opt!.value} className="text-sm" title={opt!.label}>{opt!.flag}</span>
+          ))}
           <div className="bg-black/20 backdrop-blur-sm rounded-full px-2 py-0.5 text-white text-[10px] font-bold">
             /{client.slug}
           </div>
@@ -615,6 +622,7 @@ function CreateDemoDialog({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [demoLanguages, setDemoLanguages] = useState<string[]>(["en"]);
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: "",
     slug: "",
@@ -626,9 +634,18 @@ function CreateDemoDialog({
     phone: "",
     websiteUrl: "",
     heroHeadline: "",
-    demoLanguage: "de",
     industry: "",
   });
+
+  const toggleLanguage = (code: string) => {
+    setDemoLanguages((prev) => {
+      if (prev.includes(code)) {
+        const next = prev.filter((l) => l !== code);
+        return next.length === 0 ? prev : next;
+      }
+      return [...prev, code];
+    });
+  };
 
   const primary = branding.primaryColor || "#A8C334";
   const secondary = branding.secondaryColor || "#1a3a1a";
@@ -706,7 +723,12 @@ function CreateDemoDialog({
         body: JSON.stringify({
           name: branding.companyName,
           slug: branding.slug,
-          branding: { ...branding, logoUrl: finalLogoUrl },
+          branding: {
+            ...branding,
+            logoUrl: finalLogoUrl,
+            demoLanguage: demoLanguages[0] ?? "en",
+            demoLanguages,
+          },
         }),
       });
       if (!res.ok) {
@@ -723,7 +745,8 @@ function CreateDemoDialog({
 
   const reset = () => {
     setWebsiteUrl("");
-    setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "", demoLanguage: "de", industry: "" });
+    setDemoLanguages(["en"]);
+    setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "", industry: "" });
     setLogoFile(null);
     setLogoPreview(null);
     setExtracted(false);
@@ -851,21 +874,25 @@ function CreateDemoDialog({
                 </div>
               </div>
 
-              {/* Language quick-pick */}
-              <div className="flex gap-2">
-                {LANG_OPTIONS.map((l) => (
-                  <button
-                    key={l.value}
-                    onClick={() => update("demoLanguage", l.value)}
-                    className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                      (branding.demoLanguage || "de") === l.value
-                        ? "border-primary bg-primary/10 text-primary font-semibold"
-                        : "border-border text-muted-foreground hover:border-foreground/30"
-                    }`}
-                  >
-                    {l.flag} {l.label}
-                  </button>
-                ))}
+              {/* Language multi-pick */}
+              <div className="flex gap-2 flex-wrap">
+                {LANG_OPTIONS.map((l) => {
+                  const active = demoLanguages.includes(l.value);
+                  return (
+                    <button
+                      key={l.value}
+                      type="button"
+                      onClick={() => toggleLanguage(l.value)}
+                      className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      }`}
+                    >
+                      {l.flag} {l.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Collapsible advanced */}
@@ -960,6 +987,11 @@ function EditDemoDialog({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(client.branding.logoUrl ?? null);
   const [twilioSender, setTwilioSender] = useState(client.twilioSender ?? "");
+  const [editDemoLanguages, setEditDemoLanguages] = useState<string[]>(() => {
+    const langs = client.branding.demoLanguages;
+    if (Array.isArray(langs) && langs.length > 0) return langs;
+    return [client.branding.demoLanguage ?? "en"];
+  });
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: client.branding.companyName ?? "",
     slug: client.branding.slug ?? client.slug,
@@ -971,8 +1003,17 @@ function EditDemoDialog({
     city: client.branding.city ?? "",
     phone: client.branding.phone ?? "",
     websiteUrl: client.branding.websiteUrl ?? "",
-    demoLanguage: client.branding.demoLanguage ?? "de",
   });
+
+  const toggleEditLanguage = (code: string) => {
+    setEditDemoLanguages((prev) => {
+      if (prev.includes(code)) {
+        const next = prev.filter((l) => l !== code);
+        return next.length === 0 ? prev : next;
+      }
+      return [...prev, code];
+    });
+  };
 
   const update = (key: keyof BrandingConfig, value: string) =>
     setBranding((prev) => ({ ...prev, [key]: value }));
@@ -1007,7 +1048,12 @@ function EditDemoDialog({
         body: JSON.stringify({
           name: branding.companyName,
           twilioSender: twilioSender.trim(),
-          branding: { ...branding, logoUrl: finalLogoUrl },
+          branding: {
+            ...branding,
+            logoUrl: finalLogoUrl,
+            demoLanguage: editDemoLanguages[0] ?? "en",
+            demoLanguages: editDemoLanguages,
+          },
         }),
       });
       if (!res.ok) {
@@ -1169,19 +1215,32 @@ function EditDemoDialog({
               <p className="text-xs text-muted-foreground">Format: <code>whatsapp:+&lt;number&gt;</code>. Each brand can have a unique number; defaults to the shared sandbox number.</p>
             </div>
             <div className="space-y-2">
-              <Label>Demo Language</Label>
-              <Select value={branding.demoLanguage ?? "de"} onValueChange={(v) => update("demoLanguage", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANG_OPTIONS.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>
+              <Label>Demo Languages</Label>
+              <div className="flex gap-2 flex-wrap">
+                {LANG_OPTIONS.map((l) => {
+                  const active = editDemoLanguages.includes(l.value);
+                  return (
+                    <button
+                      key={l.value}
+                      type="button"
+                      onClick={() => toggleEditLanguage(l.value)}
+                      className={`flex items-center gap-1 text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border text-muted-foreground hover:border-foreground/30"
+                      }`}
+                    >
                       {l.flag} {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    </button>
+                  );
+                })}
+              </div>
+              {editDemoLanguages.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Default: {LANG_OPTIONS.find((o) => o.value === editDemoLanguages[0])?.flag}{" "}
+                  {LANG_OPTIONS.find((o) => o.value === editDemoLanguages[0])?.label}
+                </p>
+              )}
             </div>
           </div>
 
