@@ -47,17 +47,17 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const INDUSTRY_IMAGES: Record<string, string> = {
-  aesthetics:          "/images/industry/aesthetics.png",
-  wellness:            "/images/industry/wellness.png",
-  care:                "/images/industry/care.png",
-  "cosmetic-surgery":  "/images/industry/cosmetic-surgery.png",
-  hair:                "/images/industry/hair.png",
-  "weight-management": "/images/industry/weight-management.png",
-  "iv-therapy":        "/images/industry/iv-therapy.png",
-  fertility:           "/images/industry/fertility.png",
-  dental:              "/images/industry/dental.png",
-  physiotherapy:       "/images/industry/physiotherapy.png",
-  "laser-eye":         "/images/industry/laser-eye.png",
+  aesthetics:          "/images/industry/aesthetics.webp",
+  wellness:            "/images/industry/wellness.webp",
+  care:                "/images/industry/care.webp",
+  "cosmetic-surgery":  "/images/industry/cosmetic-surgery.webp",
+  hair:                "/images/industry/hair.webp",
+  "weight-management": "/images/industry/weight-management.webp",
+  "iv-therapy":        "/images/industry/iv-therapy.webp",
+  fertility:           "/images/industry/fertility.webp",
+  dental:              "/images/industry/dental.webp",
+  physiotherapy:       "/images/industry/physiotherapy.webp",
+  "laser-eye":         "/images/industry/laser-eye.webp",
 };
 
 function getIndustryImage(industry?: string | null): string {
