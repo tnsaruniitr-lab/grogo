@@ -1,4 +1,4 @@
-import { ArrowRight, Phone, Star } from "lucide-react";
+import { ArrowRight, CheckCircle2, Phone, Star } from "lucide-react";
 
 interface V3HeroProps {
   industry: string;
@@ -286,12 +286,16 @@ export function V3Hero({
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('${cfg.seriffontImport}');
         .v3hero-serif { font-family: ${cfg.serif}; }
-        @keyframes v3fade { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        .v3-1 { animation: v3fade 0.9s 0.10s ease forwards; opacity:0; }
-        .v3-2 { animation: v3fade 0.9s 0.30s ease forwards; opacity:0; }
-        .v3-3 { animation: v3fade 0.9s 0.50s ease forwards; opacity:0; }
-        .v3-4 { animation: v3fade 0.9s 0.70s ease forwards; opacity:0; }
-        .v3-5 { animation: v3fade 0.9s 0.90s ease forwards; opacity:0; }
+        ${preview ? `
+          .v3-1,.v3-2,.v3-3,.v3-4,.v3-5 { opacity:1; }
+        ` : `
+          @keyframes v3fade { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+          .v3-1 { animation: v3fade 0.9s 0.10s ease forwards; opacity:0; }
+          .v3-2 { animation: v3fade 0.9s 0.30s ease forwards; opacity:0; }
+          .v3-3 { animation: v3fade 0.9s 0.50s ease forwards; opacity:0; }
+          .v3-4 { animation: v3fade 0.9s 0.70s ease forwards; opacity:0; }
+          .v3-5 { animation: v3fade 0.9s 0.90s ease forwards; opacity:0; }
+        `}
       `}} />
 
       {/* Background — static image in preview mode (instant), video otherwise */}
@@ -411,16 +415,22 @@ export function V3Hero({
           )}
         </div>
 
-        {/* Trust strip row */}
-        <div className="mt-12 flex flex-wrap gap-5 v3-5">
+        {/* Trust badge pills */}
+        <div className="mt-8 flex flex-wrap gap-2 v3-5">
           {cfg.trustItems.map((item, i) => (
-            <span
+            <div
               key={i}
-              className="text-[10px] tracking-[0.2em] uppercase font-light"
-              style={{ color: "rgba(245,238,230,0.30)" }}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full"
+              style={{
+                color: "rgba(245,238,230,0.80)",
+                background: "rgba(0,0,0,0.35)",
+                border: `1px solid ${cfg.accent}40`,
+                backdropFilter: "blur(6px)",
+              }}
             >
+              <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: cfg.accent }} />
               {item}
-            </span>
+            </div>
           ))}
         </div>
       </div>
