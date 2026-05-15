@@ -76,11 +76,13 @@ function detectExplicitSwitch(text: string, currentLanguage: string): string | n
     if (wantsEn) return "en";
   }
   if (currentLanguage !== "de") {
-    const wantsDe = /\b(auf\s+deutsch|bitte\s+deutsch|speak\s+german|in\s+german|deutsch\s+bitte)\b/.test(t);
+    const wantsDe =
+      /\b(auf\s+deutsch|bitte\s+deutsch|speak\s+german|in\s+german|deutsch\s+bitte|what\s+about\s+german|can\s+(you|u)\s+(speak|write|use)\s+german|switch\s+to\s+german|change\s+to\s+german|german\s+please|german\s+only)\b/.test(t);
     if (wantsDe) return "de";
   }
   if (currentLanguage !== "tr") {
-    const wantsTr = /\b(türkçe|türkce|bitte\s+türkisch|speak\s+turkish|in\s+turkish|türkçe\s+lütfen)\b/.test(t);
+    const wantsTr =
+      /\b(türkçe|türkce|bitte\s+türkisch|speak\s+turkish|in\s+turkish|türkçe\s+lütfen|what\s+about\s+turkish|can\s+(you|u)\s+(speak|write|use)\s+turkish|switch\s+to\s+turkish)\b/.test(t);
     if (wantsTr) return "tr";
   }
   return null;
