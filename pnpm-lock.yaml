@@ -676,6 +676,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@types/pg@8.18.0)(pg@8.20.0)
+      openai:
+        specifier: ^6.37.0
+        version: 6.37.0(zod@4.3.6)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6030,6 +6033,10 @@ snapshots:
   openai@6.37.0(zod@3.25.76):
     optionalDependencies:
       zod: 3.25.76
+
+  openai@6.37.0(zod@4.3.6):
+    optionalDependencies:
+      zod: 4.3.6
 
   orval@8.5.3(prettier@3.8.1)(typescript@5.9.3):
     dependencies:
