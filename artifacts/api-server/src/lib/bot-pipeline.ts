@@ -117,10 +117,14 @@ function detectLanguage(
     return "de";
   }
 
+  // English is detected unconditionally — if the user writes in English we
+  // always honour it, even for clients whose primary language is de or tr.
+  // German/Turkish are only activated when the client supports them (to avoid
+  // false positives from loanwords that appear in multilingual text).
   const englishPatterns =
     /\b(hello|hi there|hey|what|which|how|when|where|services|provide|cost|price|available|appointment|book|treatment|help|please|thanks|thank you|yes|no|okay|can you|do you|are you|i am|i'm|i have|i want|i need|i would|we are|we have|would like|could you|is there|do you have|tell me|more info|information|website|contact|number|email)\b/i;
 
-  if (englishPatterns.test(text) && (clientPrimary === "en" || clientSecondary === "en")) {
+  if (englishPatterns.test(text)) {
     return "en";
   }
 
