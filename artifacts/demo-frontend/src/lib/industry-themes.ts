@@ -935,13 +935,34 @@ export function getFAQFallbacks(industry?: string | null): FAQItem[] {
   );
 }
 
-export function getTestimonials(industry?: string | null): Testimonial[] {
+const CITY_POOLS: Record<ThemeLang, string[]> = {
+  en: ["Dubai", "Abu Dhabi", "London", "Manchester", "Sydney", "Singapore", "Toronto", "New York", "Los Angeles", "Miami"],
+  de: ["Berlin", "München", "Hamburg", "Frankfurt", "Köln", "Stuttgart", "Düsseldorf", "Leipzig", "Nürnberg", "Hannover"],
+  tr: ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Gaziantep", "Konya", "Kayseri", "Mersin"],
+};
+
+function pickCities(primaryCity: string | null | undefined, lang: ThemeLang, count: number): string[] {
+  const pool = CITY_POOLS[lang] ?? CITY_POOLS.de;
+  const cities: string[] = [];
+  if (primaryCity) cities.push(primaryCity);
+  for (const c of pool) {
+    if (cities.length >= count) break;
+    if (c.toLowerCase() !== (primaryCity ?? "").toLowerCase()) cities.push(c);
+  }
+  while (cities.length < count) cities.push(pool[cities.length % pool.length]!);
+  return cities;
+}
+
+export function getTestimonials(industry?: string | null, city?: string | null, lang?: ThemeLang): Testimonial[] {
   const key = industry ?? "";
-  return (
+  const raw = (
     INDUSTRY_TESTIMONIALS[key] ??
     INDUSTRY_TESTIMONIALS[TESTIMONIAL_KEY_FALLBACK[key] ?? ""] ??
     INDUSTRY_TESTIMONIALS["aesthetics"]
-  );
+  )!;
+  const resolvedLang: ThemeLang = lang ?? "de";
+  const cities = pickCities(city, resolvedLang, raw.length);
+  return raw.map((t, i) => ({ ...t, location: cities[i] ?? t.location }));
 }
 
 export type ThemeLang = "de" | "en" | "tr";

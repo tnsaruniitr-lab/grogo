@@ -216,7 +216,7 @@ export default function DemoPage() {
   const theme = getIndustryTheme(branding.industry);
   const themeIcons = resolveIcons(theme.serviceIconNames);
   const isPrimary = PRIMARY_VERTICALS.has(branding.industry ?? "");
-  const testimonials: Testimonial[] = getTestimonials(branding.industry);
+  const testimonials: Testimonial[] = getTestimonials(branding.industry, branding.city, lang);
 
   const faqItems: Array<{ q: string; a: string }> =
     content?.hasCrawlData && content.faq.length > 0
@@ -614,20 +614,6 @@ export default function DemoPage() {
               </ul>
             </div>
 
-            <div>
-              <h4 className="font-bold text-lg mb-4 text-white">Demo Links</h4>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href={`/demo/${branding.slug}/dashboard`}
-                    className="font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity"
-                    style={{ color: primary }}
-                  >
-                    Live-Dashboard <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </li>
-              </ul>
-            </div>
           </div>
 
           <div className="mt-16 pt-8 border-t border-white/10 text-center text-white/40 text-sm font-medium">
