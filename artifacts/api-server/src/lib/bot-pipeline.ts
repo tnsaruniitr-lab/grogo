@@ -60,6 +60,33 @@ const GENERIC_PROFILE: BotProfile = {
 };
 
 /**
+ * Detect an explicit language-switch request from the user message.
+ * This runs on EVERY message (not just the first) so the bot honours
+ * "can you speak English?" even after the session language is locked.
+ * Returns the target language code, or null if no explicit switch detected.
+ */
+function detectExplicitSwitch(text: string, currentLanguage: string): string | null {
+  const t = text.toLowerCase();
+  if (currentLanguage !== "en") {
+    const wantsEn =
+      /\b(speak|write|reply|respond|answer|talk|use|switch\s+to|change\s+to)\s+english\b/.test(t) ||
+      /\bin\s+english\b/.test(t) ||
+      /\benglish\s+(please|only|instead|now)\b/.test(t) ||
+      /\bcan\s+(you|u)\s+(speak|write|use|talk\s+in)\s+english\b/.test(t);
+    if (wantsEn) return "en";
+  }
+  if (currentLanguage !== "de") {
+    const wantsDe = /\b(auf\s+deutsch|bitte\s+deutsch|speak\s+german|in\s+german|deutsch\s+bitte)\b/.test(t);
+    if (wantsDe) return "de";
+  }
+  if (currentLanguage !== "tr") {
+    const wantsTr = /\b(türkçe|türkce|bitte\s+türkisch|speak\s+turkish|in\s+turkish|türkçe\s+lütfen)\b/.test(t);
+    if (wantsTr) return "tr";
+  }
+  return null;
+}
+
+/**
  * Detect language from user message. Falls back to client primary language.
  * Only truly Turkish-exclusive chars used: ğ,ş,ı,İ,Ğ,Ş
  * NOTE: ü and ö are intentionally NOT in the Turkish char set — they appear in
@@ -289,6 +316,8 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   const lead = leads[0]!;
 
   // 2. Language detection — detect on first message, lock thereafter.
+  // But always check for an explicit switch request ("speak English", "auf Deutsch", etc.)
+  // so the bot immediately honours the user's language preference.
   let language = lead.language;
   if (!language) {
     language = detectLanguage(userMessage, clientRecord.languagePrimary, clientRecord.languageSecondary);
@@ -296,6 +325,16 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       .update(leadsTable)
       .set({ language, updatedAt: new Date() })
       .where(eq(leadsTable.id, lead.id));
+  } else {
+    const explicitSwitch = detectExplicitSwitch(userMessage, language);
+    if (explicitSwitch) {
+      language = explicitSwitch;
+      await db
+        .update(leadsTable)
+        .set({ language, updatedAt: new Date() })
+        .where(eq(leadsTable.id, lead.id));
+      logger.info({ leadId, newLanguage: language }, "Explicit language switch detected — pipeline re-targeted");
+    }
   }
 
   // 2.5. Load bot persona profile by client industry.

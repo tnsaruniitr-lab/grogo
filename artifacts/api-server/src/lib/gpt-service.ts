@@ -107,7 +107,7 @@ function buildSystemPrompt(
 
 ## Language Rule
 Always respond in ${langLabel(language)}. The conversation language is LOCKED.
-Exception: if the user EXPLICITLY requests a different language (e.g. "bitte auf Türkisch", "please in English", "lütfen Almanca"), you may switch and must set data.switchToLanguage to the new language code.
+Exception: if the user explicitly writes their message in a different language or asks to switch (e.g. "bitte auf Türkisch", "please in English", "lütfen Almanca"), set data.switchToLanguage to the new language code AND write your reply field already in that new language — do not delay the switch to the next message.
 
 ## Knowledge Base
 Answer ONLY from the knowledge base below. Never invent prices, staff names, availability, or addresses.
@@ -136,7 +136,7 @@ Use EXACTLY these values:
 ## Response Format
 Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, request_call_now, escalate_human, out_of_scope.
 {
-  "reply": "<your response in the locked language>",
+  "reply": "<your response — in switchToLanguage if switching, otherwise in the locked language>",
   "action": "<none|book_callback|request_call_now|escalate_human|out_of_scope>",
   "data": {
 ${dataFieldLines},
