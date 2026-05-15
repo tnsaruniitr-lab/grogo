@@ -16,7 +16,7 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-const RESPOND_API_KEY = process.env.RESPOND_API_KEY;
+const WEBHOOK_API_KEY = process.env.WEBHOOK_API_KEY;
 
 const GENERIC_PROFILE: BotProfile = {
   industry: "generic",
@@ -126,7 +126,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
 
   try {
     const apiKey = req.headers["x-api-key"];
-    if (!RESPOND_API_KEY || apiKey !== RESPOND_API_KEY) {
+    if (!WEBHOOK_API_KEY || apiKey !== WEBHOOK_API_KEY) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
