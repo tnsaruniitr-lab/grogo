@@ -276,7 +276,7 @@ export function V3Hero({
 
   return (
     <section
-      className="relative h-screen flex items-center overflow-hidden"
+      className="relative h-screen flex items-start overflow-hidden"
       style={{ backgroundColor: cfg.bg, fontFamily: "'Inter', sans-serif" }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
