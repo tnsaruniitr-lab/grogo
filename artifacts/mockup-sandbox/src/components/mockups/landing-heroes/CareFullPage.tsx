@@ -43,9 +43,9 @@ export function CareFullPage() {
       `}} />
 
       {/* ══════════════════════════════════════════════════════
-          1. TRUST BAR — fixed, very top, 34px
+          1. TRUST BAR — normal flow, 34px, video hero sits flush below
       ══════════════════════════════════════════════════════ */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-[#100806] border-b border-[#F0EAE1]/8 py-2 px-6" style={{ height: '34px' }}>
+      <div className="w-full bg-[#100806] border-b border-[#F0EAE1]/8 px-6" style={{ height: '34px', display: 'flex', alignItems: 'center' }}>
         <div className="max-w-6xl mx-auto h-full flex items-center justify-between">
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-1.5 text-[#F0EAE1]/50 text-[11px] tracking-wide">
@@ -78,9 +78,9 @@ export function CareFullPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════
-          2. NAV — fixed, sits below trust bar
+          2. NAV — fixed, transparent float over hero video
       ══════════════════════════════════════════════════════ */}
-      <nav className="fixed left-0 right-0 z-50 px-8 py-5 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent" style={{ top: '34px' }}>
+      <nav className="fixed left-0 right-0 z-50 px-8 py-5 flex items-center justify-between" style={{ top: '34px' }}>
         <div className="flex items-center gap-3">
           <Heart strokeWidth={1.5} className="w-5 h-5 text-[#E8A84C]" />
           <span className="serif text-xl font-semibold tracking-wide text-[#F0EAE1]">SOLACE</span>
@@ -98,9 +98,9 @@ export function CareFullPage() {
       </nav>
 
       {/* ══════════════════════════════════════════════════════
-          3. HERO — full-bleed video, exactly like CareV3Trust
+          3. HERO — full-bleed video, flush below trust bar
       ══════════════════════════════════════════════════════ */}
-      <section className="relative flex items-center overflow-hidden" style={{ height: 'calc(100vh - 34px)', marginTop: '34px' }}>
+      <section className="relative flex items-center overflow-hidden" style={{ height: 'calc(100vh - 34px)' }}>
         <video autoPlay muted loop playsInline
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: 'brightness(0.45) saturate(1.1)' }}>
