@@ -9,6 +9,8 @@ interface V3HeroProps {
   phone?: string | null;
   city?: string | null;
   onCtaClick: () => void;
+  preview?: boolean;
+  previewImageUrl?: string;
 }
 
 interface HeroConfig {
@@ -271,6 +273,8 @@ export function V3Hero({
   phone,
   city,
   onCtaClick,
+  preview = false,
+  previewImageUrl,
 }: V3HeroProps) {
   const cfg = CONFIGS[industry] ?? DEFAULT_CONFIG;
 
@@ -290,17 +294,26 @@ export function V3Hero({
         .v3-5 { animation: v3fade 0.9s 0.90s ease forwards; opacity:0; }
       `}} />
 
-      {/* Video background */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: "brightness(0.52) saturate(1.12)" }}
-      >
-        <source src={cfg.video} type="video/mp4" />
-      </video>
+      {/* Background — static image in preview mode (instant), video otherwise */}
+      {preview ? (
+        <img
+          src={previewImageUrl ?? ""}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: "brightness(0.52) saturate(1.12)" }}
+        />
+      ) : (
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: "brightness(0.52) saturate(1.12)" }}
+        >
+          <source src={cfg.video} type="video/mp4" />
+        </video>
+      )}
 
       {/* Horizontal overlay — strong left fade */}
       <div className="absolute inset-0" style={{ background: cfg.overlayH }} />

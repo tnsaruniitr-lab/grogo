@@ -139,6 +139,7 @@ export default function DemoPage() {
   const params = useParams<{ slug: string; vertical?: string }>();
   const slug = params.slug;
   const urlVertical = params.vertical;
+  const isPreview = new URLSearchParams(window.location.search).get("preview") === "1";
 
   const [branding, setBranding] = useState<BrandingConfig | null>(null);
   const [content, setContent] = useState<ClientContent | null>(null);
@@ -280,6 +281,8 @@ export default function DemoPage() {
         onCtaClick={() =>
           document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
         }
+        preview={isPreview}
+        previewImageUrl={getIndustryImage(branding.industry)}
       />
 
       {/* Thin accent line between hero and body */}
