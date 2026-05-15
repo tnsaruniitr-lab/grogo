@@ -46,6 +46,10 @@ import {
   Database,
   AlertTriangle,
   CheckCircle2,
+  Eye,
+  MonitorSmartphone,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
@@ -86,6 +90,8 @@ export default function HubPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingClient, setEditingClient] = useState<DemoClient | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [previewClient, setPreviewClient] = useState<DemoClient | null>(null);
+  const [previewMode, setPreviewMode] = useState<"demo" | "site">("demo");
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -190,6 +196,10 @@ export default function HubPage() {
                         deleteMutation.mutate({ id: client.id });
                       }
                     }}
+                    onPreview={(mode) => {
+                      setPreviewClient(client);
+                      setPreviewMode(mode);
+                    }}
                   />
                 </motion.div>
               ))}
@@ -215,6 +225,15 @@ export default function HubPage() {
             queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
             setEditingClient(null);
           }}
+        />
+      )}
+
+      {previewClient && (
+        <PreviewModal
+          client={previewClient}
+          mode={previewMode}
+          onModeChange={setPreviewMode}
+          onClose={() => setPreviewClient(null)}
         />
       )}
     </div>
@@ -322,12 +341,14 @@ function BrandCard({
   onCopy,
   onEdit,
   onDelete,
+  onPreview,
 }: {
   client: DemoClient;
   copied: boolean;
   onCopy: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onPreview: (mode: "demo" | "site") => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
   const secondary = client.branding.secondaryColor || "#1a3a1a";
@@ -389,12 +410,25 @@ function BrandCard({
         </div>
 
         <div className="flex flex-wrap gap-2 mt-auto pt-2 border-t border-white/5">
-          <Link
-            href={`/demo/${client.slug}`}
-            className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-white transition-colors"
-          >
-            <Globe className="h-3.5 w-3.5" /> Website
-          </Link>
+          {/* Preview toggle — AI Demo vs Current Site */}
+          <div className="flex items-center rounded-lg overflow-hidden border border-white/10">
+            <button
+              onClick={() => onPreview("demo")}
+              className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 text-white/70 hover:text-white hover:bg-white/10 transition-colors border-r border-white/10"
+              title="Preview AI demo"
+            >
+              <MonitorSmartphone className="h-3.5 w-3.5" /> Demo
+            </button>
+            <button
+              onClick={() => onPreview("site")}
+              disabled={!client.branding.websiteUrl}
+              className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+              title={client.branding.websiteUrl ? "Preview current website" : "No website URL — add one in Edit"}
+            >
+              <Globe className="h-3.5 w-3.5" /> Site
+            </button>
+          </div>
+
           <Link
             href={`/demo/${client.slug}/dashboard`}
             className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-white transition-colors"
@@ -426,6 +460,119 @@ function BrandCard({
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewModal({
+  client,
+  mode,
+  onModeChange,
+  onClose,
+}: {
+  client: DemoClient;
+  mode: "demo" | "site";
+  onModeChange: (mode: "demo" | "site") => void;
+  onClose: () => void;
+}) {
+  const demoUrl = `/demo/${client.slug}`;
+  const siteUrl = client.branding.websiteUrl ?? null;
+  const activeUrl = mode === "demo" ? demoUrl : siteUrl;
+  const hasWebsite = !!siteUrl;
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#0a0c10" }}>
+      {/* Header bar */}
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/10 shrink-0 bg-[#0f1117]">
+        {/* Brand identity */}
+        <div className="flex items-center gap-2 min-w-0">
+          {client.branding.logoUrl ? (
+            <img
+              src={client.branding.logoUrl}
+              alt={client.branding.companyName}
+              className="h-6 w-auto max-w-[80px] object-contain opacity-90"
+            />
+          ) : (
+            <div
+              className="h-6 w-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+              style={{ backgroundColor: client.branding.primaryColor || "#A8C334" }}
+            >
+              {client.branding.companyName.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+          <span className="text-white/70 font-semibold text-sm truncate hidden sm:block">
+            {client.branding.companyName}
+          </span>
+        </div>
+
+        {/* Toggle pill — centred */}
+        <div className="flex items-center rounded-xl bg-white/8 border border-white/10 p-0.5 gap-0.5 mx-auto">
+          <button
+            onClick={() => onModeChange("demo")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mode === "demo"
+                ? "bg-[#A8C334] text-[#1a3a1a] shadow-sm"
+                : "text-white/50 hover:text-white"
+            }`}
+          >
+            <MonitorSmartphone className="h-3.5 w-3.5" /> AI Demo
+          </button>
+          <button
+            onClick={() => hasWebsite && onModeChange("site")}
+            disabled={!hasWebsite}
+            title={!hasWebsite ? "No website URL configured — add one in Edit" : undefined}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mode === "site"
+                ? "bg-white text-black shadow-sm"
+                : "text-white/50 hover:text-white"
+            } disabled:opacity-25 disabled:cursor-not-allowed`}
+          >
+            <Globe className="h-3.5 w-3.5" /> Current Site
+          </button>
+        </div>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {activeUrl && (
+            <a
+              href={activeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/30 hover:text-white/70 transition-colors"
+              title="Open in new tab"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
+          <button
+            onClick={onClose}
+            className="text-white/30 hover:text-white transition-colors ml-1"
+            title="Close preview"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* iframe */}
+      <div className="flex-1 relative overflow-hidden">
+        {activeUrl ? (
+          <iframe
+            key={activeUrl}
+            src={activeUrl}
+            className="absolute inset-0 w-full h-full border-0 bg-white"
+            title={`Preview: ${client.branding.companyName}`}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
+            <Globe className="h-10 w-10 text-white/10" />
+            <p className="text-white/30 text-sm font-medium">No website URL configured</p>
+            <p className="text-white/20 text-xs max-w-xs">
+              Add a website URL in the Edit panel to compare with the AI demo.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
