@@ -621,6 +621,8 @@ components:
           type: ["string", "null"]
         vertical:
           type: ["string", "null"]
+        twilioSender:
+          type: ["string", "null"]
 
     DemoClient:
       type: object

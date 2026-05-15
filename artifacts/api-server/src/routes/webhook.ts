@@ -85,20 +85,43 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
       return;
     }
 
-    // Resolve client from Twilio sender number
-    const clients = await db
-      .select()
-      .from(clientsTable)
-      .where(and(eq(clientsTable.twilioSender, To), eq(clientsTable.isActive, true)))
-      .limit(1);
+    // Resolve client — slug tag takes priority over number for shared-number multi-tenant routing.
+    // A wa.me deep link pre-fills "[slug] " so we can route correctly even when all clients
+    // share one Twilio number. Fall back to number-only lookup for direct/non-widget messages.
+    const slugTagMatch = Body.match(/^\[([a-z0-9-]+)\]\s*/i);
+    const slugTag = slugTagMatch?.[1]?.toLowerCase() ?? null;
 
-    if (clients.length === 0) {
-      req.log.warn({ To }, "No active client found for Twilio sender");
+    let clientRecord: typeof clientsTable.$inferSelect | undefined;
+
+    if (slugTag) {
+      const bySlug = await db
+        .select()
+        .from(clientsTable)
+        .where(and(eq(clientsTable.slug, slugTag), eq(clientsTable.isActive, true)))
+        .limit(1);
+      clientRecord = bySlug[0];
+      if (clientRecord) {
+        req.log.info({ slug: slugTag, clientId: clientRecord.id }, "Client resolved via slug tag");
+      }
+    }
+
+    if (!clientRecord) {
+      const byNumber = await db
+        .select()
+        .from(clientsTable)
+        .where(and(eq(clientsTable.twilioSender, To), eq(clientsTable.isActive, true)))
+        .limit(1);
+      clientRecord = byNumber[0];
+    }
+
+    if (!clientRecord) {
+      req.log.warn({ To, slugTag }, "No active client found for Twilio sender");
       res.status(200).type("text/xml").send(twimlEmpty);
       return;
     }
 
-    const clientRecord = clients[0]!;
+    // Strip the routing slug tag from the message before storing / passing to the bot
+    const cleanBody = slugTag ? Body.replace(/^\[[a-z0-9-]+\]\s*/i, "").trim() : Body;
 
     // Upsert lead by phone + client (tenant-scoped)
     const normalizedPhone = From.replace("whatsapp:", "");
@@ -144,12 +167,12 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
 
     const messageEventId = eventInserted[0]!.id;
 
-    // Store inbound conversation message
+    // Store inbound conversation message (slug tag already stripped from cleanBody)
     await db.insert(conversationsTable).values({
       clientId: clientRecord.id,
       leadId,
       direction: "inbound",
-      body: Body,
+      body: cleanBody,
     });
 
     // Enqueue job (pending) — will be marked done by the pipeline
@@ -175,7 +198,7 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
       clientRecord,
       leadId,
       messageEventId,
-      userMessage: Body,
+      userMessage: cleanBody,
       userPhone: normalizedPhone,
       twilioSender: To,
     }).catch((err: unknown) => {

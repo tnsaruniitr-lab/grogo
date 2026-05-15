@@ -31,4 +31,6 @@ export interface BrandingConfig {
   industry?: string | null;
   /** @nullable */
   vertical?: string | null;
+  /** @nullable */
+  twilioSender?: string | null;
 }
