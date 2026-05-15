@@ -1,0 +1,58 @@
+Here's the integration architecture, then I'll walk through it step by step:
+How it will work
+Instagram DM → respond.io (Instagram channel) → Workflow with "HTTP Request" step → your Replit bot URL
+                                                                                              ↓
+                                                                               your bot generates a reply
+                                                                                              ↓
+                              respond.io API ← your Replit bot calls back with the answer ←──┘
+                                     ↓
+                          message delivered to Instagram user
+You need two pieces wired up:
+1. A respond.io Developer API token — so your Replit bot can send the reply back into the Instagram conversation.
+2. A Workflow with an "HTTP Request" step (or AI Agent step) — to send each incoming Instagram message to your Replit bot's public URL.
+
+Step 1 — Generate the API token (I can navigate you there now)
+On the Integrations page you're on, find Developer API → Manage. Click "Add Access Token", name it (e.g. "Replit Bot"), and copy the token. You'll paste it into your Replit project as an environment variable like RESPOND_API_TOKEN.
+Step 2 — Build a Workflow that calls your Replit bot
+Go to Workflows → Add Workflow, then:
+
+Trigger: "Conversation Opened" (filter: Channel = Instagram), or "Message Received".
+Add step → HTTP Request:
+
+Method: POST
+URL: https://<your-replit-app>.replit.app/webhook (your bot's public URL)
+Body (JSON):
+
+
+
+json    {
+      "contact_id": "{{contact.id}}",
+      "message": "{{latest_message.text}}",
+      "channel": "instagram"
+    }
+
+Save & publish the workflow.
+
+Step 3 — What your Replit bot needs to do
+Your bot exposes a POST endpoint (e.g. /webhook) that:
+
+Receives the JSON above.
+Generates a reply (your existing logic).
+Calls respond.io back to send the message:
+
+pythonimport requests, os
+TOKEN = os.environ["RESPOND_API_TOKEN"]
+
+def reply_to_contact(contact_id, text):
+    url = f"https://api.respond.io/v2/contact/{contact_id}/message"
+    headers = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
+    payload = {"channelId": <your_instagram_channel_id>, "message": {"type": "text", "text": text}}
+    requests.post(url, json=payload, headers=headers)
+Docs: https://developers.respond.io — see "Send a Message" endpoint.
+
+Two quick questions before I click into Developer API and start setting this up live:
+
+Is your Replit project already deployed with a public HTTPS URL (Replit "Deployments" or .replit.app), or is it still running in the editor? respond.io needs a stable public URL.
+What language is your bot written in (Python / Node.js / other)? I'll tailor the webhook handler and the respond.io API call code to match.
+
+Once you answer those, I'll open the Developer API panel and walk you through token creation and the Workflow setup with the right values filled in.
