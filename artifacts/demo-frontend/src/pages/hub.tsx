@@ -477,8 +477,10 @@ function PreviewModal({
   onClose: () => void;
 }) {
   const demoUrl = `/demo/${client.slug}?preview=1`;
+  const cleanDemoUrl = `/demo/${client.slug}`;
   const siteUrl = client.branding.websiteUrl ?? null;
   const activeUrl = mode === "demo" ? demoUrl : siteUrl;
+  const tabUrl = mode === "demo" ? cleanDemoUrl : siteUrl;
   const hasWebsite = !!siteUrl;
 
   return (
@@ -534,9 +536,9 @@ function PreviewModal({
 
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
-          {activeUrl && (
+          {tabUrl && (
             <a
-              href={activeUrl}
+              href={tabUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/30 hover:text-white/70 transition-colors"
