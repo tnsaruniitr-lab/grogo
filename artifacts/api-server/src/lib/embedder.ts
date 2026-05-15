@@ -2,8 +2,8 @@ import OpenAI from "openai";
 import { logger } from "./logger";
 
 const openai = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "placeholder",
+  baseURL: "https://api.openai.com/v1",
+  apiKey: process.env.OPENAI_API_KEY ?? "placeholder",
 });
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
