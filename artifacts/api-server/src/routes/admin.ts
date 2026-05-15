@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { clientsTable, companyKnowledgeTable } from "@workspace/db";
-import { eq, isNull, and, inArray } from "drizzle-orm";
+import { eq, isNull, and, inArray, asc } from "drizzle-orm";
+import { z } from "zod/v4";
 import { extractBrand } from "../lib/brand-extractor";
 import {
   ExtractBrandingBody,
@@ -12,6 +13,20 @@ import {
   GetClientBrandingParams,
 } from "@workspace/api-zod";
 import { startCrawlJob, runCrawlPipeline } from "../lib/crawl-pipeline";
+import { embedText } from "../lib/embedder";
+
+const CreateKnowledgeEntryBody = z.object({
+  category: z.string().min(1).max(64),
+  question: z.string().min(1).max(1000),
+  answer: z.string().min(1).max(4000),
+  language: z.string().default("en"),
+  priority: z.number().int().default(0),
+});
+
+const KnowledgeEntryParams = z.object({
+  slug: z.string(),
+  id: z.coerce.number().int().positive(),
+});
 
 const router: IRouter = Router();
 
@@ -347,6 +362,93 @@ router.get("/clients/:slug/branding", async (req: Request, res: Response) => {
   }
 
   res.json(buildBranding(client));
+});
+
+router.get("/admin/clients/:slug/knowledge", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const rows = await db
+    .select({
+      id: companyKnowledgeTable.id,
+      category: companyKnowledgeTable.category,
+      question: companyKnowledgeTable.question,
+      answer: companyKnowledgeTable.answer,
+      language: companyKnowledgeTable.language,
+      priority: companyKnowledgeTable.priority,
+      source: companyKnowledgeTable.source,
+      sourceUrl: companyKnowledgeTable.sourceUrl,
+      createdAt: companyKnowledgeTable.createdAt,
+    })
+    .from(companyKnowledgeTable)
+    .where(eq(companyKnowledgeTable.clientId, client.id))
+    .orderBy(asc(companyKnowledgeTable.category), asc(companyKnowledgeTable.id));
+
+  const categories = [...new Set(rows.map((r) => r.category))].sort();
+  res.json({
+    entries: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
+    categories,
+  });
+});
+
+router.post("/admin/clients/:slug/knowledge", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const parsed = CreateKnowledgeEntryBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
+
+  const { category, question, answer, language, priority } = parsed.data;
+  const text = `${question} ${answer}`;
+  const embedding = await embedText(text);
+
+  const [created] = await db
+    .insert(companyKnowledgeTable)
+    .values({
+      clientId: client.id,
+      category,
+      question,
+      answer,
+      language,
+      priority,
+      source: "manual",
+      embeddingJson: embedding ? JSON.stringify(embedding) : null,
+    })
+    .returning();
+
+  res.status(201).json({ ...created, createdAt: created.createdAt.toISOString() });
+});
+
+router.delete("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Response) => {
+  const params = KnowledgeEntryParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: "Invalid params" }); return; }
+
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, params.data.slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const [existing] = await db
+    .select({ id: companyKnowledgeTable.id })
+    .from(companyKnowledgeTable)
+    .where(and(eq(companyKnowledgeTable.id, params.data.id), eq(companyKnowledgeTable.clientId, client.id)))
+    .limit(1);
+  if (!existing) { res.status(404).json({ error: "Entry not found" }); return; }
+
+  await db.delete(companyKnowledgeTable).where(eq(companyKnowledgeTable.id, params.data.id));
+  res.status(204).end();
 });
 
 function buildBranding(client: typeof clientsTable.$inferSelect) {

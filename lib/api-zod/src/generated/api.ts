@@ -303,6 +303,58 @@ export const DeleteDemoClientParams = zod.object({
 });
 
 /**
+ * Returns all knowledge base entries for the client, flat list with all languages and categories.
+ * @summary List all knowledge entries for a client
+ */
+export const ListKnowledgeEntriesParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const ListKnowledgeEntriesResponse = zod.object({
+  entries: zod.array(
+    zod.object({
+      id: zod.number(),
+      category: zod.string(),
+      question: zod.string(),
+      answer: zod.string(),
+      language: zod.string(),
+      priority: zod.number(),
+      source: zod.string(),
+      sourceUrl: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  categories: zod.array(zod.string()),
+});
+
+/**
+ * Creates a new Q&A entry in the knowledge base and automatically generates its embedding.
+ * @summary Add a knowledge entry for a client
+ */
+export const CreateKnowledgeEntryParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const createKnowledgeEntryBodyLanguageDefault = `en`;
+export const createKnowledgeEntryBodyPriorityDefault = 0;
+
+export const CreateKnowledgeEntryBody = zod.object({
+  category: zod.string(),
+  question: zod.string(),
+  answer: zod.string(),
+  language: zod.string().default(createKnowledgeEntryBodyLanguageDefault),
+  priority: zod.number().default(createKnowledgeEntryBodyPriorityDefault),
+});
+
+/**
+ * @summary Delete a knowledge entry
+ */
+export const DeleteKnowledgeEntryParams = zod.object({
+  slug: zod.coerce.string(),
+  id: zod.coerce.number(),
+});
+
+/**
  * Public endpoint used by the demo frontend to load real website content extracted during the crawl. Returns knowledge chunks grouped by category (service, about, contact, faq, process). Falls back gracefully when no crawl has been run. Filtered by the client's primary demo language.
 
  * @summary Get crawled knowledge content grouped by category

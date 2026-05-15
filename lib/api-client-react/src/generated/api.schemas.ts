@@ -150,6 +150,32 @@ export interface ExtractBrandingInput {
   url: string;
 }
 
+export interface KnowledgeEntry {
+  id: number;
+  category: string;
+  question: string;
+  answer: string;
+  language: string;
+  priority: number;
+  source: string;
+  /** @nullable */
+  sourceUrl?: string | null;
+  createdAt: string;
+}
+
+export interface CreateKnowledgeEntryBody {
+  category: string;
+  question: string;
+  answer: string;
+  language?: string;
+  priority?: number;
+}
+
+export interface KnowledgeListResponse {
+  entries: KnowledgeEntry[];
+  categories: string[];
+}
+
 export interface KnowledgeChunk {
   question: string;
   answer: string;

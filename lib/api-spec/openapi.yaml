@@ -292,6 +292,78 @@ paths:
         "404":
           description: Client not found
 
+  /admin/clients/{slug}/knowledge:
+    get:
+      operationId: listKnowledgeEntries
+      tags: [admin]
+      summary: List all knowledge entries for a client
+      description: Returns all knowledge base entries for the client, flat list with all languages and categories.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Knowledge entries and distinct categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeListResponse"
+        "404":
+          description: Client not found
+    post:
+      operationId: createKnowledgeEntry
+      tags: [admin]
+      summary: Add a knowledge entry for a client
+      description: Creates a new Q&A entry in the knowledge base and automatically generates its embedding.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateKnowledgeEntryBody"
+      responses:
+        "201":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeEntry"
+        "400":
+          description: Validation error
+        "404":
+          description: Client not found
+
+  /admin/clients/{slug}/knowledge/{id}:
+    delete:
+      operationId: deleteKnowledgeEntry
+      tags: [admin]
+      summary: Delete a knowledge entry
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Entry not found
+
   /clients/{slug}/content:
     get:
       operationId: getClientContent
@@ -670,6 +742,59 @@ components:
       properties:
         url:
           type: string
+
+    KnowledgeEntry:
+      type: object
+      required: [id, category, question, answer, language, priority, source, createdAt]
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+        language:
+          type: string
+        priority:
+          type: integer
+        source:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CreateKnowledgeEntryBody:
+      type: object
+      required: [category, question, answer]
+      properties:
+        category:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+        language:
+          type: string
+          default: "en"
+        priority:
+          type: integer
+          default: 0
+
+    KnowledgeListResponse:
+      type: object
+      required: [entries, categories]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeEntry"
+        categories:
+          type: array
+          items:
+            type: string
 
     KnowledgeChunk:
       type: object

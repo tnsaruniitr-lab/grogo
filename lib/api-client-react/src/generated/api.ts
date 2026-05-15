@@ -21,6 +21,7 @@ import type {
   ClientContent,
   CrawlJobStatus,
   CrawlPageDetail,
+  CreateKnowledgeEntryBody,
   DashboardStats,
   DemoClient,
   DemoClientInput,
@@ -29,6 +30,8 @@ import type {
   GetDashboardStatsParams,
   GetLeadParams,
   HealthStatus,
+  KnowledgeEntry,
+  KnowledgeListResponse,
   Lead,
   LeadDetail,
   LeadUpdate,
@@ -1039,6 +1042,269 @@ export const useDeleteDemoClient = <
   TContext
 > => {
   return useMutation(getDeleteDemoClientMutationOptions(options));
+};
+
+/**
+ * Returns all knowledge base entries for the client, flat list with all languages and categories.
+ * @summary List all knowledge entries for a client
+ */
+export const getListKnowledgeEntriesUrl = (slug: string) => {
+  return `/api/admin/clients/${slug}/knowledge`;
+};
+
+export const listKnowledgeEntries = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<KnowledgeListResponse> => {
+  return customFetch<KnowledgeListResponse>(getListKnowledgeEntriesUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListKnowledgeEntriesQueryKey = (slug: string) => {
+  return [`/api/admin/clients/${slug}/knowledge`] as const;
+};
+
+export const getListKnowledgeEntriesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listKnowledgeEntries>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listKnowledgeEntries>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListKnowledgeEntriesQueryKey(slug);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listKnowledgeEntries>>
+  > = ({ signal }) => listKnowledgeEntries(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listKnowledgeEntries>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListKnowledgeEntriesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listKnowledgeEntries>>
+>;
+export type ListKnowledgeEntriesQueryError = ErrorType<void>;
+
+/**
+ * @summary List all knowledge entries for a client
+ */
+
+export function useListKnowledgeEntries<
+  TData = Awaited<ReturnType<typeof listKnowledgeEntries>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listKnowledgeEntries>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListKnowledgeEntriesQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Creates a new Q&A entry in the knowledge base and automatically generates its embedding.
+ * @summary Add a knowledge entry for a client
+ */
+export const getCreateKnowledgeEntryUrl = (slug: string) => {
+  return `/api/admin/clients/${slug}/knowledge`;
+};
+
+export const createKnowledgeEntry = async (
+  slug: string,
+  createKnowledgeEntryBody: CreateKnowledgeEntryBody,
+  options?: RequestInit,
+): Promise<KnowledgeEntry> => {
+  return customFetch<KnowledgeEntry>(getCreateKnowledgeEntryUrl(slug), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createKnowledgeEntryBody),
+  });
+};
+
+export const getCreateKnowledgeEntryMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createKnowledgeEntry>>,
+    TError,
+    { slug: string; data: BodyType<CreateKnowledgeEntryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createKnowledgeEntry>>,
+  TError,
+  { slug: string; data: BodyType<CreateKnowledgeEntryBody> },
+  TContext
+> => {
+  const mutationKey = ["createKnowledgeEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createKnowledgeEntry>>,
+    { slug: string; data: BodyType<CreateKnowledgeEntryBody> }
+  > = (props) => {
+    const { slug, data } = props ?? {};
+
+    return createKnowledgeEntry(slug, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateKnowledgeEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createKnowledgeEntry>>
+>;
+export type CreateKnowledgeEntryMutationBody =
+  BodyType<CreateKnowledgeEntryBody>;
+export type CreateKnowledgeEntryMutationError = ErrorType<void>;
+
+/**
+ * @summary Add a knowledge entry for a client
+ */
+export const useCreateKnowledgeEntry = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createKnowledgeEntry>>,
+    TError,
+    { slug: string; data: BodyType<CreateKnowledgeEntryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createKnowledgeEntry>>,
+  TError,
+  { slug: string; data: BodyType<CreateKnowledgeEntryBody> },
+  TContext
+> => {
+  return useMutation(getCreateKnowledgeEntryMutationOptions(options));
+};
+
+/**
+ * @summary Delete a knowledge entry
+ */
+export const getDeleteKnowledgeEntryUrl = (slug: string, id: number) => {
+  return `/api/admin/clients/${slug}/knowledge/${id}`;
+};
+
+export const deleteKnowledgeEntry = async (
+  slug: string,
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteKnowledgeEntryUrl(slug, id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteKnowledgeEntryMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteKnowledgeEntry>>,
+    TError,
+    { slug: string; id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteKnowledgeEntry>>,
+  TError,
+  { slug: string; id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteKnowledgeEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteKnowledgeEntry>>,
+    { slug: string; id: number }
+  > = (props) => {
+    const { slug, id } = props ?? {};
+
+    return deleteKnowledgeEntry(slug, id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteKnowledgeEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteKnowledgeEntry>>
+>;
+
+export type DeleteKnowledgeEntryMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete a knowledge entry
+ */
+export const useDeleteKnowledgeEntry = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteKnowledgeEntry>>,
+    TError,
+    { slug: string; id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteKnowledgeEntry>>,
+  TError,
+  { slug: string; id: number },
+  TContext
+> => {
+  return useMutation(getDeleteKnowledgeEntryMutationOptions(options));
 };
 
 /**
