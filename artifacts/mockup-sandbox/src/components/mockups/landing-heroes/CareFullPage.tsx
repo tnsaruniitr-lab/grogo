@@ -43,11 +43,11 @@ export function CareFullPage() {
       `}} />
 
       {/* ══════════════════════════════════════════════════════
-          1. TRUST BAR — very top strip
+          1. TRUST BAR — fixed, very top, 34px
       ══════════════════════════════════════════════════════ */}
-      <div className="w-full bg-[#100806] border-b border-[#F0EAE1]/8 py-2 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-5 flex-wrap">
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-[#100806] border-b border-[#F0EAE1]/8 py-2 px-6" style={{ height: '34px' }}>
+        <div className="max-w-6xl mx-auto h-full flex items-center justify-between">
+          <div className="flex items-center gap-5">
             <div className="flex items-center gap-1.5 text-[#F0EAE1]/50 text-[11px] tracking-wide">
               <ShieldCheck className="w-3.5 h-3.5 text-[#E8A84C]" strokeWidth={2} />
               <span>CQC <span className="text-[#E8A84C] font-semibold">Outstanding</span></span>
@@ -57,8 +57,8 @@ export function CareFullPage() {
               <Award className="w-3.5 h-3.5 text-[#E8A84C]" strokeWidth={2} />
               <span>UKHCA <span className="text-[#F0EAE1]/70 font-medium">Member</span></span>
             </div>
-            <div className="w-px h-3 bg-[#F0EAE1]/15 hidden sm:block" />
-            <div className="hidden sm:flex items-center gap-1.5 text-[#F0EAE1]/50 text-[11px]">
+            <div className="w-px h-3 bg-[#F0EAE1]/15" />
+            <div className="flex items-center gap-1.5 text-[#F0EAE1]/50 text-[11px]">
               <Clock className="w-3.5 h-3.5 text-[#E8A84C]" strokeWidth={2} />
               <span>Est. <span className="text-[#F0EAE1]/70 font-medium">2015</span></span>
             </div>
@@ -70,7 +70,7 @@ export function CareFullPage() {
               <span className="text-[#F0EAE1]/40"> · 312 Google reviews</span>
             </span>
           </div>
-          <div className="hidden md:flex items-center gap-1.5 text-[#F0EAE1]/50 text-[11px]">
+          <div className="flex items-center gap-1.5 text-[#F0EAE1]/50 text-[11px]">
             <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" strokeWidth={2} />
             <span>WhatsApp reply in <span className="text-[#F0EAE1]/80 font-medium">under 60 sec</span></span>
           </div>
@@ -78,9 +78,9 @@ export function CareFullPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════
-          2. NAV
+          2. NAV — fixed, sits below trust bar
       ══════════════════════════════════════════════════════ */}
-      <nav className="sticky top-0 z-50 px-8 py-4 flex items-center justify-between bg-[#1A0E06]/95 backdrop-blur-md border-b border-[#F0EAE1]/6">
+      <nav className="fixed left-0 right-0 z-50 px-8 py-5 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent" style={{ top: '34px' }}>
         <div className="flex items-center gap-3">
           <Heart strokeWidth={1.5} className="w-5 h-5 text-[#E8A84C]" />
           <span className="serif text-xl font-semibold tracking-wide text-[#F0EAE1]">SOLACE</span>
@@ -98,9 +98,9 @@ export function CareFullPage() {
       </nav>
 
       {/* ══════════════════════════════════════════════════════
-          3. HERO — full-bleed video
+          3. HERO — full-bleed video, exactly like CareV3Trust
       ══════════════════════════════════════════════════════ */}
-      <section className="relative h-screen flex items-center overflow-hidden">
+      <section className="relative flex items-center overflow-hidden" style={{ height: 'calc(100vh - 34px)', marginTop: '34px' }}>
         <video autoPlay muted loop playsInline
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: 'brightness(0.45) saturate(1.1)' }}>
