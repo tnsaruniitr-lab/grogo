@@ -311,10 +311,10 @@ export function V3Hero({
       <nav className="absolute top-0 left-0 right-0 z-20 px-8 py-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {logoUrl ? (
-            <img src={logoUrl} alt={companyName} className="h-8 object-contain" />
+            <img src={logoUrl} alt={companyName} className="h-14 w-auto max-w-[200px] object-contain" />
           ) : (
             <span
-              className="v3hero-serif text-lg font-semibold tracking-wide"
+              className="v3hero-serif text-2xl font-semibold tracking-wide"
               style={{ color: "#F5EEE6" }}
             >
               {companyName}
