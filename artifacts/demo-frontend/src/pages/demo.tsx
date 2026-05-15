@@ -333,6 +333,7 @@ export default function DemoPage() {
         preview={isPreview}
         previewImageUrl={getIndustryImage(branding.industry)}
         lang={lang}
+        brandColor={branding.primaryColor}
       />
 
       {/* Thin accent line between hero and body */}

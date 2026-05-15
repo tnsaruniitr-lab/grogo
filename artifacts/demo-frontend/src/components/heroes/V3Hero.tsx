@@ -12,6 +12,37 @@ interface V3HeroProps {
   preview?: boolean;
   previewImageUrl?: string;
   lang?: string;
+  brandColor?: string | null;
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return null;
+  return [parseInt(m[1]!, 16), parseInt(m[2]!, 16), parseInt(m[3]!, 16)];
+}
+
+function brandColorToHeroTheme(hex: string): { bg: string; overlayH: string; overlayV: string; accent: string } | null {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  const [r, g, b] = rgb;
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  let dr: number, dg: number, db: number;
+  if (luminance > 180) {
+    dr = 10; dg = 10; db = 10;
+  } else {
+    dr = Math.max(4, Math.round(r * 0.13));
+    dg = Math.max(4, Math.round(g * 0.13));
+    db = Math.max(4, Math.round(b * 0.13));
+  }
+  const dr2 = Math.min(255, Math.round(dr * 1.6));
+  const dg2 = Math.min(255, Math.round(dg * 1.6));
+  const db2 = Math.min(255, Math.round(db * 1.6));
+  return {
+    bg: `rgb(${dr},${dg},${db})`,
+    overlayH: `linear-gradient(to right, rgba(${dr},${dg},${db},0.90) 0%, rgba(${dr2},${dg2},${db2},0.55) 50%, rgba(${dr},${dg},${db},0.10) 100%)`,
+    overlayV: `linear-gradient(to top, rgba(${dr},${dg},${db},0.72) 0%, transparent 50%, rgba(${dr},${dg},${db},0.32) 100%)`,
+    accent: hex,
+  };
 }
 
 interface HeroConfig {
@@ -324,20 +355,25 @@ export function V3Hero({
   preview = false,
   previewImageUrl,
   lang,
+  brandColor,
 }: V3HeroProps) {
   const cfg = CONFIGS[industry] ?? DEFAULT_CONFIG;
-  const activeTrustItems = (lang ? cfg.trustItemsI18n?.[lang] : undefined) ?? cfg.trustItems;
-  const activeCategoryLabel = (lang ? cfg.categoryLabelI18n?.[lang] : undefined) ?? cfg.categoryLabel;
-  const activeCtaLabel = (lang ? cfg.ctaLabelI18n?.[lang] : undefined) ?? cfg.ctaLabel;
+  const brandTheme = brandColor ? brandColorToHeroTheme(brandColor) : null;
+  const effectiveCfg = brandTheme
+    ? { ...cfg, bg: brandTheme.bg, overlayH: brandTheme.overlayH, overlayV: brandTheme.overlayV, accent: brandTheme.accent }
+    : cfg;
+  const activeTrustItems = (lang ? effectiveCfg.trustItemsI18n?.[lang] : undefined) ?? effectiveCfg.trustItems;
+  const activeCategoryLabel = (lang ? effectiveCfg.categoryLabelI18n?.[lang] : undefined) ?? effectiveCfg.categoryLabel;
+  const activeCtaLabel = (lang ? effectiveCfg.ctaLabelI18n?.[lang] : undefined) ?? effectiveCfg.ctaLabel;
 
   return (
     <section
       className="relative h-screen flex items-start overflow-hidden"
-      style={{ backgroundColor: cfg.bg, fontFamily: "'Inter', sans-serif" }}
+      style={{ backgroundColor: effectiveCfg.bg, fontFamily: "'Inter', sans-serif" }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('${cfg.seriffontImport}');
-        .v3hero-serif { font-family: ${cfg.serif}; }
+        @import url('${effectiveCfg.seriffontImport}');
+        .v3hero-serif { font-family: ${effectiveCfg.serif}; }
         ${preview ? `
           .v3-1,.v3-2,.v3-3,.v3-4,.v3-5 { opacity:1; }
         ` : `
@@ -367,14 +403,14 @@ export function V3Hero({
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: "brightness(0.52) saturate(1.12)" }}
         >
-          <source src={cfg.video} type="video/mp4" />
+          <source src={effectiveCfg.video} type="video/mp4" />
         </video>
       )}
 
       {/* Horizontal overlay — strong left fade */}
-      <div className="absolute inset-0" style={{ background: cfg.overlayH }} />
+      <div className="absolute inset-0" style={{ background: effectiveCfg.overlayH }} />
       {/* Vertical overlay — bottom vignette */}
-      <div className="absolute inset-0" style={{ background: cfg.overlayV }} />
+      <div className="absolute inset-0" style={{ background: effectiveCfg.overlayV }} />
 
       {/* Slim top nav bar */}
       <nav className="absolute top-0 left-0 right-0 z-20 px-8 py-5 flex items-center justify-between">
@@ -416,7 +452,7 @@ export function V3Hero({
         <button
           onClick={onCtaClick}
           className="border px-5 py-2.5 text-xs tracking-wider font-light transition-colors hover:bg-white/10"
-          style={{ borderColor: `${cfg.accent}80`, color: cfg.accent }}
+          style={{ borderColor: `${effectiveCfg.accent}80`, color: effectiveCfg.accent }}
         >
           {activeCtaLabel}
         </button>
@@ -428,7 +464,7 @@ export function V3Hero({
           <div className="flex items-center gap-3 mb-7">
             <span
               className="text-[11px] tracking-[0.3em] uppercase font-medium"
-              style={{ color: cfg.accent }}
+              style={{ color: effectiveCfg.accent }}
             >
               {activeCategoryLabel}
               {city ? ` · ${city}` : ""}
@@ -443,7 +479,7 @@ export function V3Hero({
           {headline.includes("\n")
             ? headline.split("\n").map((line, i) => (
                 <span key={i}>
-                  {i === 1 ? <em style={{ color: cfg.accent }}>{line}</em> : line}
+                  {i === 1 ? <em style={{ color: effectiveCfg.accent }}>{line}</em> : line}
                   <br />
                 </span>
               ))
@@ -454,14 +490,14 @@ export function V3Hero({
           className="text-lg font-light leading-relaxed max-w-md mb-12 v3-3"
           style={{ color: "rgba(245,238,230,0.60)" }}
         >
-          {subtext || cfg.subcategoryLabel}
+          {subtext || effectiveCfg.subcategoryLabel}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 v3-4">
           <button
             onClick={onCtaClick}
             className="px-8 py-4 text-sm font-semibold flex items-center gap-2 group transition-colors"
-            style={{ backgroundColor: cfg.accent, color: cfg.bg }}
+            style={{ backgroundColor: effectiveCfg.accent, color: effectiveCfg.bg }}
           >
             {activeCtaLabel}{" "}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -485,11 +521,11 @@ export function V3Hero({
               style={{
                 color: "rgba(245,238,230,0.80)",
                 background: "rgba(0,0,0,0.35)",
-                border: `1px solid ${cfg.accent}40`,
+                border: `1px solid ${effectiveCfg.accent}40`,
                 backdropFilter: "blur(6px)",
               }}
             >
-              <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: cfg.accent }} />
+              <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: effectiveCfg.accent }} />
               {item}
             </div>
           ))}
@@ -510,7 +546,7 @@ export function V3Hero({
               <Star
                 key={i}
                 className="w-3 h-3"
-                style={{ fill: cfg.accent, color: cfg.accent }}
+                style={{ fill: effectiveCfg.accent, color: effectiveCfg.accent }}
               />
             ))}
           </div>
@@ -518,13 +554,13 @@ export function V3Hero({
             className="text-sm italic leading-relaxed mb-3"
             style={{ color: "rgba(245,238,230,0.80)" }}
           >
-            {cfg.reviewQuote}
+            {effectiveCfg.reviewQuote}
           </p>
           <span
             className="text-xs"
             style={{ color: "rgba(245,238,230,0.35)" }}
           >
-            {cfg.reviewName}
+            {effectiveCfg.reviewName}
           </span>
         </div>
       </div>
