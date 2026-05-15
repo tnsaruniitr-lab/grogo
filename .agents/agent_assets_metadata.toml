@@ -18,6 +18,72 @@ uri = "file://artifacts/demo-frontend/src/assets/care.png"
 type = "image"
 title = "Elderly care hands"
 
+[[generated]]
+id = "blYJSv9Wpfwa_VRW00ftJ"
+uri = "file://artifacts/demo-frontend/public/images/industry/aesthetics.png"
+type = "image"
+title = "aesthetics clinic treatment"
+
+[[generated]]
+id = "DivpDgALNzkIb5r_ZQLy1"
+uri = "file://artifacts/demo-frontend/public/images/industry/wellness.png"
+type = "image"
+title = "luxury wellness spa"
+
+[[generated]]
+id = "mri9hCO47i4Zg3ZpfyYRf"
+uri = "file://artifacts/demo-frontend/public/images/industry/care.png"
+type = "image"
+title = "compassionate elderly care"
+
+[[generated]]
+id = "kj4cY84IP-qqiM1TAECwB"
+uri = "file://artifacts/demo-frontend/public/images/industry/cosmetic-surgery.png"
+type = "image"
+title = "cosmetic surgery clinic"
+
+[[generated]]
+id = "x5W8RK7pcdhcPo0AXGNN9"
+uri = "file://artifacts/demo-frontend/public/images/industry/hair.png"
+type = "image"
+title = "luxury hair clinic"
+
+[[generated]]
+id = "1F5MPUWVimODMIP6bJH3l"
+uri = "file://artifacts/demo-frontend/public/images/industry/weight-management.png"
+type = "image"
+title = "weight management nutrition"
+
+[[generated]]
+id = "oGrrH_pceSshuL31lfCR4"
+uri = "file://artifacts/demo-frontend/public/images/industry/iv-therapy.png"
+type = "image"
+title = "luxury IV therapy lounge"
+
+[[generated]]
+id = "gLGF6VwKoiDkuyr9F8tZV"
+uri = "file://artifacts/demo-frontend/public/images/industry/fertility.png"
+type = "image"
+title = "fertility clinic consultation"
+
+[[generated]]
+id = "peuCtx31IsKdKc1gbqtJX"
+uri = "file://artifacts/demo-frontend/public/images/industry/dental.png"
+type = "image"
+title = "premium dental clinic smile"
+
+[[generated]]
+id = "4GUCQZQeWWmYiEUIqijqi"
+uri = "file://artifacts/demo-frontend/public/images/industry/physiotherapy.png"
+type = "image"
+title = "physiotherapy rehabilitation"
+
+[[generated]]
+id = "vonMDCrnCMrsOwwYxIOkk"
+uri = "file://artifacts/demo-frontend/public/images/industry/laser-eye.png"
+type = "image"
+title = "laser eye surgery clinic"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"

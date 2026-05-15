@@ -14,7 +14,6 @@ import {
   type Testimonial,
 } from "@/lib/industry-themes";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import careImg from "@/assets/care.png";
 import { Link } from "wouter";
 import {
   CheckCircle2,
@@ -46,6 +45,24 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Home: HomeIcon, Heart, Users, Sparkles, Gem, Star,
   Stethoscope, Activity, Smile, Shield, Leaf, Wind,
 };
+
+const INDUSTRY_IMAGES: Record<string, string> = {
+  aesthetics:          "/images/industry/aesthetics.png",
+  wellness:            "/images/industry/wellness.png",
+  care:                "/images/industry/care.png",
+  "cosmetic-surgery":  "/images/industry/cosmetic-surgery.png",
+  hair:                "/images/industry/hair.png",
+  "weight-management": "/images/industry/weight-management.png",
+  "iv-therapy":        "/images/industry/iv-therapy.png",
+  fertility:           "/images/industry/fertility.png",
+  dental:              "/images/industry/dental.png",
+  physiotherapy:       "/images/industry/physiotherapy.png",
+  "laser-eye":         "/images/industry/laser-eye.png",
+};
+
+function getIndustryImage(industry?: string | null): string {
+  return INDUSTRY_IMAGES[industry ?? ""] ?? INDUSTRY_IMAGES["aesthetics"]!;
+}
 
 function resolveIcons(names: [string, string, string]): [LucideIcon, LucideIcon, LucideIcon] {
   return names.map((n) => ICON_MAP[n] ?? Star) as [LucideIcon, LucideIcon, LucideIcon];
@@ -330,8 +347,8 @@ export default function DemoPage() {
             <div className="flex-1 relative">
               <div className="absolute inset-0 transform -rotate-6 rounded-3xl" style={{ backgroundColor: primary + "33" }} />
               <img
-                src={careImg}
-                alt="Care"
+                src={branding.heroImageUrl ?? getIndustryImage(branding.industry)}
+                alt={branding.companyName}
                 className="relative rounded-3xl shadow-xl w-full object-cover aspect-square md:aspect-[4/3]"
               />
             </div>
