@@ -426,7 +426,6 @@ export function V3Hero({
       <div className="relative z-10 max-w-2xl px-8 md:px-16 pt-24 pb-16">
         <div className="v3-1">
           <div className="flex items-center gap-3 mb-7">
-            <div className="w-8 h-px" style={{ backgroundColor: cfg.accent }} />
             <span
               className="text-[11px] tracking-[0.3em] uppercase font-medium"
               style={{ color: cfg.accent }}
