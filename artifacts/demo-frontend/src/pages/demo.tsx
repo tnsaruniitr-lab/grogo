@@ -134,30 +134,6 @@ interface ClientContent {
   process: KnowledgeChunk[];
 }
 
-// ── Server-side initial data (injected by Express SSR into window.__INITIAL_DATA__) ──
-declare global {
-  interface Window {
-    __INITIAL_DATA__?: {
-      branding: BrandingConfig;
-      content: ClientContent;
-    };
-  }
-}
-
-// Module-level cache: React 18 StrictMode double-invokes useState initialisers
-// in dev, which would clear window.__INITIAL_DATA__ on the first call and return
-// null on the second.  Caching here ensures both invocations see the same data.
-let _ssrData: { branding: BrandingConfig; content: ClientContent } | null = null;
-
-function getInitialData() {
-  if (typeof window === "undefined") return null;
-  if (_ssrData) return _ssrData;
-  const d = window.__INITIAL_DATA__;
-  window.__INITIAL_DATA__ = undefined; // clear so back-navigation re-fetches fresh data
-  _ssrData = d ?? null;
-  return _ssrData;
-}
-
 function chunkTitle(q: string, max = 48): string {
   const clean = q.replace(/\?$/, "").trim();
   return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
@@ -169,24 +145,15 @@ export default function DemoPage() {
   const urlVertical = params.vertical;
   const isPreview = new URLSearchParams(window.location.search).get("preview") === "1";
 
-  // Initialise from window.__INITIAL_DATA__ if Express SSR injected it —
-  // this avoids the loading spinner and duplicate network fetches on first paint.
-  const [initialData] = useState(() => getInitialData());
-  const [branding, setBranding] = useState<BrandingConfig | null>(initialData?.branding ?? null);
-  const [content, setContent] = useState<ClientContent | null>(initialData?.content ?? null);
-  const [loading, setLoading] = useState(!initialData);
+  const [branding, setBranding] = useState<BrandingConfig | null>(null);
+  const [content, setContent] = useState<ClientContent | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visibleMessages, setVisibleMessages] = useState(0);
-  const [activeLang, setActiveLang] = useState<string>(() => {
-    if (!initialData?.branding) return "en";
-    const { demoLanguages, demoLanguage } = initialData.branding;
-    return Array.isArray(demoLanguages) && demoLanguages.length > 0
-      ? demoLanguages[0]!
-      : (demoLanguage ?? "en");
-  });
+  const [activeLang, setActiveLang] = useState<string>("en");
 
   useEffect(() => {
-    if (!slug || initialData) return; // skip fetch when SSR data is present
+    if (!slug) return;
     Promise.all([
       fetch(`/api/clients/${slug}/branding`).then((r) => {
         if (!r.ok) throw new Error("not found");
@@ -202,7 +169,7 @@ export default function DemoPage() {
       })
       .catch(() => setError("not found"))
       .finally(() => setLoading(false));
-  }, [slug, initialData]);
+  }, [slug]);
 
   useEffect(() => {
     if (!branding) return;
@@ -351,14 +318,7 @@ export default function DemoPage() {
         {/* transparent — nav is inside V3Hero itself */}
       </div>
 
-      {/* ── V3 VIDEO HERO ──
-           preview is intentionally hardcoded false here.
-           The ?preview=1 query param was previously forwarded to V3Hero, which
-           switches from autoplay video to a static thumbnail — that mode is only
-           meant for admin card previews (small iframes in the Hub grid where
-           autoplay video is wasteful).  Full demo websites always want the live
-           video hero.  If a static-thumbnail mode is needed here in future, add
-           a dedicated prop (e.g. thumbnailMode) rather than repurposing preview. */}
+      {/* ── V3 VIDEO HERO ── */}
       <V3Hero
         industry={branding.industry}
         companyName={branding.companyName}
@@ -370,7 +330,7 @@ export default function DemoPage() {
         onCtaClick={() =>
           document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
         }
-        preview={false}
+        preview={isPreview}
         previewImageUrl={getIndustryImage(branding.industry)}
         lang={lang}
         brandColor={branding.primaryColor}

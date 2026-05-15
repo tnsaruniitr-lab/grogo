@@ -9,13 +9,6 @@ interface V3HeroProps {
   phone?: string | null;
   city?: string | null;
   onCtaClick: () => void;
-  /**
-   * Thumbnail/preview mode — shows a static image instead of the autoplay video.
-   * ONLY set true for admin card iframes (small, in-grid previews) where video
-   * autoplay is wasteful.  Full demo websites must always pass false (or omit).
-   * Do NOT wire this to ?preview=1 on the demo URL — if a separate static-hero
-   * mode is needed for demo pages, add a dedicated prop (e.g. thumbnailMode).
-   */
   preview?: boolean;
   previewImageUrl?: string;
   lang?: string;

@@ -2,7 +2,6 @@ import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
-import ssrRouter from "./routes/ssr";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -29,10 +28,6 @@ app.use(
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// SSR routes: /demo/:slug, /robots.txt, /sitemap.xml
-// Must be mounted before /api so the Express router sees them first.
-app.use(ssrRouter);
 
 app.use("/api", router);
 
