@@ -21,6 +21,7 @@
 export type CardStyle = "premium" | "standard";
 
 export interface IndustryTheme {
+  trustBadgesI18n?: Record<string, string[]>;
   serviceIconNames: [string, string, string];
   trustBadges: string[];
   cardStyle: CardStyle;
@@ -434,7 +435,11 @@ const wellnessTheme: IndustryTheme = {
 
 const careTheme: IndustryTheme = {
   serviceIconNames: ["Home", "Heart", "Users"],
-  trustBadges: ["Qualified Carers", "24/7 Support", "Culturally Sensitive", "Insured & DBS Checked"],
+  trustBadges: ["Qualified Carers", "24/7 Support", "Culturally Sensitive", "Fully Insured"],
+  trustBadgesI18n: {
+    de: ["Zugelassener Pflegedienst", "24/7 Erreichbarkeit", "Kultursensible Pflege", "Geprüfte Pflegekräfte"],
+    tr: ["Onaylı Bakım Hizmeti", "7/24 Destek", "Kültürel Duyarlılık", "Denetlenmiş Personel"],
+  },
   cardStyle: "standard",
   botMessages: {
     de: [

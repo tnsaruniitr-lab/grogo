@@ -332,6 +332,7 @@ export default function DemoPage() {
         }
         preview={isPreview}
         previewImageUrl={getIndustryImage(branding.industry)}
+        lang={lang}
       />
 
       {/* Thin accent line between hero and body */}
@@ -342,7 +343,7 @@ export default function DemoPage() {
         <section className="py-5 border-b bg-card">
           <div className="container mx-auto px-4 md:px-8">
             <div className="flex flex-wrap justify-center gap-x-10 gap-y-3">
-              {theme.trustBadges.map((badge, i) => {
+              {(theme.trustBadgesI18n?.[lang] ?? theme.trustBadges).map((badge, i) => {
                 const TrustIcon = [ShieldCheck, Award, Clock, Star][i % 4];
                 return (
                   <div key={badge} className="flex items-center gap-2 text-sm font-medium" style={{ color: secondary }}>

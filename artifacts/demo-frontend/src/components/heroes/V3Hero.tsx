@@ -11,6 +11,7 @@ interface V3HeroProps {
   onCtaClick: () => void;
   preview?: boolean;
   previewImageUrl?: string;
+  lang?: string;
 }
 
 interface HeroConfig {
@@ -28,6 +29,7 @@ interface HeroConfig {
   reviewQuote: string;
   reviewName: string;
   trustItems: string[];
+  trustItemsI18n?: Record<string, string[]>;
 }
 
 const CONFIGS: Record<string, HeroConfig> = {
@@ -88,7 +90,11 @@ const CONFIGS: Record<string, HeroConfig> = {
     ctaLabel: "Book Free Assessment",
     reviewQuote: '"Margaret\'s carer became part of the family. Life-changing."',
     reviewName: "James H.",
-    trustItems: ["CQC Registered", "DBS Checked Carers", "3,500+ Families", "24/7 Support"],
+    trustItems: ["Fully Licensed", "Vetted Carers", "3,500+ Families", "24/7 Support"],
+    trustItemsI18n: {
+      de: ["Pflegekasse-anerkannt", "Geprüfte Pflegekräfte", "500+ betreute Familien", "24/7 Erreichbar"],
+      tr: ["Onaylı Bakım Hizmeti", "Denetlenmiş Personel", "500+ Aile", "7/24 Erişilebilir"],
+    },
   },
   "cosmetic-surgery": {
     video: "/__mockup/videos/cosmetic-surgery.mp4",
@@ -313,8 +319,10 @@ export function V3Hero({
   onCtaClick,
   preview = false,
   previewImageUrl,
+  lang,
 }: V3HeroProps) {
   const cfg = CONFIGS[industry] ?? DEFAULT_CONFIG;
+  const activeTrustItems = (lang ? cfg.trustItemsI18n?.[lang] : undefined) ?? cfg.trustItems;
 
   return (
     <section
@@ -465,7 +473,7 @@ export function V3Hero({
 
         {/* Trust badge pills */}
         <div className="mt-8 flex flex-wrap gap-2 v3-5">
-          {cfg.trustItems.map((item, i) => (
+          {activeTrustItems.map((item, i) => (
             <div
               key={i}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full"
