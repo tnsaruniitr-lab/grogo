@@ -264,8 +264,7 @@ export interface BotPipelineInput {
   messageEventId: number;
   userMessage: string;
   userPhone: string;
-  /** Twilio sender number (e.g. whatsapp:+14155238886). Omit for respond.io / non-Twilio paths. */
-  twilioSender?: string;
+  twilioSender: string;
 }
 
 /**
@@ -280,8 +279,8 @@ export interface BotPipelineInput {
  * 7. Intent-driven action execution
  * 8. Language switch persistence
  * 9. Write outbound conversation + system notification entries
- * 10. Twilio reply (skipped when twilioSender is omitted)
- * 11. Mark job done (skipped when twilioSender is omitted)
+ * 10. Twilio reply
+ * 11. Mark job done
  */
 export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   try {
@@ -307,7 +306,7 @@ export async function runBotPipeline(input: BotPipelineInput): Promise<void> {
   }
 }
 
-async function executePipeline(input: BotPipelineInput): Promise<BotResponse> {
+async function executePipeline(input: BotPipelineInput): Promise<void> {
   const { clientRecord, leadId, messageEventId, userMessage, userPhone, twilioSender } = input;
 
   // 1. Load lead
@@ -577,12 +576,11 @@ async function executePipeline(input: BotPipelineInput): Promise<BotResponse> {
     intentDetected: botResponse.intent,
   });
 
-  // 10. Twilio reply — skipped on respond.io / non-Twilio paths
-  if (twilioSender) {
-    await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
-    // 11. Mark job done (job queue only exists for Twilio-originated messages)
-    await markJobDone(messageEventId);
-  }
+  // 10. Twilio reply
+  await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
+
+  // 11. Mark job done
+  await markJobDone(messageEventId);
 
   logger.info(
     {
