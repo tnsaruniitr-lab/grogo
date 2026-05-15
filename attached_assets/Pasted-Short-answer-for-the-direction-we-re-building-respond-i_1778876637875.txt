@@ -1,0 +1,15 @@
+Short answer: for the direction we're building (respond.io → your Replit bot via HTTP Request step), a signing key is optional, not required. Here's the full picture so you can decide.
+What a "signing key" / webhook secret is
+It's a shared secret used to verify that incoming webhook requests really came from respond.io and weren't forged by someone who guessed your Replit URL. The sender (respond.io) computes an HMAC signature of the request body using the secret and adds it to a header (e.g. X-Respond-Signature). Your bot recomputes the same HMAC with its copy of the secret and rejects the request if they don't match.
+Does respond.io require one for our setup?
+There are two webhook directions in respond.io and they're different:
+
+Outbound: respond.io → your bot (this is what we're using — a Workflow with an "HTTP Request" step that POSTs each Instagram message to your Replit URL). This step does not enforce a signing key. Respond.io simply makes an HTTP POST. You can still add your own protection by including a custom header in the HTTP Request step (e.g. Authorization: Bearer my-shared-secret) and having your Replit bot reject any request missing it. That's the common pattern people use here.
+Inbound: your bot → respond.io's API (when your bot calls https://api.respond.io/v2/... to send the reply). This uses the Developer API access token (Bearer token) you already generated. No separate signing key — the access token itself authenticates the call.
+(Less common) Platform Webhooks for events — if you were subscribing to respond.io platform events (e.g. "message.created", "contact.updated") from your bot, those subscriptions can include a signing secret. This is exposed via the Developer API ("webhook subscriptions") and is generally only needed for event-driven integrations. For your "reply to Instagram DMs" use case, you don't need this.
+
+Recommendation for your Replit bot
+You don't need to generate a separate signing key in respond.io. Instead:
+
+Inside the Workflow HTTP Request step, add a header like:
+Ask before acting
