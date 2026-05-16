@@ -6,7 +6,7 @@ import {
   Stethoscope, 
   Activity, 
   Bandage, 
-  Pills, 
+  Pill, 
   HeartPulse, 
   Brain,
   Quote
@@ -120,7 +120,7 @@ export function HomecareClinical() {
               { icon: <Stethoscope />, title: "Skilled Nursing", desc: "Comprehensive care including vital sign monitoring, IV therapy, and disease management." },
               { icon: <Activity />, title: "Physical Therapy", desc: "Customized rehabilitation programs to improve mobility, strength, and balance safely." },
               { icon: <Bandage />, title: "Wound Care", desc: "Expert assessment and treatment of surgical wounds, pressure ulcers, and complex injuries." },
-              { icon: <Pills />, title: "Medication Management", desc: "Precise administration, reconciliation, and education to ensure therapeutic success." },
+              { icon: <Pill />, title: "Medication Management", desc: "Precise administration, reconciliation, and education to ensure therapeutic success." },
               { icon: <HeartPulse />, title: "Post-Surgery Care", desc: "Dedicated transitional care to accelerate recovery and prevent hospital readmissions." },
               { icon: <Brain />, title: "Dementia Care", desc: "Specialized support focusing on safety, cognitive engagement, and family guidance." }
             ].map((service, idx) => (
