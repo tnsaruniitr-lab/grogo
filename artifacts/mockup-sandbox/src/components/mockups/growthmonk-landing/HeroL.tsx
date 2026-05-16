@@ -141,7 +141,7 @@ export function HeroL() {
         </div>
 
         {/* Main content */}
-        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 24px", maxWidth: "960px", marginTop: "-40px" }}>
+        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 24px", maxWidth: "1140px", marginTop: "-40px" }}>
 
           <div className="hl-1" style={{ marginBottom: "28px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "7px 16px", borderRadius: "100px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
             <span style={{ color: "#86efac", fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI-Powered Growth Platform</span>
@@ -168,7 +168,7 @@ export function HeroL() {
             </div>
           </div>
 
-          <p className="hl-3" style={{ fontSize: "18px", lineHeight: 1.65, color: "rgba(255,255,255,0.68)", maxWidth: "580px", marginBottom: "44px", fontWeight: 500 }}>
+          <p className="hl-3" style={{ fontSize: "20px", lineHeight: 1.6, color: "rgba(255,255,255,0.68)", maxWidth: "620px", marginBottom: "44px", fontWeight: 500 }}>
             Get discovered in AI search, capture every WhatsApp and website enquiry, qualify leads automatically, and turn more enquiries into booked consultations - 24/7.
           </p>
 
