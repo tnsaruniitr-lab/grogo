@@ -82,19 +82,21 @@ export function HeroK() {
             display: inline-block;
             position: relative;
             overflow: hidden;
-            vertical-align: bottom;
-            height: 1.1em;
-            min-width: 280px;
+            vertical-align: middle;
+            height: 1.35em;
+            min-width: 300px;
           }
           .hk-rotating-word {
             position: absolute;
             left: 0;
             right: 0;
+            top: 0;
             text-align: center;
             background: linear-gradient(90deg, #22c55e, #4ade80);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             white-space: nowrap;
+            line-height: 1.35;
           }
         ` }} />
 
