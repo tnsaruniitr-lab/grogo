@@ -136,8 +136,8 @@ export function VideoHero() {
 
       {/* Nav — overlaid on video, sits above paddingTop area */}
       <nav style={{ position: "absolute", top: 0, width: "100%", padding: "22px 48px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 20, boxSizing: "border-box" }}>
-        <a href="/grow" style={{ color: "white", fontWeight: 800, fontSize: "20px", letterSpacing: "-0.4px", textDecoration: "none" }}>
-          GrowthMonk
+        <a href="/grow" style={{ fontWeight: 800, fontSize: "20px", letterSpacing: "-0.4px", textDecoration: "none" }}>
+          <span style={{ color: "#22c55e" }}>Growth</span><span style={{ color: "white" }}>Monk</span>
         </a>
 
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
