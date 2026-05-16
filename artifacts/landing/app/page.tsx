@@ -38,10 +38,10 @@ export default function LandingPage() {
 
 function TrustBar() {
   const stats = [
-    { value: "3×", label: "More leads discovered through AI search" },
+    { value: "2-4×", label: "More AI search appearances for your business" },
+    { value: "3×", label: "More leads discovered and captured" },
     { value: "80%", label: "Of leads qualified automatically by AI" },
     { value: "24/7", label: "AI follow-up, never misses a lead" },
-    { value: "<2 min", label: "Average response time to new leads" },
   ];
 
   return (

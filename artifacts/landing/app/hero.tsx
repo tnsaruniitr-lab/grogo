@@ -1,4 +1,4 @@
-import { ArrowRight, MessageSquare, Zap, Globe, Star } from "lucide-react";
+import { ArrowRight, Zap, Globe, Star } from "lucide-react";
 
 const BASE = "/grow";
 
@@ -107,23 +107,23 @@ export function VideoHero() {
       {/* Video backgrounds */}
       <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
         <video autoPlay muted loop playsInline className="vh-vid1"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 1 }}>
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}>
           <source src={`${BASE}/videos/wellness-meditation.mp4`} type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid2"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
           <source src={`${BASE}/videos/caregiver-hands-healthcare.mp4`} type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid3"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
           <source src={`${BASE}/videos/physio-rehab.mp4`} type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid4"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
           <source src={`${BASE}/videos/dental-clinic-lobby.mp4`} type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid5"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
           <source src={`${BASE}/videos/optical-frames-boutique.mp4`} type="video/mp4" />
         </video>
       </div>
@@ -156,12 +156,6 @@ export function VideoHero() {
 
       {/* Hero content — centred in the space below nav */}
       <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 32px", maxWidth: "1100px", width: "100%" }}>
-
-        {/* Badge */}
-        <div className="vh-in1" style={{ marginBottom: "24px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 16px", borderRadius: "100px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-          <span className="vh-glow" style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#22c55e", display: "inline-block" }} />
-          <span style={{ color: "#86efac", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>AI-Powered Growth Platform</span>
-        </div>
 
         {/* Headline */}
         <div className="vh-in2" style={{ marginBottom: "28px" }}>
@@ -199,8 +193,6 @@ export function VideoHero() {
         {/* Stats */}
         <div className="vh-in5" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "16px 36px", color: "rgba(255,255,255,0.35)", fontSize: "13px", fontWeight: 600 }}>
           <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Zap size={13} color="#22c55e" /> 2-4x AI search appearances</span>
-          <span style={{ color: "rgba(255,255,255,0.12)" }}>|</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><MessageSquare size={13} color="#22c55e" /> &lt;2 min response</span>
           <span style={{ color: "rgba(255,255,255,0.12)" }}>|</span>
           <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Globe size={13} color="#22c55e" /> 24-hr setup</span>
           <span style={{ color: "rgba(255,255,255,0.12)" }}>|</span>
