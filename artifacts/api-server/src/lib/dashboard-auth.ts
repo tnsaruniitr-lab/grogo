@@ -11,8 +11,8 @@ function safeCompare(a: string, b: string): boolean {
 }
 
 export function requireDashboardAuth(req: Request, res: Response, next: NextFunction): void {
-  const expectedUser = process.env["DASHBOARD_USER"];
-  const expectedPass = process.env["DASHBOARD_PASS"];
+  const expectedUser = process.env["DASHBOARD_USER"]?.trim();
+  const expectedPass = process.env["DASHBOARD_PASS"]?.trim();
 
   if (!expectedUser || !expectedPass) {
     logger.error({ path: req.path }, "DASHBOARD_USER or DASHBOARD_PASS not set — blocking request");
@@ -33,11 +33,11 @@ export function requireDashboardAuth(req: Request, res: Response, next: NextFunc
     return;
   }
 
-  const user = decoded.slice(0, colonIdx);
-  const pass = decoded.slice(colonIdx + 1);
+  const user = decoded.slice(0, colonIdx).trim();
+  const pass = decoded.slice(colonIdx + 1).trim();
 
   if (!safeCompare(user, expectedUser) || !safeCompare(pass, expectedPass)) {
-    logger.warn({ path: req.path, ip: req.ip }, "Dashboard auth failed — bad credentials");
+    logger.warn({ path: req.path, ip: req.ip, receivedUser: user }, "Dashboard auth failed — bad credentials");
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
