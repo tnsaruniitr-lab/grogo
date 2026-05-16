@@ -84,6 +84,24 @@ uri = "file://artifacts/demo-frontend/public/images/industry/laser-eye.png"
 type = "image"
 title = "laser eye surgery clinic"
 
+[[generated]]
+id = "q-6R2ph03PNDtq_GNeOMe"
+uri = "file://artifacts/mockup-sandbox/public/images/homecare-clinical-scene.png"
+type = "image"
+title = "Professional homecare scene"
+
+[[generated]]
+id = "AMAP3Hj0-TunV0LS9PKVY"
+uri = "file://artifacts/mockup-sandbox/public/images/homecare-scene-1.png"
+type = "image"
+title = "Warm homecare nurse and patient"
+
+[[generated]]
+id = "JAZG5feopukFdOcVHrekd"
+uri = "file://artifacts/mockup-sandbox/public/images/lumina-care-editorial.png"
+type = "image"
+title = "Luxury homecare moody editorial shot"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
