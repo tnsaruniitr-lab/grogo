@@ -108,6 +108,54 @@ uri = "file://artifacts/mockup-sandbox/public/images/care-enriched-scene.png"
 type = "image"
 title = "Professional homecare scene"
 
+[[generated]]
+id = "HpPH3GE3cvLItKQz8dB7A"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/hero-editorial.png"
+type = "image"
+title = "Hero editorial photography"
+
+[[generated]]
+id = "RWe1d2Za0iiLAbnq5M-IC"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/ai-search-editorial.png"
+type = "image"
+title = "AI search abstract concept"
+
+[[generated]]
+id = "46zVg3iqC7FIZNZcodIsi"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/qualification-editorial.png"
+type = "image"
+title = "Communication organic node concept"
+
+[[generated]]
+id = "INgffM2bvPxcIP2-U8-J6"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/ai-network.png"
+type = "image"
+title = "abstract green neural network"
+
+[[generated]]
+id = "8LuJTTRYySLRPpp3d_ujc"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/dashboard-glow.png"
+type = "image"
+title = "dark mode analytics dashboard"
+
+[[generated]]
+id = "VQf4IM3Qvfhicq_4OPRKk"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/premium-clinic.png"
+type = "image"
+title = "premium healthcare clinic interior"
+
+[[generated]]
+id = "deT5QHOLrMMmSfZ8fdmpZ"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/hero-abstract.png"
+type = "image"
+title = "Dark abstract green glowing aurora"
+
+[[generated]]
+id = "NPj5DUJN-OZCjSSuhmGq-"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/clinic-dashboard-bg.png"
+type = "image"
+title = "Premium dark clinic environment"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
