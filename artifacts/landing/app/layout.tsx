@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const BASE_URL = "https://answermonk.ai/grow";
+const BASE_URL = "https://growthmonk.ai";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://answermonk.ai"),
+  metadataBase: new URL("https://growthmonk.ai"),
   title: {
     default: "GrowthMonk — AI Growth Engine for Healthcare & Wellness",
     template: "%s | GrowthMonk",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
       "Get discovered in AI search and social media. Convert leads to booked patients automatically. The AI growth engine built for healthcare and wellness businesses.",
     images: [
       {
-        url: "/grow/og-image.jpg",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "GrowthMonk — AI Growth Engine for Healthcare & Wellness",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "GrowthMonk — AI Growth Engine for Healthcare & Wellness",
     description:
       "Get discovered in AI search and social media. Convert leads to booked patients automatically.",
-    images: ["/grow/og-image.jpg"],
+    images: ["/og-image.jpg"],
     creator: "@growthmonk",
   },
   alternates: {

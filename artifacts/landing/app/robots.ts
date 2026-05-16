@@ -12,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: "https://answermonk.ai/grow/sitemap.xml",
-    host: "https://answermonk.ai",
+    sitemap: "https://growthmonk.ai/sitemap.xml",
+    host: "https://growthmonk.ai",
   };
 }
