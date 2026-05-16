@@ -1,8 +1,8 @@
 import React from "react";
 import { ArrowRight, MessageSquare, Zap, Globe, Star } from "lucide-react";
 
-// HeroL — 5-scene crossfade, static headline "for Clinics"
-// wellness → care → physio → dental (warm medical) → optical (warm boutique)
+// HeroL — 5-scene crossfade + rotating word (Healthcare / Wellness / Clinics)
+// wellness → care → physio → dental-clinic-lobby → optical-frames-boutique
 export function HeroL() {
   return (
     <>
@@ -50,6 +50,30 @@ export function HeroL() {
             100%  { opacity: 0; }
           }
 
+          /* ── Word rotation — 24s cycle, 8s per word, opacity only ── */
+          @keyframes hlw1 {
+            0%        { opacity: 1; }
+            29.2%     { opacity: 1; }
+            33.3%     { opacity: 0; }
+            95.8%     { opacity: 0; }
+            100%      { opacity: 1; }
+          }
+          @keyframes hlw2 {
+            0%        { opacity: 0; }
+            29.2%     { opacity: 0; }
+            33.3%     { opacity: 1; }
+            62.5%     { opacity: 1; }
+            66.7%     { opacity: 0; }
+            100%      { opacity: 0; }
+          }
+          @keyframes hlw3 {
+            0%        { opacity: 0; }
+            62.5%     { opacity: 0; }
+            66.7%     { opacity: 1; }
+            95.8%     { opacity: 1; }
+            100%      { opacity: 0; }
+          }
+
           @keyframes riseL {
             from { opacity: 0; transform: translateY(28px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -64,6 +88,10 @@ export function HeroL() {
           .hl-vid3 { animation: cfl3 40s ease-in-out infinite; }
           .hl-vid4 { animation: cfl4 40s ease-in-out infinite; }
           .hl-vid5 { animation: cfl5 40s ease-in-out infinite; }
+
+          .hl-word1 { animation: hlw1 24s ease-in-out infinite; }
+          .hl-word2 { animation: hlw2 24s ease-in-out infinite; }
+          .hl-word3 { animation: hlw3 24s ease-in-out infinite; }
 
           .hl-1 { animation: riseL 1s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
           .hl-2 { animation: riseL 1s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
@@ -108,7 +136,7 @@ export function HeroL() {
           <span style={{ color: "white", fontWeight: 800, fontSize: "20px", letterSpacing: "-0.4px" }}>GrowthMonk</span>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 16px", borderRadius: "100px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}>
             <span className="hl-glow" style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: "#22c55e", display: "inline-block" }} />
-            <span style={{ color: "#86efac", fontSize: "13px", fontWeight: 600 }}>Live · Wellness · Care · Physio · Dental · Optical</span>
+            <span style={{ color: "#86efac", fontSize: "13px", fontWeight: 600 }}>Live · Healthcare · Wellness · Clinics</span>
           </div>
         </div>
 
@@ -119,14 +147,24 @@ export function HeroL() {
             <span style={{ color: "#86efac", fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI-Powered Growth Platform</span>
           </div>
 
-          {/* Static headline — no rotation */}
+          {/* Headline with rotating word */}
           <div className="hl-2" style={{ marginBottom: "32px" }}>
             <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white", marginBottom: "0.05em" }}>
               The AI Growth Engine
             </div>
-            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px" }}>
-              <span style={{ color: "white" }}>for </span>
-              <span style={{ background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Clinics.</span>
+            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
+              <span style={{ color: "white", marginRight: "0.28em" }}>for</span>
+              {/* Rotating word slot — invisible sizer keeps width stable */}
+              <span style={{ position: "relative", display: "inline-block" }}>
+                {/* Invisible sizer: widest word */}
+                <span style={{ visibility: "hidden", pointerEvents: "none" }}>
+                  <span style={{ background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare.</span>
+                </span>
+                {/* Animated words */}
+                <span className="hl-word1" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare.</span>
+                <span className="hl-word2" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Wellness.</span>
+                <span className="hl-word3" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Clinics.</span>
+              </span>
             </div>
           </div>
 
