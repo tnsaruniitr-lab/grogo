@@ -127,9 +127,9 @@ function ProblemSolution() {
         </div>
 
         {/* Two panels */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, position: "relative" }}>
+        <div className="gm-ps-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, position: "relative" }}>
           {/* VS badge */}
-          <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 10, width: 38, height: 38, borderRadius: "50%", background: "#030712", border: "1px solid rgba(55,65,81,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="gm-vs-badge" style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 10, width: 38, height: 38, borderRadius: "50%", background: "#030712", border: "1px solid rgba(55,65,81,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>VS</span>
           </div>
 
@@ -184,7 +184,7 @@ const featuresList = [
       "Identify authority sources and let our agent earn you citations automatically",
       "Humanised blog content that AI engines can cite, quote and extract — built on official frameworks from Google, Perplexity and Schema.org",
     ],
-    img: "/grow/features/ai-search.png",
+    img: "/features/ai-search.png",
   },
   {
     icon: MessageCircle,
@@ -196,7 +196,7 @@ const featuresList = [
       "Handles high volume without adding headcount — scales instantly at zero marginal cost",
       "Smart handoff to your team when a human touch is needed",
     ],
-    img: "/grow/features/whatsapp-capture.png",
+    img: "/features/whatsapp-capture.png",
   },
   {
     icon: Globe,
@@ -208,7 +208,7 @@ const featuresList = [
       "Language is locked for the full interaction — no jarring mid-flow switching",
       "Zero staff language skills required — serve any community your practice reaches",
     ],
-    img: "/grow/features/multilingual.png",
+    img: "/features/multilingual.png",
   },
   {
     icon: Bot,
@@ -220,7 +220,7 @@ const featuresList = [
       "Routes hot leads straight to your team and filters out time-wasters",
       "Staff only handle ready-to-book prospects — focus on converting, not filtering",
     ],
-    img: "/grow/features/qualification.png",
+    img: "/features/qualification.png",
   },
   {
     icon: Calendar,
@@ -232,7 +232,7 @@ const featuresList = [
       "Syncs with your calendar in real time — zero double-booking, zero manual entry",
       "Works around the clock so you wake up to a full diary every morning",
     ],
-    img: "/grow/features/booking.png",
+    img: "/features/booking.png",
   },
   {
     icon: BarChart3,
@@ -244,7 +244,7 @@ const featuresList = [
       "Nothing is logged manually — every data point is captured automatically",
       "Spot drop-off points and optimise your funnel with live, actionable data",
     ],
-    img: "/grow/features/analytics.png",
+    img: "/features/analytics.png",
   },
 ];
 
@@ -268,7 +268,7 @@ function Features() {
       aria-labelledby="features-heading"
     >
       {/* ambient glow */}
-      <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%,-50%)", width: 1000, height: 600, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.10) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 1000, height: 600, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.10) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
       <div className="relative mx-auto max-w-5xl px-6" style={{ zIndex: 1 }}>
         {/* Section header */}
@@ -295,6 +295,7 @@ function Features() {
             return (
               <div
                 key={i}
+                className="gm-feature-row"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
@@ -304,14 +305,14 @@ function Features() {
                 }}
               >
                 {/* Image */}
-                <div style={{ direction: "ltr", position: "relative", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(55,65,81,0.55)", boxShadow: "0 0 80px rgba(34,197,94,0.07), 0 32px 64px rgba(0,0,0,0.45)" }}>
+                <div className="gm-feature-img" style={{ direction: "ltr", position: "relative", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(55,65,81,0.55)", boxShadow: "0 0 80px rgba(34,197,94,0.07), 0 32px 64px rgba(0,0,0,0.45)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={f.img} alt={f.tag} style={{ width: "100%", display: "block" }} />
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #22c55e 40%, #4ade80 60%, transparent)", opacity: 0.5 }} />
                 </div>
 
                 {/* Text */}
-                <div style={{ direction: "ltr" }}>
+                <div className="gm-feature-text" style={{ direction: "ltr" }}>
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.22)", borderRadius: 100, padding: "5px 14px", marginBottom: 18 }}>
                     <Icon className="h-3.5 w-3.5 text-green-400" />
                     <span style={{ color: "#22c55e", fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase" }}>{f.tag}</span>

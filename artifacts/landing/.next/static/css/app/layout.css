@@ -941,6 +941,48 @@ video {
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* ── GrowthMonk Mobile Responsiveness ── */
+@media (max-width: 768px) {
+  /* Problem / Solution — stack vertically */
+  .gm-ps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .gm-vs-badge {
+    display: none !important;
+  }
+
+  /* Features — stack image above text, always LTR */
+  .gm-feature-row {
+    grid-template-columns: 1fr !important;
+    direction: ltr !important;
+    gap: 24px !important;
+  }
+  .gm-feature-img,
+  .gm-feature-text {
+    direction: ltr !important;
+  }
+
+  /* Section horizontal padding */
+  section {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  /* Footer grid — stack on mobile */
+  .gm-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stat cards: single column on very small screens */
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 .hover\:border-green-500\/20:hover {
   border-color: rgb(34 197 94 / 0.2);
 }

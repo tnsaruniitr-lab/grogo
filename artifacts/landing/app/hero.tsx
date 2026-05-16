@@ -1,7 +1,5 @@
 import { ArrowRight } from "lucide-react";
 
-const BASE = "/grow";
-
 export function VideoHero() {
   return (
     <section style={{
@@ -102,29 +100,41 @@ export function VideoHero() {
         .vh-in4 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.55s both; }
         .vh-in5 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
         .vh-glow { animation: glowPulseVH 2s ease-in-out infinite; }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+          .gm-nav        { padding: 16px 20px !important; }
+          .gm-nav-links  { display: none !important; }
+          .gm-nav-cta    { padding: 9px 16px !important; font-size: 13px !important; }
+          .gm-hero-body  { padding: 0 20px !important; }
+          .gm-hero-sub   { font-size: 16px !important; }
+          .gm-hero-ctas  { gap: 10px !important; }
+          .gm-hero-cta-primary  { padding: 13px 26px !important; font-size: 15px !important; }
+          .gm-hero-cta-secondary { display: none !important; }
+        }
       ` }} />
 
       {/* Video backgrounds */}
       <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
         <video autoPlay muted loop playsInline className="vh-vid1"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}>
-          <source src={`${BASE}/videos/wellness-meditation.mp4`} type="video/mp4" />
+          <source src="/videos/wellness-meditation.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid2"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src={`${BASE}/videos/caregiver-hands-healthcare.mp4`} type="video/mp4" />
+          <source src="/videos/caregiver-hands-healthcare.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid3"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src={`${BASE}/videos/physio-rehab.mp4`} type="video/mp4" />
+          <source src="/videos/physio-rehab.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid4"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src={`${BASE}/videos/dental-clinic-lobby.mp4`} type="video/mp4" />
+          <source src="/videos/dental-clinic-lobby.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid5"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src={`${BASE}/videos/optical-frames-boutique.mp4`} type="video/mp4" />
+          <source src="/videos/optical-frames-boutique.mp4" type="video/mp4" />
         </video>
       </div>
 
@@ -134,35 +144,35 @@ export function VideoHero() {
       {/* Green glow */}
       <div style={{ position: "absolute", top: "35%", left: "50%", transform: "translateX(-50%)", width: "700px", height: "400px", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.13) 0%, transparent 70%)", zIndex: 1, pointerEvents: "none" }} />
 
-      {/* Nav — overlaid on video, sits above paddingTop area */}
-      <nav style={{ position: "absolute", top: 0, width: "100%", padding: "22px 48px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 20, boxSizing: "border-box" }}>
-        <a href="/grow" style={{ fontWeight: 800, fontSize: "20px", letterSpacing: "-0.4px", textDecoration: "none" }}>
+      {/* Nav */}
+      <nav className="gm-nav" style={{ position: "absolute", top: 0, width: "100%", padding: "22px 48px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 20, boxSizing: "border-box" }}>
+        <a href="/" style={{ fontWeight: 800, fontSize: "20px", letterSpacing: "-0.4px", textDecoration: "none" }}>
           <span style={{ color: "#22c55e" }}>Growth</span><span style={{ color: "white" }}>Monk</span>
         </a>
 
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          <div style={{ display: "flex", gap: "28px" }}>
+          <div className="gm-nav-links" style={{ display: "flex", gap: "28px" }}>
             {(["Features", "How It Works", "Industries", "FAQ"] as const).map((label) => (
               <a key={label} href={`#${label.toLowerCase().replace(/ /g, "-")}`} style={{ color: "rgba(255,255,255,0.55)", fontSize: "14px", fontWeight: 500, textDecoration: "none" }}>
                 {label}
               </a>
             ))}
           </div>
-          <a href="#cta" style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: "#22c55e", color: "#030712", padding: "10px 22px", borderRadius: "100px", fontWeight: 700, fontSize: "14px", textDecoration: "none" }}>
+          <a className="gm-nav-cta" href="#cta" style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: "#22c55e", color: "#030712", padding: "10px 22px", borderRadius: "100px", fontWeight: 700, fontSize: "14px", textDecoration: "none" }}>
             Book a Demo <ArrowRight size={14} />
           </a>
         </div>
       </nav>
 
-      {/* Hero content — centred in the space below nav */}
-      <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 32px", maxWidth: "1100px", width: "100%" }}>
+      {/* Hero content */}
+      <div className="gm-hero-body" style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 32px", maxWidth: "1100px", width: "100%" }}>
 
         {/* Headline */}
         <div className="vh-in2" style={{ marginBottom: "28px" }}>
-          <div style={{ fontSize: "clamp(42px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", color: "white", marginBottom: "0.04em" }}>
+          <div style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", color: "white", marginBottom: "0.04em" }}>
             The AI Growth Engine
           </div>
-          <div style={{ fontSize: "clamp(42px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
+          <div style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
             <span style={{ color: "white", marginRight: "0.25em" }}>for</span>
             <span style={{ position: "relative", display: "inline-block" }}>
               <span style={{ visibility: "hidden", pointerEvents: "none" }}>
@@ -176,16 +186,16 @@ export function VideoHero() {
         </div>
 
         {/* Subtext */}
-        <p className="vh-in3" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.65)", maxWidth: "580px", marginBottom: "40px", fontWeight: 500 }}>
+        <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.65)", maxWidth: "580px", marginBottom: "40px", fontWeight: 500 }}>
           Get discovered in AI search, capture every WhatsApp, website and social media lead, qualify leads automatically, and turn more enquiries into booked consultations - 24/7.
         </p>
 
         {/* CTAs */}
-        <div className="vh-in4" style={{ display: "flex", gap: "12px", marginBottom: "48px", flexWrap: "wrap", justifyContent: "center" }}>
-          <a href="#cta" style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "#22c55e", color: "#030712", padding: "15px 34px", borderRadius: "100px", fontWeight: 800, fontSize: "16px", textDecoration: "none", letterSpacing: "-0.2px", boxShadow: "0 0 40px rgba(34,197,94,0.3)" }}>
+        <div className="vh-in4 gm-hero-ctas" style={{ display: "flex", gap: "12px", marginBottom: "48px", flexWrap: "wrap", justifyContent: "center" }}>
+          <a className="gm-hero-cta-primary" href="#cta" style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "#22c55e", color: "#030712", padding: "15px 34px", borderRadius: "100px", fontWeight: 800, fontSize: "16px", textDecoration: "none", letterSpacing: "-0.2px", boxShadow: "0 0 40px rgba(34,197,94,0.3)" }}>
             Book a Free Demo <ArrowRight size={18} />
           </a>
-          <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.55)", padding: "15px 28px", borderRadius: "100px", fontWeight: 600, fontSize: "16px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)" }}>
+          <a className="gm-hero-cta-secondary" href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.55)", padding: "15px 28px", borderRadius: "100px", fontWeight: 600, fontSize: "16px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)" }}>
             See How It Works
           </a>
         </div>

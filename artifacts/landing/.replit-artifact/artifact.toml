@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/grow/"
+previewPath = "/"
 title = "GrowthMonk Landing Page"
 version = "1.0.0"
 id = "artifacts/landing"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/grow/" ]
+paths = [ "/" ]
 localPort = 18150
 
 [services.development]
@@ -23,4 +23,4 @@ run = "pnpm --filter @workspace/landing run start"
 
 [services.env]
 PORT = "18150"
-BASE_PATH = "/grow/"
+BASE_PATH = "/"
