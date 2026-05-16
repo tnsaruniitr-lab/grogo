@@ -15,6 +15,7 @@ export const modules: ModuleMap = {
   "./components/mockups/growthmonk-landing/HeroI.tsx": () => import("../components/mockups/growthmonk-landing/HeroI.tsx"),
   "./components/mockups/growthmonk-landing/HeroJ.tsx": () => import("../components/mockups/growthmonk-landing/HeroJ.tsx"),
   "./components/mockups/growthmonk-landing/HeroK.tsx": () => import("../components/mockups/growthmonk-landing/HeroK.tsx"),
+  "./components/mockups/growthmonk-landing/HeroL.tsx": () => import("../components/mockups/growthmonk-landing/HeroL.tsx"),
   "./components/mockups/growthmonk-landing/Immersive.tsx": () => import("../components/mockups/growthmonk-landing/Immersive.tsx"),
   "./components/mockups/landing-heroes/Care.tsx": () => import("../components/mockups/landing-heroes/Care.tsx"),
   "./components/mockups/landing-heroes/CareFullPage.tsx": () => import("../components/mockups/landing-heroes/CareFullPage.tsx"),
