@@ -22,7 +22,6 @@ export function requireDashboardAuth(req: Request, res: Response, next: NextFunc
 
   const authHeader = req.headers["authorization"] ?? "";
   if (!authHeader.startsWith("Basic ")) {
-    res.setHeader("WWW-Authenticate", `Basic realm="${REALM}"`);
     res.status(401).json({ error: "Authentication required" });
     return;
   }
@@ -30,7 +29,6 @@ export function requireDashboardAuth(req: Request, res: Response, next: NextFunc
   const decoded = Buffer.from(authHeader.slice(6), "base64").toString("utf8");
   const colonIdx = decoded.indexOf(":");
   if (colonIdx === -1) {
-    res.setHeader("WWW-Authenticate", `Basic realm="${REALM}"`);
     res.status(401).json({ error: "Invalid credentials format" });
     return;
   }
@@ -40,7 +38,6 @@ export function requireDashboardAuth(req: Request, res: Response, next: NextFunc
 
   if (!safeCompare(user, expectedUser) || !safeCompare(pass, expectedPass)) {
     logger.warn({ path: req.path, ip: req.ip }, "Dashboard auth failed — bad credentials");
-    res.setHeader("WWW-Authenticate", `Basic realm="${REALM}"`);
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }

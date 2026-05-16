@@ -17,6 +17,19 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _basicAuthHeader: string | null = null;
+
+/**
+ * Set HTTP Basic Auth credentials used for every request.
+ * Pass (null, null) to clear.
+ */
+export function setBasicAuth(user: string | null, pass: string | null): void {
+  if (user && pass) {
+    _basicAuthHeader = `Basic ${btoa(`${user}:${pass}`)}`;
+  } else {
+    _basicAuthHeader = null;
+  }
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -349,12 +362,15 @@ export async function customFetch<T = unknown>(
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
-  // Attach bearer token when an auth getter is configured and no
-  // Authorization header has been explicitly provided.
-  if (_authTokenGetter && !headers.has("authorization")) {
-    const token = await _authTokenGetter();
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
+  // Attach Basic Auth or Bearer token when configured and no explicit header present.
+  if (!headers.has("authorization")) {
+    if (_basicAuthHeader) {
+      headers.set("authorization", _basicAuthHeader);
+    } else if (_authTokenGetter) {
+      const token = await _authTokenGetter();
+      if (token) {
+        headers.set("authorization", `Bearer ${token}`);
+      }
     }
   }
 

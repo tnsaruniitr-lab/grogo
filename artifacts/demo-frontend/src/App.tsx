@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,8 +9,23 @@ import Dashboard from "@/pages/dashboard";
 import Mockups from "@/pages/mockups";
 import Demo from "@/pages/demo";
 import DemoDashboard from "@/pages/demo-dashboard";
+import { LoginGate } from "@/components/login-gate";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: unknown) => {
+        // Never retry on 401 — fire event to trigger login gate instead
+        const status = (error as { status?: number })?.status;
+        if (status === 401) {
+          window.dispatchEvent(new CustomEvent("api:unauthorized", { detail: { status: 401 } }));
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+  },
+});
 
 function Router() {
   return (
@@ -32,10 +47,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
+        <LoginGate>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </LoginGate>
       </TooltipProvider>
     </QueryClientProvider>
   );
