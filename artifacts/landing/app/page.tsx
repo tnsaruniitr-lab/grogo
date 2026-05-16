@@ -16,13 +16,13 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
+import { VideoHero } from "./hero";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#030712] text-gray-100">
-      <Nav />
       <main>
-        <Hero />
+        <VideoHero />
         <TrustBar />
         <ProblemSolution />
         <Features />
@@ -33,127 +33,6 @@ export default function LandingPage() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-gray-800/50 bg-[#030712]/90 backdrop-blur-xl">
-      <nav
-        className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4"
-        aria-label="Main navigation"
-      >
-        <a href="/grow" className="flex items-center gap-2.5" aria-label="GrowthMonk home">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500">
-            <TrendingUp className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            GrowthMonk
-          </span>
-        </a>
-
-        <div className="hidden items-center gap-8 md:flex">
-          <a href="#features" className="text-sm text-gray-400 transition-colors hover:text-white">
-            Features
-          </a>
-          <a href="#how-it-works" className="text-sm text-gray-400 transition-colors hover:text-white">
-            How It Works
-          </a>
-          <a href="#industries" className="text-sm text-gray-400 transition-colors hover:text-white">
-            Industries
-          </a>
-          <a href="#faq" className="text-sm text-gray-400 transition-colors hover:text-white">
-            FAQ
-          </a>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <a
-            href="#cta"
-            className="hidden rounded-full border border-gray-700 px-4 py-2 text-sm text-gray-300 transition-all hover:border-green-500/50 hover:text-white md:inline-flex"
-          >
-            Sign In
-          </a>
-          <a
-            href="#cta"
-            className="inline-flex items-center gap-1.5 rounded-full bg-green-500 px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-green-400"
-          >
-            Book a Demo
-            <ArrowRight className="h-3.5 w-3.5" />
-          </a>
-        </div>
-      </nav>
-    </header>
-  );
-}
-
-function Hero() {
-  return (
-    <section
-      className="relative overflow-hidden px-6 pb-24 pt-20 text-center md:pt-28"
-      aria-labelledby="hero-heading"
-    >
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,197,94,0.12), transparent)",
-        }}
-      />
-
-      <div className="relative mx-auto max-w-4xl">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm font-medium text-green-400">
-          <Sparkles className="h-3.5 w-3.5" />
-          AI-Powered Growth Platform for Healthcare &amp; Wellness
-        </div>
-
-        <h1
-          id="hero-heading"
-          className="mb-6 text-5xl font-extrabold leading-[1.08] tracking-tight text-white md:text-6xl lg:text-7xl"
-        >
-          The AI Growth Engine for{" "}
-          <span
-            style={{
-              background:
-                "linear-gradient(135deg, #22c55e 0%, #86efac 60%, #4ade80 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            Healthcare &amp; Wellness
-          </span>
-        </h1>
-
-        <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-400 md:text-xl">
-          Get discovered in AI search and social media. Convert those leads to
-          customers, fast. Built for clinics, medspas, dental practices, and
-          wellness businesses that are serious about growth.
-        </p>
-
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <a
-            href="#cta"
-            className="inline-flex items-center gap-2 rounded-full bg-green-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-green-500/25 transition-all hover:bg-green-400 hover:shadow-green-400/30"
-          >
-            Book a Free Demo
-            <ArrowRight className="h-4 w-4" />
-          </a>
-          <a
-            href="#how-it-works"
-            className="inline-flex items-center gap-2 rounded-full border border-gray-700 px-8 py-3.5 text-base font-medium text-gray-300 transition-all hover:border-gray-500 hover:text-white"
-          >
-            See How It Works
-            <ChevronRight className="h-4 w-4" />
-          </a>
-        </div>
-
-        <p className="mt-6 text-sm text-gray-500">
-          No credit card required &nbsp;·&nbsp; Setup in under 24 hours
-          &nbsp;·&nbsp; Works in any language
-        </p>
-      </div>
-    </section>
   );
 }
 
