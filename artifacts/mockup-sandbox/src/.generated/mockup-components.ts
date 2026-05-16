@@ -3,6 +3,13 @@ type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/growthmonk-landing/Cinematic.tsx": () => import("../components/mockups/growthmonk-landing/Cinematic.tsx"),
   "./components/mockups/growthmonk-landing/Editorial.tsx": () => import("../components/mockups/growthmonk-landing/Editorial.tsx"),
+  "./components/mockups/growthmonk-landing/HeroA.tsx": () => import("../components/mockups/growthmonk-landing/HeroA.tsx"),
+  "./components/mockups/growthmonk-landing/HeroB.tsx": () => import("../components/mockups/growthmonk-landing/HeroB.tsx"),
+  "./components/mockups/growthmonk-landing/HeroC.tsx": () => import("../components/mockups/growthmonk-landing/HeroC.tsx"),
+  "./components/mockups/growthmonk-landing/HeroCv2.tsx": () => import("../components/mockups/growthmonk-landing/HeroCv2.tsx"),
+  "./components/mockups/growthmonk-landing/HeroD.tsx": () => import("../components/mockups/growthmonk-landing/HeroD.tsx"),
+  "./components/mockups/growthmonk-landing/HeroE.tsx": () => import("../components/mockups/growthmonk-landing/HeroE.tsx"),
+  "./components/mockups/growthmonk-landing/HeroF.tsx": () => import("../components/mockups/growthmonk-landing/HeroF.tsx"),
   "./components/mockups/growthmonk-landing/Immersive.tsx": () => import("../components/mockups/growthmonk-landing/Immersive.tsx"),
   "./components/mockups/landing-heroes/Care.tsx": () => import("../components/mockups/landing-heroes/Care.tsx"),
   "./components/mockups/landing-heroes/CareFullPage.tsx": () => import("../components/mockups/landing-heroes/CareFullPage.tsx"),

@@ -156,6 +156,18 @@ uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/clinic-dashboard
 type = "image"
 title = "Premium dark clinic environment"
 
+[[generated]]
+id = "dLITXKsnFBLp_cyEo0VrM"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/green-glow-bg.png"
+type = "image"
+title = "Abstract green glow"
+
+[[generated]]
+id = "YCWnDBMF-pNDFSCaiQMRo"
+uri = "file://artifacts/mockup-sandbox/public/images/growthmonk/hero-c-mesh.png"
+type = "image"
+title = "Abstract green wireframe mesh"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
