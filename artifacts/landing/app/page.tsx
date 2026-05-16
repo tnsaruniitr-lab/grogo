@@ -184,7 +184,7 @@ const featuresList = [
       "Identify authority sources and let our agent earn you citations automatically",
       "Humanised blog content that AI engines can cite, quote and extract — built on official frameworks from Google, Perplexity and Schema.org",
     ],
-    img: "/features/ai-search.png",
+    img: "/grow/features/ai-search.png",
   },
   {
     icon: MessageCircle,
@@ -196,7 +196,7 @@ const featuresList = [
       "Handles high volume without adding headcount — scales instantly at zero marginal cost",
       "Smart handoff to your team when a human touch is needed",
     ],
-    img: "/features/whatsapp-capture.png",
+    img: "/grow/features/whatsapp-capture.png",
   },
   {
     icon: Globe,
@@ -208,7 +208,7 @@ const featuresList = [
       "Language is locked for the full interaction — no jarring mid-flow switching",
       "Zero staff language skills required — serve any community your practice reaches",
     ],
-    img: "/features/multilingual.png",
+    img: "/grow/features/multilingual.png",
   },
   {
     icon: Bot,
@@ -220,7 +220,7 @@ const featuresList = [
       "Routes hot leads straight to your team and filters out time-wasters",
       "Staff only handle ready-to-book prospects — focus on converting, not filtering",
     ],
-    img: "/features/qualification.png",
+    img: "/grow/features/qualification.png",
   },
   {
     icon: Calendar,
@@ -232,7 +232,7 @@ const featuresList = [
       "Syncs with your calendar in real time — zero double-booking, zero manual entry",
       "Works around the clock so you wake up to a full diary every morning",
     ],
-    img: "/features/booking.png",
+    img: "/grow/features/booking.png",
   },
   {
     icon: BarChart3,
@@ -244,7 +244,7 @@ const featuresList = [
       "Nothing is logged manually — every data point is captured automatically",
       "Spot drop-off points and optimise your funnel with live, actionable data",
     ],
-    img: "/features/analytics.png",
+    img: "/grow/features/analytics.png",
   },
 ];
 
