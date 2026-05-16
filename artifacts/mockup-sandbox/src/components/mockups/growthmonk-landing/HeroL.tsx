@@ -149,10 +149,10 @@ export function HeroL() {
 
           {/* Headline with rotating word */}
           <div className="hl-2" style={{ marginBottom: "32px" }}>
-            <div style={{ fontSize: "clamp(40px,6.5vw,96px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white", marginBottom: "0.05em" }}>
+            <div style={{ fontSize: "clamp(44px,8.5vw,108px)", fontWeight: 900, lineHeight: 1.0, letterSpacing: "-4px", color: "white", marginBottom: "0.05em" }}>
               The AI Growth Engine
             </div>
-            <div style={{ fontSize: "clamp(40px,6.5vw,96px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
+            <div style={{ fontSize: "clamp(44px,8.5vw,108px)", fontWeight: 900, lineHeight: 1.0, letterSpacing: "-4px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
               <span style={{ color: "white", marginRight: "0.28em" }}>for</span>
               {/* Rotating word slot — invisible sizer keeps width stable */}
               <span style={{ position: "relative", display: "inline-block" }}>
