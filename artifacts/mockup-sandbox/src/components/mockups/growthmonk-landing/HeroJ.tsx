@@ -1,13 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ArrowRight, MessageSquare, Zap, Globe, Star } from "lucide-react";
 
 // HeroG clone — identical layout, slower & dreamier crossfade (48s cycle, 2s dissolve)
 export function HeroJ() {
-  useEffect(() => {
-    const videos = document.querySelectorAll<HTMLVideoElement>(".hj-vid");
-    videos.forEach(v => { v.playbackRate = 0.3; });
-  }, []);
-
   return (
     <>
       <div style={{ position: "relative", width: "100%", height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "#030712", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -57,15 +52,15 @@ export function HeroJ() {
 
         {/* Crossfading video backgrounds — slow 48s cycle */}
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <video autoPlay muted loop playsInline className="hj-vid hj-vid1"
+          <video autoPlay muted loop playsInline className="hj-vid1"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 1 }}>
             <source src="/__mockup/videos/wellness-meditation.mp4" type="video/mp4" />
           </video>
-          <video autoPlay muted loop playsInline className="hj-vid hj-vid2"
+          <video autoPlay muted loop playsInline className="hj-vid2"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
             <source src="/__mockup/videos/caregiver-hands-healthcare.mp4" type="video/mp4" />
           </video>
-          <video autoPlay muted loop playsInline className="hj-vid hj-vid3"
+          <video autoPlay muted loop playsInline className="hj-vid3"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
             <source src="/__mockup/videos/physio-rehab.mp4" type="video/mp4" />
           </video>
