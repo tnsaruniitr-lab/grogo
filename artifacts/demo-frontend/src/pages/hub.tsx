@@ -129,7 +129,7 @@ export default function HubPage() {
           <div className="h-7 w-7 rounded-md bg-[#A8C334] flex items-center justify-center">
             <Settings className="h-3.5 w-3.5 text-[#1a3a1a]" />
           </div>
-          <span className="text-sm font-bold text-white tracking-tight">Demo System</span>
+          <span className="text-sm font-bold text-white tracking-tight">GrowthMonk</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="text-xs text-white/40 hover:text-white/70 transition-colors">

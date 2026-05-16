@@ -707,7 +707,7 @@ export default function DemoPage() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-white/10 text-center text-white/40 text-sm font-medium">
-            © {new Date().getFullYear()} {branding.companyName}. Demo by Dosteli System.
+            © {new Date().getFullYear()} {branding.companyName}. Demo by GrowthMonk.
           </div>
         </div>
       </footer>

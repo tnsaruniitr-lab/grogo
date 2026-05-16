@@ -12,7 +12,7 @@ export function AdminNav() {
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <Settings className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold tracking-tight text-foreground">Demo System</span>
+          <span className="text-lg font-bold tracking-tight text-foreground">GrowthMonk</span>
         </div>
 
         <div className="flex items-center gap-6">
