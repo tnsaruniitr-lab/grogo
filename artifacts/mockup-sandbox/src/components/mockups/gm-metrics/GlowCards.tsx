@@ -1,10 +1,5 @@
 import { Activity, Target, Zap, Clock } from "lucide-react";
 
-const BG = "linear-gradient(135deg, #0b1528 0%, #0d1e38 100%)";
-const CARD = "rgba(17, 34, 60, 0.9)";
-const GREEN = "#22c55e";
-const GREEN_LIGHT = "#4ade80";
-
 const stats = [
   { value: "2-4×", label: "More AI search appearances for your business", icon: Activity },
   { value: "3×",   label: "More leads discovered and captured",            icon: Target },
@@ -14,47 +9,47 @@ const stats = [
 
 export function GlowCards() {
   return (
-    <section style={{ background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-      className="relative w-full py-20 px-6 overflow-hidden">
+    <section style={{ backgroundColor: "#030712", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative", width: "100%", padding: "80px 24px", overflow: "hidden" }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {/* ambient green glow */}
-      <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%,-50%)", width: 800, height: 400, borderRadius: "50%", background: `radial-gradient(ellipse, rgba(34,197,94,0.10) 0%, transparent 70%)`, pointerEvents: "none" }} />
+      {/* Hero-matching green glow — strong, centred */}
+      <div style={{ position: "absolute", top: "35%", left: "50%", transform: "translate(-50%,-50%)", width: 900, height: 500, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.18) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-      <div className="relative z-10 max-w-5xl mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-14">
-          <p style={{ color: GREEN, letterSpacing: "0.1em", fontSize: 11, fontWeight: 700, textTransform: "uppercase", marginBottom: 14 }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 980, margin: "0 auto" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 52 }}>
+          <p style={{ color: "#22c55e", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             WHAT GROWTHMONK DELIVERS
           </p>
-          <h2 style={{ color: "white", fontWeight: 800, fontSize: "clamp(22px,3.5vw,36px)", letterSpacing: "-0.5px", lineHeight: 1.2, margin: 0 }}>
+          <h2 style={{ color: "white", fontWeight: 900, fontSize: "clamp(24px,3.5vw,38px)", letterSpacing: "-0.5px", lineHeight: 1.15, margin: 0 }}>
             Results healthcare businesses can measure
           </h2>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* 4 cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
           {stats.map((s, i) => {
             const Icon = s.icon;
             return (
-              <div key={i} style={{ background: CARD, border: `1px solid rgba(34,197,94,0.22)`, borderRadius: 20, padding: "28px 24px", position: "relative", overflow: "hidden" }}>
-                {/* inner glow */}
-                <div style={{ position: "absolute", top: -40, right: -40, width: 130, height: 130, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.18) 0%, transparent 70%)", pointerEvents: "none" }} />
-                {/* bottom accent */}
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${GREEN}, transparent)`, borderRadius: "0 0 20px 20px" }} />
+              <div key={i} style={{ position: "relative", overflow: "hidden", borderRadius: 20, background: "rgba(17,24,39,0.5)", border: "1px solid rgba(55,65,81,0.6)", padding: "28px 22px" }}>
+                {/* per-card green bloom */}
+                <div style={{ position: "absolute", top: -50, right: -50, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.22) 0%, transparent 70%)", pointerEvents: "none" }} />
+                {/* bottom green line */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent 0%, #22c55e 50%, transparent 100%)", opacity: 0.7 }} />
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                  <span style={{ fontSize: "clamp(40px,5vw,58px)", fontWeight: 900, lineHeight: 1, background: `linear-gradient(135deg, ${GREEN_LIGHT}, ${GREEN})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-1px" }}>
-                    {s.value}
-                  </span>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: GREEN }}>
-                    <Icon size={16} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+                    <span style={{ fontSize: "clamp(44px,5.5vw,60px)", fontWeight: 900, lineHeight: 1, letterSpacing: "-2px", background: "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      {s.value}
+                    </span>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "#4ade80" }}>
+                      <Icon size={15} />
+                    </div>
                   </div>
+                  <p style={{ color: "rgba(255,255,255,0.60)", fontSize: 13.5, lineHeight: 1.55, fontWeight: 500, margin: 0 }}>
+                    {s.label}
+                  </p>
                 </div>
-
-                <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 14, lineHeight: 1.55, fontWeight: 500, margin: 0 }}>
-                  {s.label}
-                </p>
               </div>
             );
           })}
