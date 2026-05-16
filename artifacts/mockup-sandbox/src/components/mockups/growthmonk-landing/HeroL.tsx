@@ -168,8 +168,8 @@ export function HeroL() {
             </div>
           </div>
 
-          <p className="hl-3" style={{ fontSize: "19px", lineHeight: 1.7, color: "rgba(255,255,255,0.55)", maxWidth: "540px", marginBottom: "44px", fontWeight: 400 }}>
-            Capture every WhatsApp enquiry. Qualify leads automatically. Book callbacks without lifting a finger — 24/7, in German &amp; Turkish.
+          <p className="hl-3" style={{ fontSize: "18px", lineHeight: 1.65, color: "rgba(255,255,255,0.68)", maxWidth: "580px", marginBottom: "44px", fontWeight: 500 }}>
+            Get discovered in AI search, capture every WhatsApp and website enquiry, qualify leads automatically, and turn more enquiries into booked consultations — 24/7.
           </p>
 
           <div className="hl-4" style={{ display: "flex", gap: "12px", marginBottom: "52px" }}>
