@@ -1,38 +1,97 @@
 import React from "react";
 import { ArrowRight, MessageSquare, Zap, Globe, Star } from "lucide-react";
 
-// HeroG-based — rotating text headline: "The AI Growth Engine for [Healthcare / Wellness / Clinics]"
+// 5-scene crossfade: wellness → care → physio → dental → laser-eye (40s cycle)
+// Rotating words: Healthcare / Wellness / Clinics / Dental / Optical (25s cycle)
 export function HeroK() {
-  const words = ["Healthcare", "Wellness", "Clinics"];
-  // Each word gets 3.5s on screen, 0.5s transition = 4s per word, 12s total cycle
+  const words = ["Healthcare", "Wellness", "Clinics", "Dental", "Optical"];
+
   return (
     <>
       <div style={{ position: "relative", width: "100%", height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "#030712", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
         <style dangerouslySetInnerHTML={{ __html: `
+          /* ── 5-scene video crossfade — 40s cycle, 8s per scene, 1s dissolve ── */
           @keyframes cfk1 {
-            0%   { opacity: 1; }
-            29%  { opacity: 1; }
-            33%  { opacity: 0; }
-            96%  { opacity: 0; }
-            100% { opacity: 1; }
+            0%     { opacity: 1; }
+            17.5%  { opacity: 1; }
+            20%    { opacity: 0; }
+            97.5%  { opacity: 0; }
+            100%   { opacity: 1; }
           }
           @keyframes cfk2 {
-            0%   { opacity: 0; }
-            29%  { opacity: 0; }
-            33%  { opacity: 1; }
-            62%  { opacity: 1; }
-            67%  { opacity: 0; }
-            100% { opacity: 0; }
+            0%     { opacity: 0; }
+            17.5%  { opacity: 0; }
+            20%    { opacity: 1; }
+            37.5%  { opacity: 1; }
+            40%    { opacity: 0; }
+            100%   { opacity: 0; }
           }
           @keyframes cfk3 {
-            0%   { opacity: 0; }
-            62%  { opacity: 0; }
-            67%  { opacity: 1; }
-            96%  { opacity: 1; }
-            100% { opacity: 0; }
+            0%     { opacity: 0; }
+            37.5%  { opacity: 0; }
+            40%    { opacity: 1; }
+            57.5%  { opacity: 1; }
+            60%    { opacity: 0; }
+            100%   { opacity: 0; }
           }
+          @keyframes cfk4 {
+            0%     { opacity: 0; }
+            57.5%  { opacity: 0; }
+            60%    { opacity: 1; }
+            77.5%  { opacity: 1; }
+            80%    { opacity: 0; }
+            100%   { opacity: 0; }
+          }
+          @keyframes cfk5 {
+            0%     { opacity: 0; }
+            77.5%  { opacity: 0; }
+            80%    { opacity: 1; }
+            97.5%  { opacity: 1; }
+            100%   { opacity: 0; }
+          }
+
+          /* ── 5-word rotation — 25s cycle, 5s per word, slide up in/out ── */
+          @keyframes rotW0 {
+            0%    { opacity: 1;  transform: translateY(0); }
+            16%   { opacity: 1;  transform: translateY(0); }
+            20%   { opacity: 0;  transform: translateY(-110%); }
+            96%   { opacity: 0;  transform: translateY(110%); }
+            100%  { opacity: 1;  transform: translateY(0); }
+          }
+          @keyframes rotW1 {
+            0%    { opacity: 0;  transform: translateY(110%); }
+            16%   { opacity: 0;  transform: translateY(110%); }
+            20%   { opacity: 1;  transform: translateY(0); }
+            36%   { opacity: 1;  transform: translateY(0); }
+            40%   { opacity: 0;  transform: translateY(-110%); }
+            100%  { opacity: 0;  transform: translateY(110%); }
+          }
+          @keyframes rotW2 {
+            0%    { opacity: 0;  transform: translateY(110%); }
+            36%   { opacity: 0;  transform: translateY(110%); }
+            40%   { opacity: 1;  transform: translateY(0); }
+            56%   { opacity: 1;  transform: translateY(0); }
+            60%   { opacity: 0;  transform: translateY(-110%); }
+            100%  { opacity: 0;  transform: translateY(110%); }
+          }
+          @keyframes rotW3 {
+            0%    { opacity: 0;  transform: translateY(110%); }
+            56%   { opacity: 0;  transform: translateY(110%); }
+            60%   { opacity: 1;  transform: translateY(0); }
+            76%   { opacity: 1;  transform: translateY(0); }
+            80%   { opacity: 0;  transform: translateY(-110%); }
+            100%  { opacity: 0;  transform: translateY(110%); }
+          }
+          @keyframes rotW4 {
+            0%    { opacity: 0;  transform: translateY(110%); }
+            76%   { opacity: 0;  transform: translateY(110%); }
+            80%   { opacity: 1;  transform: translateY(0); }
+            96%   { opacity: 1;  transform: translateY(0); }
+            100%  { opacity: 0;  transform: translateY(-110%); }
+          }
+
           @keyframes riseK {
             from { opacity: 0; transform: translateY(28px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -42,65 +101,47 @@ export function HeroK() {
             50%       { opacity: 1; }
           }
 
-          /* Rotating word — slide up in, hold, slide up out. 12s cycle, 4s per word */
-          @keyframes rotWord0 {
-            0%          { opacity: 0; transform: translateY(100%); }
-            4.2%        { opacity: 1; transform: translateY(0); }
-            29%         { opacity: 1; transform: translateY(0); }
-            33.3%       { opacity: 0; transform: translateY(-100%); }
-            100%        { opacity: 0; transform: translateY(100%); }
-          }
-          @keyframes rotWord1 {
-            0%          { opacity: 0; transform: translateY(100%); }
-            33.3%       { opacity: 0; transform: translateY(100%); }
-            37.5%       { opacity: 1; transform: translateY(0); }
-            62%         { opacity: 1; transform: translateY(0); }
-            66.7%       { opacity: 0; transform: translateY(-100%); }
-            100%        { opacity: 0; transform: translateY(100%); }
-          }
-          @keyframes rotWord2 {
-            0%          { opacity: 0; transform: translateY(100%); }
-            66.7%       { opacity: 0; transform: translateY(100%); }
-            70.8%       { opacity: 1; transform: translateY(0); }
-            95.8%       { opacity: 1; transform: translateY(0); }
-            100%        { opacity: 0; transform: translateY(-100%); }
-          }
+          .hk-vid1 { animation: cfk1 40s ease-in-out infinite; }
+          .hk-vid2 { animation: cfk2 40s ease-in-out infinite; }
+          .hk-vid3 { animation: cfk3 40s ease-in-out infinite; }
+          .hk-vid4 { animation: cfk4 40s ease-in-out infinite; }
+          .hk-vid5 { animation: cfk5 40s ease-in-out infinite; }
 
-          .hk-vid1 { animation: cfk1 24s ease-in-out infinite; }
-          .hk-vid2 { animation: cfk2 24s ease-in-out infinite; }
-          .hk-vid3 { animation: cfk3 24s ease-in-out infinite; }
           .hk-1 { animation: riseK 1s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
           .hk-2 { animation: riseK 1s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
           .hk-3 { animation: riseK 1s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
           .hk-4 { animation: riseK 1s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
           .hk-5 { animation: riseK 1s cubic-bezier(0.16,1,0.3,1) 0.9s both; }
           .hk-glow { animation: glowPulseK 2s ease-in-out infinite; }
-          .hk-word0 { animation: rotWord0 12s cubic-bezier(0.16,1,0.3,1) 0.8s infinite; }
-          .hk-word1 { animation: rotWord1 12s cubic-bezier(0.16,1,0.3,1) 0.8s infinite; }
-          .hk-word2 { animation: rotWord2 12s cubic-bezier(0.16,1,0.3,1) 0.8s infinite; }
-          .hk-rotating-slot {
-            display: inline-block;
+
+          /* Rotating word slot — block-level, owns its own clipping */
+          .hk-slot {
             position: relative;
             overflow: hidden;
-            vertical-align: middle;
-            height: 1.35em;
+            height: 1.15em;
+            display: inline-block;
             min-width: 300px;
+            vertical-align: top;
           }
-          .hk-rotating-word {
+          .hk-word {
             position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            text-align: center;
+            inset: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
             background: linear-gradient(90deg, #22c55e, #4ade80);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             white-space: nowrap;
-            line-height: 1.35;
           }
+          .hk-w0 { animation: rotW0 25s cubic-bezier(0.16,1,0.3,1) 1s infinite; }
+          .hk-w1 { animation: rotW1 25s cubic-bezier(0.16,1,0.3,1) 1s infinite; }
+          .hk-w2 { animation: rotW2 25s cubic-bezier(0.16,1,0.3,1) 1s infinite; }
+          .hk-w3 { animation: rotW3 25s cubic-bezier(0.16,1,0.3,1) 1s infinite; }
+          .hk-w4 { animation: rotW4 25s cubic-bezier(0.16,1,0.3,1) 1s infinite; }
         ` }} />
 
-        {/* Crossfading video backgrounds */}
+        {/* 5-scene crossfading video backgrounds */}
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <video autoPlay muted loop playsInline className="hk-vid1"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 1 }}>
@@ -113,6 +154,14 @@ export function HeroK() {
           <video autoPlay muted loop playsInline className="hk-vid3"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
             <source src="/__mockup/videos/physio-rehab.mp4" type="video/mp4" />
+          </video>
+          <video autoPlay muted loop playsInline className="hk-vid4"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
+            <source src="/__mockup/videos/dental-smile.mp4" type="video/mp4" />
+          </video>
+          <video autoPlay muted loop playsInline className="hk-vid5"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
+            <source src="/__mockup/videos/laser-eye.mp4" type="video/mp4" />
           </video>
         </div>
 
@@ -127,7 +176,7 @@ export function HeroK() {
           <span style={{ color: "white", fontWeight: 800, fontSize: "20px", letterSpacing: "-0.4px" }}>GrowthMonk</span>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 16px", borderRadius: "100px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}>
             <span className="hk-glow" style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: "#22c55e", display: "inline-block" }} />
-            <span style={{ color: "#86efac", fontSize: "13px", fontWeight: 600 }}>Live · Wellness · Care · Physio</span>
+            <span style={{ color: "#86efac", fontSize: "13px", fontWeight: 600 }}>Wellness · Care · Physio · Dental · Optical</span>
           </div>
         </div>
 
@@ -135,22 +184,25 @@ export function HeroK() {
         <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 24px", maxWidth: "960px", marginTop: "-40px" }}>
 
           <div className="hk-1" style={{ marginBottom: "28px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "7px 16px", borderRadius: "100px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-            <span style={{ color: "#86efac", fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI-Powered Growth · Healthcare</span>
+            <span style={{ color: "#86efac", fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI-Powered Growth Platform</span>
           </div>
 
-          {/* Headline: two static lines + rotating word */}
-          <div className="hk-2">
-            <h1 style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white", marginBottom: "2px" }}>
+          {/* ── Headline — flex column, rotating word is its own block, NOT inside h1 ── */}
+          <div className="hk-2" style={{ marginBottom: "32px" }}>
+            {/* Line 1 — static */}
+            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white" }}>
               The AI Growth Engine
-            </h1>
-            <h1 style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.1, letterSpacing: "-3px", color: "white", marginBottom: "32px" }}>
-              for{" "}
-              <span className="hk-rotating-slot">
+            </div>
+            {/* Line 2 — "for" + rotating slot as flex siblings, no h1 wrapping the slot */}
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", gap: "0.22em", fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px" }}>
+              <span style={{ color: "white" }}>for</span>
+              {/* Slot is a sibling div — owns its own overflow:hidden, parent line-box cannot clip it */}
+              <span className="hk-slot">
                 {words.map((word, i) => (
-                  <span key={word} className={`hk-word${i} hk-rotating-word`}>{word}</span>
+                  <span key={word} className={`hk-word hk-w${i}`}>{word}</span>
                 ))}
               </span>
-            </h1>
+            </div>
           </div>
 
           <p className="hk-3" style={{ fontSize: "19px", lineHeight: 1.7, color: "rgba(255,255,255,0.55)", maxWidth: "540px", marginBottom: "44px", fontWeight: 400 }}>
@@ -174,10 +226,10 @@ export function HeroK() {
           </div>
         </div>
 
-        {/* Scene label bottom-left */}
+        {/* Scene labels — bottom left */}
         <div style={{ position: "absolute", bottom: "28px", left: "40px", zIndex: 20, display: "flex", gap: "8px", alignItems: "center" }}>
-          {["Wellness", "Care", "Physio"].map((label, i) => (
-            <span key={i} style={{ padding: "4px 10px", borderRadius: "100px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.35)", fontSize: "11px", fontWeight: 600 }}>{label}</span>
+          {["Wellness", "Care", "Physio", "Dental", "Optical"].map((label) => (
+            <span key={label} style={{ padding: "4px 10px", borderRadius: "100px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.35)", fontSize: "11px", fontWeight: 600 }}>{label}</span>
           ))}
         </div>
       </div>
