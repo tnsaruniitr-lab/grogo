@@ -1,53 +1,43 @@
-import React from "react";
+const BG = "linear-gradient(135deg, #0b1528 0%, #0d1e38 100%)";
+const GREEN = "#22c55e";
+const GREEN_LIGHT = "#4ade80";
+
+const stats = [
+  { value: "2-4×", label: "More AI search appearances for your business" },
+  { value: "3×",   label: "More leads discovered and captured" },
+  { value: "80%",  label: "Of leads qualified automatically by AI" },
+  { value: "24/7", label: "AI follow-up, never misses a lead" },
+];
 
 export function EditorialNumbers() {
-  const stats = [
-    {
-      value: "2-4×",
-      label: "More AI search appearances for your business",
-    },
-    {
-      value: "3×",
-      label: "More leads discovered and captured",
-    },
-    {
-      value: "80%",
-      label: "Of leads qualified automatically by AI",
-    },
-    {
-      value: "24/7",
-      label: "AI follow-up, never misses a lead",
-    },
-  ];
-
   return (
-    <section 
-      className="w-full min-h-[60vh] flex flex-col justify-center items-center px-6 py-24 md:py-32"
-      style={{ backgroundColor: "#030712" }}
-    >
-      <div className="max-w-7xl w-full mx-auto flex flex-col gap-20">
-        <header className="flex justify-center text-center">
-          <h2 className="text-gray-400 uppercase tracking-widest text-sm font-semibold max-w-lg leading-relaxed">
-            What GrowthMonk delivers for healthcare businesses
-          </h2>
-        </header>
+    <section style={{ background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      className="relative w-full py-20 px-6 overflow-hidden">
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-0 divide-y md:divide-y-0 lg:divide-x divide-gray-800/50">
-          {stats.map((stat, i) => (
-            <div 
-              key={i} 
-              className="flex flex-col items-center text-center pt-12 lg:pt-0 lg:px-12 group"
-            >
-              <div 
-                className="text-7xl md:text-8xl lg:text-[120px] leading-none font-light tracking-tighter mb-6 bg-clip-text text-transparent transition-all duration-700"
-                style={{
-                  backgroundImage: "linear-gradient(180deg, #f8fafc 0%, #22c55e 150%)",
-                }}
-              >
-                {stat.value}
+      {/* ambient glow */}
+      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 900, height: 300, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.09) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Section header */}
+        <div className="text-center mb-16">
+          <p style={{ color: GREEN, letterSpacing: "0.1em", fontSize: 11, fontWeight: 700, textTransform: "uppercase", marginBottom: 14 }}>
+            WHAT GROWTHMONK DELIVERS
+          </p>
+          <h2 style={{ color: "white", fontWeight: 800, fontSize: "clamp(22px,3.5vw,36px)", letterSpacing: "-0.5px", lineHeight: 1.2, margin: 0 }}>
+            Results healthcare businesses can measure
+          </h2>
+        </div>
+
+        {/* Numbers row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+          {stats.map((s, i) => (
+            <div key={i} style={{ textAlign: "center", padding: "0 24px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+              <div style={{ fontSize: "clamp(64px,8vw,100px)", fontWeight: 900, lineHeight: 1, letterSpacing: "-3px", background: `linear-gradient(160deg, ${GREEN_LIGHT} 0%, ${GREEN} 60%, rgba(34,197,94,0.6) 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: 20 }}>
+                {s.value}
               </div>
-              <p className="text-gray-400 text-sm md:text-base max-w-[200px] leading-relaxed font-light">
-                {stat.label}
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.55, fontWeight: 500, margin: 0 }}>
+                {s.label}
               </p>
             </div>
           ))}

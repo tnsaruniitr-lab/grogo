@@ -1,103 +1,94 @@
-import React from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, ArrowRight } from "lucide-react";
+
+const BG = "linear-gradient(135deg, #0b1528 0%, #0d1e38 100%)";
+const GREEN = "#22c55e";
+const GREEN_LIGHT = "#4ade80";
+
+const problems = [
+  "Invisible in AI search (ChatGPT, Perplexity, AI Overviews)",
+  "Leads from WhatsApp & Instagram go unanswered for hours",
+  "Staff spend hours qualifying the same basic enquiries",
+  "Language barriers losing you multilingual patients",
+  "Leads captured but never followed up on consistently",
+];
+const solutions = [
+  "Optimised for AI search engines — patients find you first",
+  "AI responds to every message in under 2 minutes, 24/7",
+  "AI qualifies, filters, and routes leads automatically",
+  "Conversations in English, German, Turkish, Arabic and more",
+  "AI books appointments and callbacks without human input",
+];
 
 export function SplitCards() {
-  const problems = [
-    "Invisible in AI search (ChatGPT, Perplexity, AI Overviews)",
-    "Leads from WhatsApp & Instagram go unanswered for hours",
-    "Staff spend hours qualifying the same basic enquiries",
-    "Language barriers losing you multilingual patients",
-    "Leads captured but never followed up on consistently"
-  ];
-
-  const solutions = [
-    "Optimised for AI search engines — patients find you first",
-    "AI responds to every message in under 2 minutes, 24/7",
-    "AI qualifies, filters, and routes leads automatically",
-    "Conversations in English, German, Turkish, Arabic and more",
-    "AI books appointments and callbacks without human input"
-  ];
-
   return (
-    <div style={{ backgroundColor: "#030712" }} className="min-h-screen text-slate-200 py-24 px-6 font-sans flex flex-col items-center selection:bg-green-500/30">
-      <div className="max-w-5xl w-full">
-        {/* Header Section */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 text-xs font-semibold tracking-widest text-slate-400 uppercase">
-            <span>The Problem</span>
-            <span className="text-slate-500">→</span>
-            <span className="text-green-400">The Fix</span>
+    <section style={{ background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      className="relative w-full py-20 px-6 overflow-hidden">
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+      <div style={{ position: "absolute", top: "40%", right: "20%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Section header */}
+        <div className="text-center mb-14">
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 100, padding: "5px 14px", marginBottom: 16 }}>
+            <span style={{ color: "rgba(255,80,80,0.8)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>The Problem</span>
+            <ArrowRight size={12} color={GREEN} />
+            <span style={{ color: GREEN, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>The Fix</span>
           </div>
-          
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
-            Stop losing patients to practices that move <span className="italic font-light text-slate-400">faster</span>
+          <h2 style={{ color: "white", fontWeight: 800, fontSize: "clamp(24px,3.5vw,38px)", letterSpacing: "-0.5px", lineHeight: 1.2, margin: "0 0 12px" }}>
+            Stop losing patients to practices that move faster
           </h2>
-          
-          <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto">
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 16, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
             Healthcare businesses that rely on manual processes are losing patients to AI-enabled competitors. GrowthMonk closes that gap.
           </p>
         </div>
 
-        {/* Split Cards Container */}
-        <div className="relative grid md:grid-cols-2 gap-4 lg:gap-8 items-stretch">
-          
-          {/* VS Badge (Desktop) */}
-          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-[#030712] border border-slate-800 items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-            <span className="text-sm font-bold text-slate-500 italic">VS</span>
+        {/* Two panels */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "stretch", position: "relative" }}>
+          {/* VS badge */}
+          <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 10, width: 40, height: 40, borderRadius: "50%", background: "#0d1e38", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>VS</span>
           </div>
 
-          {/* Left Panel: The Old Way */}
-          <div className="relative group rounded-3xl bg-gradient-to-b from-slate-900/80 to-[#0a0a0a] border border-red-900/20 p-8 md:p-10 flex flex-col gap-8 overflow-hidden shadow-2xl transition-all hover:border-red-900/40">
-            {/* Subtle red glow top right */}
-            <div className="absolute -top-32 -right-32 w-64 h-64 bg-red-500/5 rounded-full blur-[100px] pointer-events-none transition-opacity opacity-50 group-hover:opacity-100" />
-            
-            <div className="space-y-2 relative z-10">
-              <h3 className="text-2xl font-semibold text-white flex items-center gap-3">
-                The Old Way
-              </h3>
-              <p className="text-red-400/80 text-sm">Slow, manual, leaky funnel.</p>
+          {/* Old way */}
+          <div style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 20, padding: "32px 28px" }}>
+            <div style={{ marginBottom: 24 }}>
+              <p style={{ color: "rgba(239,68,68,0.85)", fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>✗  The Old Way</p>
+              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>Slow, manual, leaky funnel</p>
             </div>
-
-            <ul className="space-y-6 relative z-10 flex-1">
-              {problems.map((problem, i) => (
-                <li key={i} className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center mt-0.5">
-                    <X className="w-3.5 h-3.5 text-red-500" strokeWidth={3} />
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+              {problems.map((p, i) => (
+                <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                    <X size={11} color="rgba(239,68,68,0.8)" strokeWidth={3} />
                   </div>
-                  <span className="text-slate-300 leading-relaxed">{problem}</span>
+                  <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, lineHeight: 1.5 }}>{p}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Right Panel: The GrowthMonk Way */}
-          <div className="relative group rounded-3xl bg-gradient-to-b from-[#06180c] to-[#0a0a0a] border border-green-500/20 p-8 md:p-10 flex flex-col gap-8 overflow-hidden shadow-[0_0_40px_rgba(34,197,94,0.05)] transition-all hover:border-green-500/40 hover:shadow-[0_0_60px_rgba(34,197,94,0.1)]">
-            {/* Glowing green background effect */}
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-green-500/10 rounded-full blur-[120px] pointer-events-none transition-opacity opacity-70 group-hover:opacity-100" />
-            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
-            
-            <div className="space-y-2 relative z-10">
-              <h3 className="text-2xl font-semibold text-white flex items-center gap-3">
-                The GrowthMonk Way
-              </h3>
-              <p className="text-green-400/80 text-sm">Automated, instant, optimized.</p>
+          {/* GrowthMonk way */}
+          <div style={{ background: "rgba(34,197,94,0.06)", border: `1px solid rgba(34,197,94,0.25)`, borderRadius: 20, padding: "32px 28px", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ marginBottom: 24, position: "relative", zIndex: 1 }}>
+              <p style={{ color: GREEN, fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>✓  The GrowthMonk Way</p>
+              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>Automated, instant, always-on</p>
             </div>
-
-            <ul className="space-y-6 relative z-10 flex-1">
-              {solutions.map((solution, i) => (
-                <li key={i} className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mt-0.5 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                    <Check className="w-3.5 h-3.5 text-green-400" strokeWidth={3} />
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 16, position: "relative", zIndex: 1 }}>
+              {solutions.map((s, i) => (
+                <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(34,197,94,0.18)", border: "1px solid rgba(34,197,94,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                    <Check size={11} color={GREEN} strokeWidth={3} />
                   </div>
-                  <span className="text-white font-medium leading-relaxed">{solution}</span>
+                  <span style={{ color: "rgba(255,255,255,0.88)", fontSize: 14, lineHeight: 1.5, fontWeight: 500 }}>{s}</span>
                 </li>
               ))}
             </ul>
           </div>
-
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
