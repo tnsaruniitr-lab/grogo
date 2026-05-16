@@ -149,27 +149,27 @@ export function HeroL() {
 
           {/* Headline with rotating word */}
           <div className="hl-2" style={{ marginBottom: "32px" }}>
-            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white", marginBottom: "0.05em" }}>
+            <div style={{ fontSize: "clamp(40px,6.5vw,96px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white", marginBottom: "0.05em" }}>
               The AI Growth Engine
             </div>
-            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
+            <div style={{ fontSize: "clamp(40px,6.5vw,96px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
               <span style={{ color: "white", marginRight: "0.28em" }}>for</span>
               {/* Rotating word slot — invisible sizer keeps width stable */}
               <span style={{ position: "relative", display: "inline-block" }}>
                 {/* Invisible sizer: widest word */}
                 <span style={{ visibility: "hidden", pointerEvents: "none" }}>
-                  <span style={{ background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare.</span>
+                  <span style={{ background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare</span>
                 </span>
                 {/* Animated words */}
-                <span className="hl-word1" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare.</span>
-                <span className="hl-word2" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Wellness.</span>
-                <span className="hl-word3" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Clinics.</span>
+                <span className="hl-word1" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare</span>
+                <span className="hl-word2" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Wellness</span>
+                <span className="hl-word3" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Clinics</span>
               </span>
             </div>
           </div>
 
           <p className="hl-3" style={{ fontSize: "18px", lineHeight: 1.65, color: "rgba(255,255,255,0.68)", maxWidth: "580px", marginBottom: "44px", fontWeight: 500 }}>
-            Get discovered in AI search, capture every WhatsApp and website enquiry, qualify leads automatically, and turn more enquiries into booked consultations — 24/7.
+            Get discovered in AI search, capture every WhatsApp and website enquiry, qualify leads automatically, and turn more enquiries into booked consultations - 24/7.
           </p>
 
           <div className="hl-4" style={{ display: "flex", gap: "12px", marginBottom: "52px" }}>
@@ -179,7 +179,7 @@ export function HeroL() {
           </div>
 
           <div className="hl-5" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "20px 40px", color: "rgba(255,255,255,0.38)", fontSize: "13px", fontWeight: 600 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Zap size={14} color="#22c55e" /> 80% leads auto-qualified</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Zap size={14} color="#22c55e" /> 2-4x AI search appearances</span>
             <span style={{ color: "rgba(255,255,255,0.15)" }}>|</span>
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><MessageSquare size={14} color="#22c55e" /> &lt;2 min response</span>
             <span style={{ color: "rgba(255,255,255,0.15)" }}>|</span>
