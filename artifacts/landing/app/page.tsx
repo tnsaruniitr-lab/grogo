@@ -7,12 +7,15 @@ import {
   BarChart3,
   ArrowRight,
   Check,
+  X,
   Zap,
   Shield,
   Star,
   TrendingUp,
   Users,
   Clock,
+  Activity,
+  Target,
   ChevronRight,
   Sparkles,
 } from "lucide-react";
@@ -38,32 +41,48 @@ export default function LandingPage() {
 
 function TrustBar() {
   const stats = [
-    { value: "2-4×", label: "More AI search appearances for your business" },
-    { value: "3×", label: "More leads discovered and captured" },
-    { value: "80%", label: "Of leads qualified automatically by AI" },
-    { value: "24/7", label: "AI follow-up, never misses a lead" },
+    { value: "2-4×", label: "More AI search appearances for your business", icon: Activity },
+    { value: "3×",   label: "More leads discovered and captured",            icon: Target },
+    { value: "80%",  label: "Of leads qualified automatically by AI",        icon: Zap },
+    { value: "24/7", label: "AI follow-up, never misses a lead",             icon: Clock },
   ];
 
   return (
-    <section
-      className="border-y border-gray-800/60 bg-gray-900/30 px-6 py-10"
-      aria-label="Key statistics"
-    >
-      <div className="mx-auto max-w-5xl">
-        <p className="mb-10 text-center text-sm font-medium uppercase tracking-widest text-gray-500">
-          What GrowthMonk delivers for healthcare businesses
-        </p>
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.value} className="text-center">
-              <div className="mb-1 text-4xl font-extrabold text-green-400">
-                {stat.value}
+    <section style={{ backgroundColor: "#030712", position: "relative", overflow: "hidden" }}
+      className="px-6 py-20" aria-label="Key statistics">
+      <div style={{ position: "absolute", top: "35%", left: "50%", transform: "translate(-50%,-50%)", width: 900, height: 500, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.18) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
+      <div className="relative mx-auto max-w-5xl" style={{ zIndex: 1 }}>
+        <div className="mb-14 text-center">
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-green-500">
+            What GrowthMonk delivers
+          </p>
+          <h2 className="text-3xl font-black tracking-tight text-white" style={{ letterSpacing: "-0.5px" }}>
+            Results healthcare businesses can measure
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.value} style={{ position: "relative", overflow: "hidden", borderRadius: 20, background: "rgba(17,24,39,0.5)", border: "1px solid rgba(55,65,81,0.6)", padding: "28px 22px" }}>
+                <div style={{ position: "absolute", top: -50, right: -50, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.22) 0%, transparent 70%)", pointerEvents: "none" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent 0%, #22c55e 50%, transparent 100%)", opacity: 0.7 }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+                    <span style={{ fontSize: "clamp(40px,5vw,56px)", fontWeight: 900, lineHeight: 1, letterSpacing: "-2px", background: "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      {stat.value}
+                    </span>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "#4ade80" }}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.60)", fontSize: 13.5, lineHeight: 1.55, fontWeight: 500, margin: 0 }}>
+                    {stat.label}
+                  </p>
+                </div>
               </div>
-              <div className="text-sm leading-snug text-gray-400">
-                {stat.label}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -71,70 +90,83 @@ function TrustBar() {
 }
 
 function ProblemSolution() {
-  const comparisons = [
-    {
-      problem: "Invisible in AI search (ChatGPT, Perplexity, AI Overviews)",
-      solution: "Optimised for AI search engines — patients find you first",
-    },
-    {
-      problem: "Leads from WhatsApp & Instagram go unanswered for hours",
-      solution: "AI responds to every message in under 2 minutes, 24/7",
-    },
-    {
-      problem: "Staff spend hours qualifying the same basic enquiries",
-      solution: "AI qualifies, filters, and routes leads automatically",
-    },
-    {
-      problem: "Language barriers losing you multilingual patients",
-      solution: "Conversations in English, German, Turkish, Arabic and more",
-    },
-    {
-      problem: "Leads captured but never followed up on consistently",
-      solution: "AI books appointments and callbacks without human input",
-    },
+  const problems = [
+    "Invisible in AI search (ChatGPT, Perplexity, AI Overviews)",
+    "Leads from WhatsApp & Instagram go unanswered for hours",
+    "Staff spend hours qualifying the same basic enquiries",
+    "Language barriers losing you multilingual patients",
+    "Leads captured but never followed up on consistently",
+  ];
+  const solutions = [
+    "Optimised for AI search engines — patients find you first",
+    "AI responds to every message in under 2 minutes, 24/7",
+    "AI qualifies, filters, and routes leads automatically",
+    "Conversations in English, German, Turkish, Arabic and more",
+    "AI books appointments and callbacks without human input",
   ];
 
   return (
-    <section className="px-6 py-24" aria-labelledby="problem-heading">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-4 text-center">
-          <span className="text-sm font-semibold uppercase tracking-widest text-green-500">
-            The Problem → The Fix
-          </span>
-        </div>
-        <h2
-          id="problem-heading"
-          className="mb-4 text-center text-4xl font-extrabold text-white"
-        >
-          Stop losing patients to practices that move faster
-        </h2>
-        <p className="mx-auto mb-16 max-w-xl text-center text-gray-400">
-          Healthcare businesses that rely on manual processes are losing patients
-          to AI-enabled competitors. GrowthMonk closes that gap.
-        </p>
+    <section style={{ backgroundColor: "#030712", position: "relative", overflow: "hidden" }}
+      className="px-6 py-20" aria-labelledby="problem-heading">
+      <div style={{ position: "absolute", top: "40%", right: "15%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.16) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
-        <div className="overflow-hidden rounded-2xl border border-gray-800">
-          <div className="grid grid-cols-2 border-b border-gray-800 bg-gray-900/60">
-            <div className="px-6 py-3 text-sm font-semibold text-red-400">
-              ✗ &nbsp;The old way
-            </div>
-            <div className="border-l border-gray-800 px-6 py-3 text-sm font-semibold text-green-400">
-              ✓ &nbsp;The GrowthMonk way
+      <div className="relative mx-auto max-w-5xl" style={{ zIndex: 1 }}>
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 100, padding: "5px 16px", marginBottom: 16 }}>
+            <span style={{ color: "rgba(248,113,113,0.85)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>The Problem</span>
+            <ArrowRight className="h-3 w-3 text-green-500" />
+            <span style={{ color: "#22c55e", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>The Fix</span>
+          </div>
+          <h2 id="problem-heading" className="mb-3 text-4xl font-black text-white" style={{ letterSpacing: "-0.5px" }}>
+            Stop losing patients to practices that move faster
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.60)", fontSize: 16, maxWidth: 500, margin: "0 auto", lineHeight: 1.65, fontWeight: 500 }}>
+            Healthcare businesses that rely on manual processes are losing patients to AI-enabled competitors. GrowthMonk closes that gap.
+          </p>
+        </div>
+
+        {/* Two panels */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, position: "relative" }}>
+          {/* VS badge */}
+          <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 10, width: 38, height: 38, borderRadius: "50%", background: "#030712", border: "1px solid rgba(55,65,81,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>VS</span>
+          </div>
+
+          {/* Old way */}
+          <div style={{ borderRadius: 20, background: "rgba(17,24,39,0.5)", border: "1px solid rgba(55,65,81,0.55)", padding: "32px 26px" }}>
+            <p style={{ color: "rgba(248,113,113,0.8)", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>✗  The Old Way</p>
+            <p style={{ color: "rgba(255,255,255,0.30)", fontSize: 13, marginBottom: 24 }}>Slow, manual, leaky funnel</p>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+              {problems.map((p, i) => (
+                <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                    <X className="h-3 w-3" style={{ color: "rgba(239,68,68,0.75)" }} strokeWidth={3} />
+                  </div>
+                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13.5, lineHeight: 1.5 }}>{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* GrowthMonk way */}
+          <div style={{ position: "relative", overflow: "hidden", borderRadius: 20, background: "rgba(17,24,39,0.5)", border: "1px solid rgba(34,197,94,0.30)", padding: "32px 26px" }}>
+            <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.18) 0%, transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <p style={{ color: "#22c55e", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>✓  The GrowthMonk Way</p>
+              <p style={{ color: "rgba(255,255,255,0.30)", fontSize: 13, marginBottom: 24 }}>Automated, instant, always-on</p>
+              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+                {solutions.map((s, i) => (
+                  <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(34,197,94,0.18)", border: "1px solid rgba(34,197,94,0.38)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                      <Check className="h-3 w-3 text-green-400" strokeWidth={3} />
+                    </div>
+                    <span style={{ color: "rgba(255,255,255,0.88)", fontSize: 13.5, lineHeight: 1.5, fontWeight: 500 }}>{s}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-          {comparisons.map((row, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-2 border-b border-gray-800/60 last:border-0"
-            >
-              <div className="px-6 py-4 text-sm text-gray-400">
-                {row.problem}
-              </div>
-              <div className="border-l border-gray-800/60 px-6 py-4 text-sm text-gray-200">
-                {row.solution}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </section>
