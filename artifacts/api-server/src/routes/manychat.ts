@@ -123,22 +123,32 @@ const ManychatPayloadSchema = z.object({
 router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
   let language = "en";
   const slug = req.params["slug"] as string;
+  let step = "auth";
 
   try {
     const apiKey = req.headers["x-api-key"];
     if (!WEBHOOK_API_KEY || apiKey !== WEBHOOK_API_KEY) {
+      logger.warn({ slug, step: "auth", ip: req.ip }, "ManyChat webhook unauthorized — bad or missing API key");
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
+    step = "validate_payload";
     const parsed = ManychatPayloadSchema.safeParse(req.body);
     if (!parsed.success) {
+      logger.warn({ slug, step: "validate_payload", issues: parsed.error.issues, body: req.body }, "ManyChat webhook bad payload");
       res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
       return;
     }
 
     const { senderId, message, channel, name, phone: contactPhone, email } = parsed.data;
 
+    logger.info(
+      { slug, channel, senderId, messageLength: message.length, hasName: !!name, hasPhone: !!contactPhone },
+      "ManyChat webhook received",
+    );
+
+    step = "db_client_lookup";
     const clients = await db
       .select()
       .from(clientsTable)
@@ -146,6 +156,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       .limit(1);
 
     if (clients.length === 0) {
+      logger.warn({ slug, step: "db_client_lookup" }, "ManyChat webhook — client slug not found");
       res.status(404).json({ error: "Client not found", slug });
       return;
     }
@@ -153,6 +164,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
     const clientRecord = clients[0]!;
     const externalId = `${channel}:${senderId}`;
 
+    step = "db_lead_lookup";
     const existingLeads = await db
       .select()
       .from(leadsTable)
@@ -184,6 +196,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       lead = inserted[0]!;
     }
 
+    step = "db_conversation_write";
     await db.insert(conversationsTable).values({
       clientId: clientRecord.id,
       leadId: lead.id,
@@ -191,6 +204,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       body: message || "(empty)",
     });
 
+    step = "language_detection";
     language = lead.language ?? detectLanguage(message, clientRecord.languagePrimary, clientRecord.languageSecondary ?? undefined);
 
     if (lead.language) {
@@ -216,6 +230,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
     const industry = typeof clientConfig["industry"] === "string" ? clientConfig["industry"] : null;
     const callbackHours = typeof clientConfig["callbackHours"] === "string" ? clientConfig["callbackHours"] : "Mon–Fri 8am–6pm";
 
+    step = "db_profile_lookup";
     let profile: BotProfile = GENERIC_PROFILE;
     if (industry) {
       const profileRows = await db
@@ -226,6 +241,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       if (profileRows.length > 0) profile = profileRows[0]!;
     }
 
+    step = "db_history_load";
     const history = await db
       .select()
       .from(conversationsTable)
@@ -241,8 +257,10 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
         content: h.body,
       }));
 
+    step = "knowledge_retrieval";
     const knowledgeChunks = await retrieveKnowledge(clientRecord.id, language, message, 5);
 
+    step = "gpt_call";
     const botResponse = await callGpt({
       language,
       clientName: clientRecord.name,
@@ -253,6 +271,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       profile,
     });
 
+    step = "build_response";
     const requestedSwitch = botResponse.data?.["switchToLanguage"];
     if (
       typeof requestedSwitch === "string" &&
@@ -263,11 +282,13 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       language = requestedSwitch;
     }
 
+    step = "db_lead_update";
     await db
       .update(leadsTable)
       .set({ language, lastContactAt: new Date(), updatedAt: new Date() })
       .where(eq(leadsTable.id, lead.id));
 
+    step = "db_outbound_write";
     await db.insert(conversationsTable).values({
       clientId: clientRecord.id,
       leadId: lead.id,
@@ -279,13 +300,16 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
     const responseBody = buildManychatResponse(botResponse.reply, botResponse.action);
 
     logger.info(
-      { slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent, responseBody },
+      { slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent, language, responseBody },
       "ManyChat pipeline complete",
     );
 
     res.json(responseBody);
   } catch (err) {
-    logger.error({ err }, "ManyChat pipeline error");
+    logger.error(
+      { err, slug, step, language },
+      `ManyChat pipeline error at step: ${step}`,
+    );
     const fallback =
       language === "de"
         ? "Vielen Dank für Ihre Nachricht. Ich verbinde Sie gleich mit unserem Team."
