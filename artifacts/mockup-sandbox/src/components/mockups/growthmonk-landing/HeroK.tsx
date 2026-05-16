@@ -150,7 +150,7 @@ export function HeroK() {
             </div>
             {/* Line 2 — "for" and the rotating slot are plain inline text, no h1 wrapping */}
             <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white" }}>
-              {"for "}
+              <span style={{ marginRight: "0.28em" }}>for</span>
               {/* Slot: the widest word ("Healthcare") always occupies space; others overlay it */}
               <span className="hk-slot">
                 {/* Invisible sizer — always present, keeps the slot wide enough */}
