@@ -89,11 +89,11 @@ export function HeroL() {
           </video>
           <video autoPlay muted loop playsInline className="hl-vid4"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
-            <source src="/__mockup/videos/dental-medical-warm.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/dental-clinic-lobby.mp4" type="video/mp4" />
           </video>
           <video autoPlay muted loop playsInline className="hl-vid5"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
-            <source src="/__mockup/videos/optical-boutique-v2.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/optical-frames-boutique.mp4" type="video/mp4" />
           </video>
         </div>
 
