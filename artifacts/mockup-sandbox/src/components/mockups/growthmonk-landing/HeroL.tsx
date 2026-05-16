@@ -169,7 +169,7 @@ export function HeroL() {
           </div>
 
           <p className="hl-3" style={{ fontSize: "20px", lineHeight: 1.6, color: "rgba(255,255,255,0.68)", maxWidth: "620px", marginBottom: "44px", fontWeight: 500 }}>
-            Get discovered in AI search, capture every WhatsApp and website enquiry, qualify leads automatically, and turn more enquiries into booked consultations - 24/7.
+            Get discovered in AI search, capture every WhatsApp, website and social media lead, qualify leads automatically, and turn more enquiries into booked consultations - 24/7.
           </p>
 
           <div className="hl-4" style={{ display: "flex", gap: "12px", marginBottom: "52px" }}>
