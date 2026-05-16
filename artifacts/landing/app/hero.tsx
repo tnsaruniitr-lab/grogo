@@ -1,4 +1,4 @@
-import { ArrowRight, Zap, Globe, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const BASE = "/grow";
 
@@ -190,14 +190,6 @@ export function VideoHero() {
           </a>
         </div>
 
-        {/* Stats */}
-        <div className="vh-in5" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "16px 36px", color: "rgba(255,255,255,0.35)", fontSize: "13px", fontWeight: 600 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Zap size={13} color="#22c55e" /> 2-4x AI search appearances</span>
-          <span style={{ color: "rgba(255,255,255,0.12)" }}>|</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Globe size={13} color="#22c55e" /> 24-hr setup</span>
-          <span style={{ color: "rgba(255,255,255,0.12)" }}>|</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Star size={13} color="#22c55e" /> DE &amp; TR bilingual</span>
-        </div>
       </div>
     </section>
   );

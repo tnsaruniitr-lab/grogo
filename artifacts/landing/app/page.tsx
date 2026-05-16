@@ -46,7 +46,7 @@ function TrustBar() {
 
   return (
     <section
-      className="border-y border-gray-800/60 bg-gray-900/30 px-6 py-12"
+      className="border-y border-gray-800/60 bg-gray-900/30 px-6 py-10"
       aria-label="Key statistics"
     >
       <div className="mx-auto max-w-5xl">
