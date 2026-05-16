@@ -581,6 +581,12 @@ video {
 .mb-12 {
   margin-bottom: 3rem;
 }
+.mb-20 {
+  margin-bottom: 5rem;
+}
+.block {
+  display: block;
+}
 .inline-block {
   display: inline-block;
 }
@@ -623,6 +629,9 @@ video {
 .h-3 {
   height: 0.75rem;
 }
+.h-2\.5 {
+  height: 0.625rem;
+}
 .min-h-screen {
   min-height: 100vh;
 }
@@ -652,6 +661,9 @@ video {
 }
 .w-3 {
   width: 0.75rem;
+}
+.w-2\.5 {
+  width: 0.625rem;
 }
 .max-w-2xl {
   max-width: 42rem;
