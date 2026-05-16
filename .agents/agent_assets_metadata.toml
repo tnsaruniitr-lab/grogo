@@ -102,6 +102,12 @@ uri = "file://artifacts/mockup-sandbox/public/images/lumina-care-editorial.png"
 type = "image"
 title = "Luxury homecare moody editorial shot"
 
+[[generated]]
+id = "h0iqK1l4M6mMBecFh1gTA"
+uri = "file://artifacts/mockup-sandbox/public/images/care-enriched-scene.png"
+type = "image"
+title = "Professional homecare scene"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
