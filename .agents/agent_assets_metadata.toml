@@ -178,19 +178,19 @@ title = "ai-search-discovery"
 id = "lXAAUL7Oigogm2Toipol2"
 uri = "file://artifacts/landing/public/features/whatsapp-capture.png"
 type = "image"
-title = "whatsapp-capture"
+title = "whatsapp-social-capture"
 
 [[generated]]
 id = "k3OR_7z129iqyaTNtYbWl"
 uri = "file://artifacts/landing/public/features/multilingual.png"
 type = "image"
-title = "multilingual-conversations"
+title = "multilingual-chat"
 
 [[generated]]
 id = "hq2S0ahvW8_ycuWDoSvM1"
 uri = "file://artifacts/landing/public/features/qualification.png"
 type = "image"
-title = "automated-qualification"
+title = "lead-qualification"
 
 [[generated]]
 id = "Fq6IqsIZSQ0mVnCJHPqlU"
