@@ -1,12 +1,9 @@
 import React from "react";
 import { ArrowRight, MessageSquare, Zap, Globe, Star } from "lucide-react";
 
-// HeroL — 5-scene crossfade: wellness → care → physio → dental (warm) → optical (warm)
-// Rotating words: Healthcare / Wellness / Clinics / Dental / Optical
-// Based on HeroK layout — HeroK itself is untouched
+// HeroL — 5-scene crossfade, static headline "for Clinics"
+// wellness → care → physio → dental (warm medical) → optical (warm boutique)
 export function HeroL() {
-  const words = ["Healthcare", "Wellness", "Clinics", "Dental", "Optical"];
-
   return (
     <>
       <div style={{ position: "relative", width: "100%", height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "#030712", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -53,46 +50,6 @@ export function HeroL() {
             100%  { opacity: 0; }
           }
 
-          /* ── 5-word crossfade — 25s cycle, 5s per word, 1s fade ── */
-          @keyframes rotL0 {
-            0%   { opacity: 1; }
-            16%  { opacity: 1; }
-            20%  { opacity: 0; }
-            96%  { opacity: 0; }
-            100% { opacity: 1; }
-          }
-          @keyframes rotL1 {
-            0%   { opacity: 0; }
-            16%  { opacity: 0; }
-            20%  { opacity: 1; }
-            36%  { opacity: 1; }
-            40%  { opacity: 0; }
-            100% { opacity: 0; }
-          }
-          @keyframes rotL2 {
-            0%   { opacity: 0; }
-            36%  { opacity: 0; }
-            40%  { opacity: 1; }
-            56%  { opacity: 1; }
-            60%  { opacity: 0; }
-            100% { opacity: 0; }
-          }
-          @keyframes rotL3 {
-            0%   { opacity: 0; }
-            56%  { opacity: 0; }
-            60%  { opacity: 1; }
-            76%  { opacity: 1; }
-            80%  { opacity: 0; }
-            100% { opacity: 0; }
-          }
-          @keyframes rotL4 {
-            0%   { opacity: 0; }
-            76%  { opacity: 0; }
-            80%  { opacity: 1; }
-            96%  { opacity: 1; }
-            100% { opacity: 0; }
-          }
-
           @keyframes riseL {
             from { opacity: 0; transform: translateY(28px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -114,24 +71,6 @@ export function HeroL() {
           .hl-4 { animation: riseL 1s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
           .hl-5 { animation: riseL 1s cubic-bezier(0.16,1,0.3,1) 0.9s both; }
           .hl-glow { animation: glowPulseL 2s ease-in-out infinite; }
-
-          .hl-slot { position: relative; display: inline-block; }
-          .hl-word {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            white-space: nowrap;
-          }
-          .hl-word-abs {
-            position: absolute;
-            left: 0; top: 0;
-            pointer-events: none;
-          }
-          .hl-w0 { animation: rotL0 25s ease-in-out 1s infinite; }
-          .hl-w1 { animation: rotL1 25s ease-in-out 1s infinite; }
-          .hl-w2 { animation: rotL2 25s ease-in-out 1s infinite; }
-          .hl-w3 { animation: rotL3 25s ease-in-out 1s infinite; }
-          .hl-w4 { animation: rotL4 25s ease-in-out 1s infinite; }
         ` }} />
 
         {/* 5-scene crossfading backgrounds */}
@@ -150,11 +89,11 @@ export function HeroL() {
           </video>
           <video autoPlay muted loop playsInline className="hl-vid4"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
-            <source src="/__mockup/videos/dental-warm-lifestyle.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/dental-medical-warm.mp4" type="video/mp4" />
           </video>
           <video autoPlay muted loop playsInline className="hl-vid5"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", mixBlendMode: "luminosity", opacity: 0 }}>
-            <source src="/__mockup/videos/optical-warm-boutique.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/optical-boutique-v2.mp4" type="video/mp4" />
           </video>
         </div>
 
@@ -180,21 +119,14 @@ export function HeroL() {
             <span style={{ color: "#86efac", fontSize: "12px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI-Powered Growth Platform</span>
           </div>
 
+          {/* Static headline — no rotation */}
           <div className="hl-2" style={{ marginBottom: "32px" }}>
             <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white", marginBottom: "0.05em" }}>
               The AI Growth Engine
             </div>
-            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px", color: "white" }}>
-              <span style={{ marginRight: "0.28em" }}>for</span>
-              <span className="hl-slot">
-                {/* Invisible sizer — widest word keeps the slot wide */}
-                <span style={{ visibility: "hidden", pointerEvents: "none" }} className="hl-word">Healthcare</span>
-                {words.map((word, i) => (
-                  <span key={word} className={`hl-word hl-word-abs hl-w${i}`} style={{ opacity: i === 0 ? 1 : 0 }}>
-                    {word}
-                  </span>
-                ))}
-              </span>
+            <div style={{ fontSize: "clamp(40px,6.5vw,90px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-3px" }}>
+              <span style={{ color: "white" }}>for </span>
+              <span style={{ background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Clinics.</span>
             </div>
           </div>
 
