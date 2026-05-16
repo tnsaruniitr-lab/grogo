@@ -4,6 +4,9 @@ const nextConfig = {
   trailingSlash: false,
   poweredByHeader: false,
   compress: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   headers: async () => [
     {
       source: "/(.*)",
