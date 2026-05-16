@@ -106,10 +106,19 @@ export function VideoHero() {
           .gm-nav        { padding: 16px 20px !important; }
           .gm-nav-links  { display: none !important; }
           .gm-nav-cta    { padding: 9px 16px !important; font-size: 13px !important; }
-          .gm-hero-body  { padding: 0 20px !important; }
-          .gm-hero-sub   { font-size: 16px !important; }
+          .gm-hero-body  { padding: 0 24px !important; }
+          .gm-hero-headline {
+            font-size: 48px !important;
+            letter-spacing: -1.5px !important;
+            line-height: 1.08 !important;
+          }
+          .gm-hero-sub   {
+            font-size: 17px !important;
+            line-height: 1.7 !important;
+            margin-bottom: 36px !important;
+          }
           .gm-hero-ctas  { gap: 10px !important; }
-          .gm-hero-cta-primary  { padding: 13px 26px !important; font-size: 15px !important; }
+          .gm-hero-cta-primary  { padding: 15px 32px !important; font-size: 16px !important; }
           .gm-hero-cta-secondary { display: none !important; }
         }
       ` }} />
@@ -169,10 +178,10 @@ export function VideoHero() {
 
         {/* Headline */}
         <div className="vh-in2" style={{ marginBottom: "28px" }}>
-          <div style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", color: "white", marginBottom: "0.04em" }}>
+          <div className="gm-hero-headline" style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", color: "white", marginBottom: "0.04em" }}>
             The AI Growth Engine
           </div>
-          <div style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
+          <div className="gm-hero-headline" style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
             <span style={{ color: "white", marginRight: "0.25em" }}>for</span>
             <span style={{ position: "relative", display: "inline-block" }}>
               <span style={{ visibility: "hidden", pointerEvents: "none" }}>
