@@ -37,7 +37,10 @@ export function requireDashboardAuth(req: Request, res: Response, next: NextFunc
   const pass = decoded.slice(colonIdx + 1).trim();
 
   if (!safeCompare(user, expectedUser) || !safeCompare(pass, expectedPass)) {
-    logger.warn({ path: req.path, ip: req.ip, receivedUser: user }, "Dashboard auth failed — bad credentials");
+    logger.warn(
+      { path: req.path, ip: req.ip, receivedUser: user, receivedPassLen: pass.length, expectedPassLen: expectedPass.length },
+      "Dashboard auth failed — bad credentials",
+    );
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
