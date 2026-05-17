@@ -40,10 +40,10 @@ function Router() {
       <Route path="/">
         <LoginGate>
           <Switch>
-            <Route path="/" component={Hub} />
             <Route path="/admin" component={Admin} />
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/mockups" component={Mockups} />
+            <Route path="/" component={Hub} />
             <Route component={NotFound} />
           </Switch>
         </LoginGate>

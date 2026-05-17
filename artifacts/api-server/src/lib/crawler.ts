@@ -18,6 +18,62 @@ export interface PageResult {
   error?: string;
 }
 
+export async function fetchSitemapUrls(origin: string): Promise<string[]> {
+  const candidates = [
+    `${origin}/sitemap.xml`,
+    `${origin}/sitemap_index.xml`,
+    `${origin}/sitemap-index.xml`,
+    `${origin}/sitemap/sitemap.xml`,
+  ];
+
+  const collected = new Set<string>();
+
+  const parseSitemapXml = async (url: string, depth = 0): Promise<void> => {
+    if (depth > 2) return;
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(8_000),
+        redirect: "follow",
+      });
+      if (!res.ok) return;
+      const xml = await res.text();
+
+      // Sitemap index — recurse into child sitemaps
+      const sitemapLocPattern = /<sitemap>[\s\S]*?<loc>(https?:\/\/[^<]{1,500})<\/loc>/gi;
+      let m: RegExpExecArray | null;
+      while ((m = sitemapLocPattern.exec(xml)) !== null) {
+        await parseSitemapXml(m[1]!.trim(), depth + 1);
+      }
+
+      // Regular sitemap — collect <url><loc>...</loc> entries
+      const urlLocPattern = /<url>[\s\S]*?<loc>(https?:\/\/[^<]{1,500})<\/loc>/gi;
+      while ((m = urlLocPattern.exec(xml)) !== null) {
+        const loc = m[1]!.trim();
+        try {
+          const { origin: locOrigin, pathname, href } = new URL(loc);
+          if (locOrigin !== origin) continue;
+          if (SKIP_EXTENSIONS.test(pathname)) continue;
+          if (SKIP_PATH_PATTERNS.test(pathname)) continue;
+          if (SKIP_QUERY_PATTERNS.test(href)) continue;
+          collected.add(`${locOrigin}${pathname}`.replace(/\/$/, "") || origin);
+        } catch {
+          // unparseable URL — skip
+        }
+      }
+    } catch {
+      // sitemap not available — silently skip
+    }
+  };
+
+  for (const candidate of candidates) {
+    await parseSitemapXml(candidate);
+    if (collected.size > 0) break; // found a working sitemap — stop trying
+  }
+
+  return Array.from(collected);
+}
+
 export async function fetchRobotsTxt(origin: string): Promise<string[]> {
   try {
     const res = await fetch(`${origin}/robots.txt`, {

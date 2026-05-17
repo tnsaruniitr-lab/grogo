@@ -589,12 +589,28 @@ function PreviewModal({
       {/* iframe */}
       <div className="flex-1 relative overflow-hidden">
         {activeUrl ? (
-          <iframe
-            key={activeUrl}
-            src={activeUrl}
-            className="absolute inset-0 w-full h-full border-0 bg-white"
-            title={`Preview: ${client.branding.companyName}`}
-          />
+          <>
+            <iframe
+              key={activeUrl}
+              src={activeUrl}
+              className="absolute inset-0 w-full h-full border-0 bg-white"
+              title={`Preview: ${client.branding.companyName}`}
+            />
+            {/* Persistent fallback bar — many sites block iframe embedding */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-black/70 backdrop-blur-sm pointer-events-auto">
+              <p className="text-white/50 text-xs truncate">
+                If the site isn't loading, it may block previews — open it directly instead.
+              </p>
+              <a
+                href={activeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-xs font-medium text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+              >
+                Open in new tab ↗
+              </a>
+            </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
             <Globe className="h-10 w-10 text-white/10" />

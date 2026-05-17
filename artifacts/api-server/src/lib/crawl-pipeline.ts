@@ -1,7 +1,7 @@
 import { db } from "@workspace/db";
 import { crawlJobsTable, crawlPagesTable, companyKnowledgeTable } from "@workspace/db";
 import { eq, and, inArray } from "drizzle-orm";
-import { fetchPage, fetchRobotsTxt, isAllowed, withConcurrency } from "./crawler";
+import { fetchPage, fetchRobotsTxt, fetchSitemapUrls, isAllowed, withConcurrency } from "./crawler";
 import { extractKnowledge, deduplicateItems } from "./extractor";
 import { embedText, embeddingToJson } from "./embedder";
 import { extractBrand } from "./brand-extractor";
@@ -56,8 +56,11 @@ export async function runCrawlPipeline(
       .where(eq(crawlJobsTable.id, jobId));
 
     const origin = new URL(websiteUrl).origin;
-    const disallowed = await fetchRobotsTxt(origin);
-    log.info({ disallowed }, "Robots.txt parsed");
+    const [disallowed, sitemapUrls] = await Promise.all([
+      fetchRobotsTxt(origin),
+      fetchSitemapUrls(origin),
+    ]);
+    log.info({ disallowed, sitemapCount: sitemapUrls.length }, "Robots.txt + sitemap parsed");
 
     // Wipe previous crawl knowledge for this client (keep manual entries)
     await db
@@ -69,7 +72,7 @@ export async function runCrawlPipeline(
         ),
       );
 
-    // Seed homepage as first page
+    // Seed: homepage first, then sitemap URLs (up to MAX_PAGES cap)
     const homepageUrl = origin + new URL(websiteUrl).pathname.replace(/\/$/, "");
     const discovered = new Set<string>([homepageUrl]);
     const queued: Array<{ url: string; depth: number }> = [{ url: homepageUrl, depth: 0 }];
@@ -84,9 +87,31 @@ export async function runCrawlPipeline(
       status: "pending",
     });
 
+    // Seed sitemap URLs that pass filters and aren't the homepage
+    const filteredSitemap = sitemapUrls
+      .filter((u) => u !== homepageUrl && !discovered.has(u) && isAllowed(u, disallowed))
+      .slice(0, MAX_PAGES - 1);
+
+    if (filteredSitemap.length > 0) {
+      for (const u of filteredSitemap) {
+        discovered.add(u);
+        queued.push({ url: u, depth: 1 });
+      }
+      await db.insert(crawlPagesTable).values(
+        filteredSitemap.map((u) => ({
+          clientId,
+          jobId,
+          url: u,
+          depth: 1,
+          status: "pending" as const,
+        })),
+      );
+      log.info({ count: filteredSitemap.length }, "Seeded pages from sitemap");
+    }
+
     await db
       .update(crawlJobsTable)
-      .set({ pagesFound: 1 })
+      .set({ pagesFound: discovered.size })
       .where(eq(crawlJobsTable.id, jobId));
 
     // BFS crawl
