@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 // GrowthMonk Multi-Video Hero V2
 // Cycles: care-compassion → wellness-meditation → medspa-treatment → dental-smile → physio-rehab
-// Slightly brighter overlay (0.78 vs 0.90) — same dark green/navy brand palette
+// Words cycle via React state (no CSS overlap): Healthcare → Clinics → Medspas → Wellness Centres
+
+const WORDS = ['Healthcare', 'Clinics', 'Medspas', 'Wellness Centres'];
+const HOLD_MS = 6000;
+const FADE_MS = 450;
 
 export function GrowthMonkMultiV2() {
+  const [wordIdx, setWordIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      // fade out
+      setVisible(false);
+      timerRef.current = setTimeout(() => {
+        // swap word, then fade back in
+        setWordIdx(i => (i + 1) % WORDS.length);
+        setVisible(true);
+      }, FADE_MS);
+    }, HOLD_MS);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [wordIdx]);
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#030712', fontFamily: "'Plus Jakarta Sans', sans-serif", boxSizing: 'border-box' }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -17,11 +38,6 @@ export function GrowthMonkMultiV2() {
         @keyframes gmv2cfl4 { 0%{opacity:0} 57.5%{opacity:0} 60%{opacity:1} 77.5%{opacity:1} 80%{opacity:0} 100%{opacity:0} }
         @keyframes gmv2cfl5 { 0%{opacity:0} 77.5%{opacity:0} 80%{opacity:1} 97.5%{opacity:1} 100%{opacity:0} }
 
-        @keyframes gmv2hlw1 { 0%{opacity:1} 20%{opacity:1} 23%{opacity:0} 97%{opacity:0} 100%{opacity:1} }
-        @keyframes gmv2hlw2 { 0%{opacity:0} 20%{opacity:0} 23%{opacity:1} 45%{opacity:1} 48%{opacity:0} 100%{opacity:0} }
-        @keyframes gmv2hlw3 { 0%{opacity:0} 45%{opacity:0} 48%{opacity:1} 70%{opacity:1} 73%{opacity:0} 100%{opacity:0} }
-        @keyframes gmv2hlw4 { 0%{opacity:0} 70%{opacity:0} 73%{opacity:1} 95%{opacity:1} 98%{opacity:0} 100%{opacity:0} }
-
         @keyframes gmv2rise { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes gmv2glow { 0%,100%{opacity:0.65} 50%{opacity:1} }
 
@@ -30,10 +46,6 @@ export function GrowthMonkMultiV2() {
         .gmv2-v3 { animation: gmv2cfl3 40s ease-in-out infinite; }
         .gmv2-v4 { animation: gmv2cfl4 40s ease-in-out infinite; }
         .gmv2-v5 { animation: gmv2cfl5 40s ease-in-out infinite; }
-        .gmv2-w1 { animation: gmv2hlw1 28s ease-in-out infinite; }
-        .gmv2-w2 { animation: gmv2hlw2 28s ease-in-out infinite; opacity: 0; }
-        .gmv2-w3 { animation: gmv2hlw3 28s ease-in-out infinite; opacity: 0; }
-        .gmv2-w4 { animation: gmv2hlw4 28s ease-in-out infinite; opacity: 0; }
         .gmv2-i1 { animation: gmv2rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
         .gmv2-i2 { animation: gmv2rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
         .gmv2-i3 { animation: gmv2rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
@@ -65,7 +77,7 @@ export function GrowthMonkMultiV2() {
         </video>
       </div>
 
-      {/* Overlay — brighter than v1 (0.78 vs 0.90), keeps dark green palette */}
+      {/* Overlay */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'linear-gradient(160deg, rgba(3,7,18,0.78) 0%, rgba(5,25,12,0.40) 50%, rgba(3,7,18,0.75) 100%)' }} />
 
       {/* Green ambient glow */}
@@ -94,16 +106,21 @@ export function GrowthMonkMultiV2() {
           <div style={{ fontSize: 'clamp(38px,7.5vw,100px)', fontWeight: 900, lineHeight: 1.02, letterSpacing: '-3.5px', color: 'white', marginBottom: '0.04em' }}>
             The AI Growth Engine
           </div>
-          <div style={{ fontSize: 'clamp(38px,7.5vw,100px)', fontWeight: 900, lineHeight: 1.02, letterSpacing: '-3.5px', display: 'flex', justifyContent: 'center', alignItems: 'baseline' }}>
-            <span style={{ color: 'white', marginRight: '0.25em' }}>for</span>
-            <span style={{ position: 'relative', display: 'inline-block' }}>
-              <span style={{ visibility: 'hidden', pointerEvents: 'none' }}>
-                <span style={{ background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Wellness Centres</span>
-              </span>
-              <span className="gmv2-w1" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Healthcare</span>
-              <span className="gmv2-w2" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Clinics</span>
-              <span className="gmv2-w3" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Medspas</span>
-              <span className="gmv2-w4" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Wellness Centres</span>
+          <div style={{ fontSize: 'clamp(38px,7.5vw,100px)', fontWeight: 900, lineHeight: 1.02, letterSpacing: '-3.5px', display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: '0.22em' }}>
+            <span style={{ color: 'white' }}>for</span>
+            {/* Rotating word — single word, fade via React state, no overlapping */}
+            <span
+              style={{
+                background: 'linear-gradient(90deg, #22c55e, #4ade80)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                opacity: visible ? 1 : 0,
+                transition: `opacity ${FADE_MS}ms ease`,
+                whiteSpace: 'nowrap',
+                display: 'inline-block',
+              }}
+            >
+              {WORDS[wordIdx]}
             </span>
           </div>
         </div>
