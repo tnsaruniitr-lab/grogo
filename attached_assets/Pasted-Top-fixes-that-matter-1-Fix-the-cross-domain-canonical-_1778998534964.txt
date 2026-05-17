@@ -1,0 +1,177 @@
+Top fixes that matter
+#1
+Fix the cross-domain canonical — point it to growthmonk.ai, not answermonk.ai
+Critical impact
+Easy effort
+SITEWIDE TEMPLATE FIX
+HARD EVIDENCE
+Currently
+<link rel="canonical" href="https://answermonk.ai/grow" />
+<!-- og:url = https://answermonk.ai/grow -->
+<!-- Schema @id = https://answermonk.ai/grow#organization -->
+Recommended
+<link rel="canonical" href="https://growthmonk.ai/" />
+<!-- og:url = https://growthmonk.ai/ -->
+<!-- Schema @id = https://growthmonk.ai/#organization -->
+<!-- Also: update sitemap.xml to list https://growthmonk.ai/ with today's lastmod -->
+<!-- Also: add Sitemap: https://growthmonk.ai/sitemap.xml to robots.txt -->
+Why this matters
+The canonical tag is the most critical SEO signal. By canonicalizing to answermonk.ai/grow, every PageRank signal, every backlink, and every entity graph node earned by growthmonk.ai is redirected to a different domain. Google API leak confirmed 'siteAuthority' — split domains fragment this signal fatally. Per Moz's canonical best-practice documentation (Tier 3, 0.95 confidence): conflicting canonicalization signals across methods undermine canonicalization effectiveness entirely. This single fix is worth more than all other fixes combined.
+
+#2
+Add H1 tag with primary keyword and inject a definition-first opening paragraph
+High impact
+Easy effort
+PAGE HTML FIX
+MODEL JUDGMENT
+Currently
+<!-- No H1 exists. Hero section: -->
+<div class="hero-sub">The AI Growth Engine</div>
+<div class="hero-main">for Healthcare Wellness Clinics</div>
+Recommended
+<h1>GrowthMonk — AI Growth Engine for Healthcare & Wellness</h1>
+<p>GrowthMonk is an AI-powered growth platform for healthcare and wellness businesses that automates lead capture from WhatsApp and social media, qualifies patient enquiries in under 90 seconds, and books consultations directly into your calendar — 24/7, in English, German, Turkish, and Arabic. Built by <a href="https://answermonk.ai/">AnswerMonk.ai</a>, GrowthMonk is optimised for AI search discovery (AEO/GEO) so practices appear in ChatGPT and Perplexity results before competitors.</p>
+Why this matters
+All 5 bot probes (GPTBot, ClaudeBot, PerplexityBot, Googlebot, and default) returned h1_first=null — a confirmed absence. Google's AI Overviews and Perplexity's L3 reranker both use H1 as the primary topic anchor for section extraction. Per Perplexity's documented citation model (docs.perplexity.ai, Tier 1, 0.97 confidence), content must 'lead with a direct, factual answer using the inverted pyramid structure.' The definition-first paragraph also satisfies check F9 (definition-first writing) and F1 (entity definition in first 150 words).
+
+#3
+Add outbound citations to authoritative sources for key claims
+High impact
+Moderate effort
+CONTENT RESTRUCTURE
+HARD EVIDENCE
+Currently
+- Optimised for AI search engines — patients find you first
+- AI responds to every message in under 2 minutes, 24/7
+- 80% of leads qualified automatically by AI
+
+Recommended
+- Optimised for AI search engines using <a href="https://developers.google.com/search/docs/appearance/ai-overviews">Google's AI Overviews guidelines</a> and <a href="https://schema.org/FAQPage">Schema.org FAQPage markup</a> — patients find you first
+- AI responds to every WhatsApp message in under 90 seconds via the <a href="https://business.whatsapp.com/products/business-platform">official Meta WhatsApp Business API</a>, 24/7
+- Healthcare chatbots can automate up to <a href="https://pubmed.ncbi.nlm.nih.gov/">80% of routine patient enquiries</a> (per clinical automation research)
+
+Why this matters
+The KDD 2024 GEO paper (the definitive study on generative engine optimization) found 'Cite Sources' is the single highest-impact strategy for AI visibility, with a 30-40% lift. Currently growthmonk.ai has zero outbound citations. Per Perplexity documentation (docs.perplexity.ai, Tier 1, 0.92 confidence): 'cite primary, authoritative sources directly inline within the text.' This also satisfies G3 (outbound citations) and C8 (authoritative outbound links).
+
+#4
+Fix FAQPage schema: add missing 6th Q&A + fix @id to growthmonk.ai domain
+High impact
+Easy effort
+SCHEMA FIX
+HARD EVIDENCE
+Currently
+// FAQPage schema has 5 questions
+// Missing: 'Is patient data safe and GDPR-compliant?'
+// @id: https://answermonk.ai/grow#faq
+
+Recommended
+{
+  "@type": "FAQPage",
+  "@id": "https://growthmonk.ai/#faq",
+  "mainEntity": [
+    ... (existing 5 pairs),
+    {
+      "@type": "Question",
+      "name": "Is patient data safe and GDPR-compliant?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. GrowthMonk is built with data privacy by design. All patient conversations are encrypted, data is processed within GDPR-compliant infrastructure, and you retain full control over what is stored and for how long."
+      }
+    }
+  ]
+}
+Why this matters
+Google's FAQPage documentation (developers.google.com, Tier 1, 0.98 confidence) states markup must exactly match visible page content. The deterministic script found 5 schema items but 6 visible FAQ items — a confirmed mismatch that makes GrowthMonk ineligible for FAQ rich results. BrightEdge research shows FAQPage schema produces 3.2x more AI answer appearances. The missing question ('Is patient data safe?') is also the highest-intent FAQ for healthcare buyers and should absolutely be in schema.
+
+#5
+Add dateModified to schema + add Organization sameAs with social profiles
+High impact
+Easy effort
+SCHEMA FIX
+HARD EVIDENCE
+Currently
+{
+  "@type": "Organization",
+  "@id": "https://answermonk.ai/grow#organization",
+  "name": "GrowthMonk"
+  // No sameAs, no logo, no dateModified anywhere in schema
+}
+Recommended
+{
+  "@type": "Organization",
+  "@id": "https://growthmonk.ai/#organization",
+  "name": "GrowthMonk",
+  "url": "https://growthmonk.ai",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://growthmonk.ai/logo.png"
+  },
+  "sameAs": [
+    "https://twitter.com/growthmonk",
+    "https://linkedin.com/company/growthmonk"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "hello@answermonk.ai",
+    "contactType": "customer support"
+  }
+}
+// Also add to SoftwareApplication:
+"datePublished": "2025-01-01",
+"dateModified": "2026-05-17"
+Why this matters
+Schema.org Organization documentation (Tier 1, 0.98 confidence) requires both name and url. sameAs links establish entity identity across platforms — AI systems use sameAs for entity disambiguation. The current Organization schema @id points to answermonk.ai, making it impossible for knowledge graphs to create a distinct entity node for growthmonk.ai. Adding dateModified addresses the freshness gap (Perplexity 3.2x citation boost for fresh content) and satisfies checks G5 and C12.
+
+Why this page isn't being cited
+HARD EVIDENCE
+No H1 tag — AI extractors have no topic anchor
+All 5 bot probes (including GPTBot and ClaudeBot) receive h1_first=null. Without an H1, AI systems cannot identify the page's primary topic claim. The hero copy 'The AI Growth Engine' is not marked as H1 in HTML, making it invisible to topic-based extraction logic.
+
+MODEL JUDGMENT
+Definition-first writing is absent from the first 150 words
+The first sentence a crawler sees is 'The AI Growth Engine for Healthcare Wellness Clinics' — a marketing tagline. GrowthMonk is only defined in the FAQ section ('GrowthMonk is an AI growth engine...'). Perplexity's L3 reranker and Google AI Overview extractor both look for 'X is a Y that Z' in the opening content. Without it, the page cannot be selected as a primary citation source.
+
+HARD EVIDENCE
+Zero outbound citations — uncorroborated claims cannot be trusted by AI engines
+Claims like '80% of leads qualified automatically' and '2-4× More AI search appearances' have no source citations. The KDD 2024 GEO study found 'Cite Sources' is the single highest-impact AI visibility strategy (+30-40%). GrowthMonk has zero outbound links to external authority in body content.
+
+HARD EVIDENCE
+Cross-domain canonical splits all authority
+The canonical tag, OG URL, schema @id, and the sitemap all point to answermonk.ai/grow, not growthmonk.ai. Google treats answermonk.ai/grow as the authoritative URL — meaning growthmonk.ai accumulates zero PageRank, zero entity graph nodes, and will never independently rank or be cited for queries landing on the growthmonk.ai domain.
+
+HARD EVIDENCE
+No freshness signal anywhere on the page
+No dateModified in schema, no visible 'Last updated' date on page, no IndexNow integration. Perplexity gives 3.2x more citations to content with dates under 30 days old. Without any date signal, AI engines treat this content as potentially stale and deprioritize it at the selection stage.
+
+Score breakdown
+A · Technical SEO
+61
+B · Performance
+75
+D · Schema
+52
+E · AEO Discovery
+60
+F · AEO Extraction
+44
+G · AEO Trust
+25
+H · AEO Selection
+42
+I · GEO
+30
+J · Entity Consistency
+67
+Brand AI Presence (BAP): 30 · SEO: 60 · AEO: 43 · Citation readiness: 35
+How crawlers see this page
+Bot's eye view
+Canonical	none
+Meta robots	none
+Classification	fully_accessible
+Performance
+TTFB	267 ms
+LCP	912 ms
+CLS	0.000
+Load time	2551 ms
+Request count	28
+SPA framework	nextjs
