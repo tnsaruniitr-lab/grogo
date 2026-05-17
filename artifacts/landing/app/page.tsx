@@ -27,10 +27,10 @@ export default function LandingPage() {
       <main>
         <VideoHero />
         <TrustBar />
+        <Testimonials />
         <ProblemSolution />
         <Features />
         <HowItWorks />
-        <Testimonials />
         <Industries />
         <FAQ />
         <CTASection />
@@ -448,22 +448,24 @@ function Testimonials() {
       company: "Dosteli",
       country: "Germany",
       flag: "🇩🇪",
-      wordmark: { letters: "Do", color: "#22c55e" },
+      logo: "/images/logo-dosteli.png",
+      logoBg: "#ffffff",
     },
     {
       quote:
         "GrowthMonk helped us identify key AI-search visibility and website structure gaps, with clear technical recommendations that our team could implement to improve how our healthcare services are discovered and understood online.",
-      company: "FeelValeo",
+      company: "Valeo Health",
       country: "United Kingdom",
       flag: "🇬🇧",
-      wordmark: { letters: "FV", color: "#4ade80" },
+      logo: "/images/logo-valeo-health.png",
+      logoBg: "#F5A623",
     },
   ];
 
   return (
     <section
       style={{ backgroundColor: "#030712", position: "relative", overflow: "hidden" }}
-      className="px-6 py-24"
+      className="px-6 py-20"
       aria-labelledby="testimonials-heading"
     >
       {/* Ambient glow */}
@@ -471,13 +473,13 @@ function Testimonials() {
 
       <div className="relative mx-auto max-w-5xl" style={{ zIndex: 1 }}>
         {/* Header */}
-        <div className="mb-16 text-center">
+        <div className="mb-12 text-center">
           <p style={{ color: "#22c55e", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
             Customer Stories
           </p>
           <h2
             id="testimonials-heading"
-            style={{ color: "white", fontWeight: 900, fontSize: "clamp(28px,4vw,44px)", letterSpacing: "-1px", lineHeight: 1.1, margin: "0 0 16px" }}
+            style={{ color: "white", fontWeight: 900, fontSize: "clamp(28px,4vw,44px)", letterSpacing: "-1px", lineHeight: 1.1, margin: 0 }}
           >
             Trusted by healthcare businesses
           </h2>
@@ -496,7 +498,7 @@ function Testimonials() {
                 padding: "36px 32px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 28,
+                gap: 24,
                 overflow: "hidden",
               }}
             >
@@ -504,26 +506,25 @@ function Testimonials() {
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent 0%, #22c55e 50%, transparent 100%)", opacity: 0.6 }} />
 
               {/* Opening quote mark */}
-              <div style={{ fontSize: 72, lineHeight: 1, color: "rgba(34,197,94,0.20)", fontFamily: "Georgia, serif", position: "absolute", top: 16, right: 28, userSelect: "none" }}>&ldquo;</div>
+              <div style={{ fontSize: 72, lineHeight: 1, color: "rgba(34,197,94,0.18)", fontFamily: "Georgia, serif", position: "absolute", top: 16, right: 28, userSelect: "none" }}>&ldquo;</div>
 
-              {/* Wordmark logo */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Logo + company */}
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <div style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  background: "rgba(34,197,94,0.12)",
-                  border: "1px solid rgba(34,197,94,0.25)",
+                  width: 64,
+                  height: 40,
+                  borderRadius: 10,
+                  background: t.logoBg,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: 900,
-                  fontSize: 15,
-                  color: t.wordmark.color,
-                  letterSpacing: "-0.5px",
+                  overflow: "hidden",
                   flexShrink: 0,
+                  padding: "4px 8px",
+                  boxSizing: "border-box",
                 }}>
-                  {t.wordmark.letters}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={t.logo} alt={t.company + " logo"} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                 </div>
                 <div>
                   <div style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{t.company}</div>
@@ -538,12 +539,6 @@ function Testimonials() {
               <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, lineHeight: 1.75, fontWeight: 500, margin: 0, position: "relative", zIndex: 1 }}>
                 &ldquo;{t.quote}&rdquo;
               </p>
-
-              {/* Verified badge */}
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.18)", borderRadius: 100, padding: "4px 12px", width: "fit-content" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
-                <span style={{ color: "#4ade80", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em" }}>VERIFIED CUSTOMER</span>
-              </div>
             </div>
           ))}
         </div>
