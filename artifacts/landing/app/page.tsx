@@ -44,7 +44,7 @@ function TrustBar() {
     { value: "2-4×", label: "More AI search appearances for your business", icon: Activity },
     { value: "3×",   label: "More leads discovered and captured",            icon: Target },
     { value: "80%",  label: "Of leads qualified automatically by AI",        icon: Zap },
-    { value: "24/7", label: "AI follow-up, never misses a lead",             icon: Clock },
+    { value: "15–20%", label: "More booked consultations for your clinic",   icon: Clock },
   ];
 
   return (

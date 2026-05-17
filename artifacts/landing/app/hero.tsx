@@ -134,33 +134,6 @@ export function VideoHero() {
           color: #4ade80;
           background: rgba(34,197,94,0.07);
         }
-        /* ── Stat pills ── */
-        .gm-stat-row {
-          display: flex;
-          flex-direction: row;
-          gap: 10px;
-          justify-content: center;
-          flex-wrap: wrap;
-          margin-bottom: 24px;
-        }
-        .gm-stat-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          background: rgba(34,197,94,0.10);
-          border: 1px solid rgba(34,197,94,0.22);
-          border-radius: 100px;
-          padding: 7px 16px;
-          font-size: 13px;
-          font-weight: 700;
-          color: #4ade80;
-          letter-spacing: 0.01em;
-          white-space: nowrap;
-        }
-        .gm-stat-pill span.label {
-          color: rgba(255,255,255,0.60);
-          font-weight: 500;
-        }
         /* ── Mobile ── */
         @media (max-width: 768px) {
           .gm-nav       { padding: 16px 20px !important; }
@@ -178,7 +151,6 @@ export function VideoHero() {
           .gm-hero-ctas { gap: 10px !important; }
           .gm-hero-cta-primary  { padding: 15px 32px !important; font-size: 16px !important; }
           .gm-hero-cta-secondary { display: none !important; }
-          .gm-stat-row { flex-direction: column !important; align-items: center !important; gap: 8px !important; }
         }
       ` }} />
 
@@ -267,19 +239,6 @@ export function VideoHero() {
             >
               {WORDS[wordIdx]}
             </span>
-          </div>
-        </div>
-
-        {/* Stat pills — revenue uplift leftmost (topmost on mobile) */}
-        <div className="vh-in3 gm-stat-row">
-          <div className="gm-stat-pill">
-            15–20% <span className="label">more booked consultations</span>
-          </div>
-          <div className="gm-stat-pill">
-            3× <span className="label">faster lead response</span>
-          </div>
-          <div className="gm-stat-pill">
-            Zero <span className="label">missed leads</span>
           </div>
         </div>
 
