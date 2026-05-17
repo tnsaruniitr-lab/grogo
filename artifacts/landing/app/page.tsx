@@ -453,7 +453,7 @@ function Testimonials() {
     },
     {
       quote:
-        "GrowthMonk helped us identify key AI-search visibility and website structure gaps, with clear technical recommendations that our team could implement to improve how our healthcare services are discovered and understood online.",
+        "As a healthcare brand, we needed a clearer way to understand why we were not being surfaced or cited consistently in AI search. GrowthMonk's healthcare-focused Growth Engine gave us a practical roadmap across website structure, schema, and discoverability, with recommendations grounded in Google and Schema.org guidance. It helped us move from guesswork to clear, actionable fixes our team could implement.",
       company: "Valeo Health",
       country: "United Kingdom",
       flag: "🇬🇧",
