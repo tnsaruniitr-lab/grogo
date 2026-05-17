@@ -324,23 +324,23 @@ const CONFIGS: Record<string, HeroConfig> = {
 };
 
 const DEFAULT_CONFIG: HeroConfig = {
-  video: "/videos/medspa-treatment.mp4",
-  accent: "#C4882A",
-  bg: "#0E0804",
+  video: "/videos/forest-canopy-hero.mp4",
+  accent: "#22C55E",
+  bg: "#030712",
   overlayH:
-    "linear-gradient(to right, rgba(14,8,4,0.90) 0%, rgba(14,8,4,0.55) 50%, rgba(14,8,4,0.15) 100%)",
+    "linear-gradient(to right, rgba(3,7,18,0.88) 0%, rgba(3,7,18,0.52) 50%, rgba(3,7,18,0.12) 100%)",
   overlayV:
-    "linear-gradient(to top, rgba(14,8,4,0.65) 0%, transparent 50%, rgba(14,8,4,0.30) 100%)",
-  serif: "'Playfair Display', serif",
+    "linear-gradient(to top, rgba(3,7,18,0.80) 0%, transparent 50%, rgba(3,7,18,0.30) 100%)",
+  serif: "'Plus Jakarta Sans', sans-serif",
   seriffontImport:
-    "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap",
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap",
   serifClass: "v3hero-serif",
   categoryLabel: "Professional Services",
-  subcategoryLabel: "",
-  ctaLabel: "Book Consultation",
-  reviewQuote: '"Exceptional service and incredible results."',
+  subcategoryLabel: "AI-Powered Lead Capture · WhatsApp · 24/7",
+  ctaLabel: "Get Started",
+  reviewQuote: '"Leads qualified and booked automatically. Genuinely game-changing."',
   reviewName: "A. Client",
-  trustItems: ["Fully Insured", "Professional Team", "5★ Reviews", "Instant Response"],
+  trustItems: ["AI-Powered", "24/7 Response", "WhatsApp Ready", "Instant Setup"],
 };
 
 export function V3Hero({
