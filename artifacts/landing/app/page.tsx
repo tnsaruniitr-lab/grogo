@@ -98,7 +98,7 @@ function ProblemSolution() {
     "Leads captured but never followed up on consistently",
   ];
   const solutions = [
-    "Optimised for AI search engines — patients find you first",
+    "Optimised for AI search engines - patients find you first",
     "AI responds to every message in under 2 minutes, 24/7",
     "AI qualifies, filters, and routes leads automatically",
     "Conversations in English, German, Turkish, Arabic and more",
@@ -177,12 +177,12 @@ const featuresList = [
   {
     icon: Search,
     tag: "AI Search Discovery",
-    title: "Get found before your competitors — in AI search",
+    title: "Get found before your competitors - in AI search",
     bullets: [
-      "Generate a fully AEO, SEO & GEO-optimised website in hours — or audit yours to close the gap",
+      "Generate a fully AEO, SEO & GEO-optimised website in hours - or audit yours to close the gap",
       "Analyse what top competitors are doing to rank in ChatGPT, Perplexity and Google AI Overviews",
       "Identify authority sources and let our agent earn you citations automatically",
-      "Humanised blog content that AI engines can cite, quote and extract — built on official frameworks from Google, Perplexity and Schema.org",
+      "Humanised blog content that AI engines can cite, quote and extract - built on official frameworks from Google, Perplexity and Schema.org",
     ],
     img: "/features/ai-search.png",
   },
@@ -191,9 +191,9 @@ const featuresList = [
     tag: "WhatsApp & Social Capture",
     title: "Capture every lead the moment they message",
     bullets: [
-      "AI responds to every WhatsApp, Instagram DM and Facebook message in under 90 seconds — 24/7",
-      "No enquiry falls through the cracks — every channel captured in one connected inbox",
-      "Handles high volume without adding headcount — scales instantly at zero marginal cost",
+      "AI responds to every WhatsApp, Instagram DM and Facebook message in under 90 seconds - 24/7",
+      "No enquiry falls through the cracks - every channel captured in one connected inbox",
+      "Handles high volume without adding headcount - scales instantly at zero marginal cost",
       "Smart handoff to your team when a human touch is needed",
     ],
     img: "/features/whatsapp-capture.png",
@@ -201,12 +201,12 @@ const featuresList = [
   {
     icon: Globe,
     tag: "Multilingual Conversations",
-    title: "Speak every patient's language — automatically",
+    title: "Speak every patient's language - automatically",
     bullets: [
-      "Detects the patient's language from the very first message — no setup or rules needed",
+      "Detects the patient's language from the very first message - no setup or rules needed",
       "Responds fluently in English, German, Turkish, Arabic and more throughout the conversation",
-      "Language is locked for the full interaction — no jarring mid-flow switching",
-      "Zero staff language skills required — serve any community your practice reaches",
+      "Language is locked for the full interaction - no jarring mid-flow switching",
+      "Zero staff language skills required - serve any community your practice reaches",
     ],
     img: "/features/multilingual.png",
   },
@@ -216,9 +216,9 @@ const featuresList = [
     title: "Your team only talks to serious prospects",
     bullets: [
       "AI asks the right questions to understand each patient's need and intent",
-      "Scores and qualifies every lead automatically — no manual review required",
+      "Scores and qualifies every lead automatically - no manual review required",
       "Routes hot leads straight to your team and filters out time-wasters",
-      "Staff only handle ready-to-book prospects — focus on converting, not filtering",
+      "Staff only handle ready-to-book prospects - focus on converting, not filtering",
     ],
     img: "/features/qualification.png",
   },
@@ -227,9 +227,9 @@ const featuresList = [
     tag: "Instant Booking",
     title: "Your calendar fills while you deliver care",
     bullets: [
-      "Converts qualified leads into booked consultations automatically — no back-and-forth",
+      "Converts qualified leads into booked consultations automatically - no back-and-forth",
       "Schedules callbacks for patients who need more time before committing",
-      "Syncs with your calendar in real time — zero double-booking, zero manual entry",
+      "Syncs with your calendar in real time - zero double-booking, zero manual entry",
       "Works around the clock so you wake up to a full diary every morning",
     ],
     img: "/features/booking.png",
@@ -237,11 +237,11 @@ const featuresList = [
   {
     icon: BarChart3,
     tag: "Live Analytics Dashboard",
-    title: "Complete visibility — zero manual tracking",
+    title: "Complete visibility - zero manual tracking",
     bullets: [
-      "Track every lead, conversation and conversion in real time — all in one place",
+      "Track every lead, conversation and conversion in real time - all in one place",
       "See source, language, AI-detected intent and status at a glance",
-      "Nothing is logged manually — every data point is captured automatically",
+      "Nothing is logged manually - every data point is captured automatically",
       "Spot drop-off points and optimise your funnel with live, actionable data",
     ],
     img: "/features/analytics.png",
@@ -341,14 +341,14 @@ function HowItWorks() {
       number: "01",
       title: "Connect your channels",
       description:
-        "Link your WhatsApp Business number, Instagram, and other social media channels to GrowthMonk in minutes. No technical skills needed — we handle the integration.",
+        "Link your WhatsApp Business number, Instagram, and other social media channels to GrowthMonk in minutes. No technical skills needed - we handle the integration.",
       detail: "WhatsApp · Instagram · Facebook · Website chat",
     },
     {
       number: "02",
       title: "AI captures and qualifies every lead",
       description:
-        "The moment a potential patient sends a message, our AI responds instantly — in their language. It asks the right questions, understands their need, and qualifies their intent automatically.",
+        "The moment a potential patient sends a message, our AI responds instantly - in their language. It asks the right questions, understands their need, and qualifies their intent automatically.",
       detail: "24/7 response · Multilingual · Zero staff time",
     },
     {
@@ -510,7 +510,7 @@ function FAQ() {
     },
     {
       q: "How does GrowthMonk capture leads from WhatsApp?",
-      a: "GrowthMonk connects to your WhatsApp Business number via the official Meta API. When a patient messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — automatically, 24 hours a day.",
+      a: "GrowthMonk connects to your WhatsApp Business number via the official Meta API. When a patient messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback - automatically, 24 hours a day.",
     },
     {
       q: "Does GrowthMonk support multiple languages?",
@@ -518,7 +518,7 @@ function FAQ() {
     },
     {
       q: "What is Answer Engine Optimization (AEO) for healthcare?",
-      a: "AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, Google AI Overviews) cite your practice when patients ask health questions. GrowthMonk builds your AEO foundation — structured data, semantic content, and Q&A pages — so you appear in AI answers before your competitors.",
+      a: "AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, Google AI Overviews) cite your practice when patients ask health questions. GrowthMonk builds your AEO foundation - structured data, semantic content, and Q&A pages - so you appear in AI answers before your competitors.",
     },
     {
       q: "How long does setup take?",
@@ -605,7 +605,7 @@ function CTASection() {
             </h2>
             <p className="mx-auto mb-8 max-w-xl text-lg text-green-100/70">
               Book a free 30-minute demo. We&apos;ll show you exactly how
-              GrowthMonk would work for your practice — live, no slides, no
+              GrowthMonk would work for your practice - live, no slides, no
               sales pitch.
             </p>
 
