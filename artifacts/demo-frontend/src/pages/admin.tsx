@@ -58,6 +58,9 @@ import {
   BookOpen,
   MessageCircle,
   Save,
+  ChevronDown,
+  ChevronUp,
+  Settings2,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -352,6 +355,19 @@ export default function AdminPage() {
   );
 }
 
+const INDUSTRY_OPTIONS = [
+  { value: "medspa", label: "Medspa", emoji: "✨" },
+  { value: "dental", label: "Dental", emoji: "🦷" },
+  { value: "hair-clinic", label: "Hair Clinic", emoji: "💇" },
+  { value: "iv-therapy", label: "IV Therapy", emoji: "⚡" },
+  { value: "fertility", label: "Fertility", emoji: "❤️" },
+  { value: "weight-mgmt", label: "Weight Mgmt", emoji: "📋" },
+  { value: "wellness", label: "Wellness", emoji: "🌿" },
+  { value: "surgery", label: "Surgery", emoji: "⭐" },
+  { value: "home-care", label: "Home Care", emoji: "🏠" },
+  { value: "other", label: "Other", emoji: "➕" },
+];
+
 function CreateDemoDialog({
   open,
   onClose,
@@ -369,6 +385,8 @@ function CreateDemoDialog({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [demoLanguages, setDemoLanguages] = useState<string[]>(["en"]);
+  const [selectedIndustry, setSelectedIndustry] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [branding, setBranding] = useState<BrandingConfig>({
     companyName: "",
@@ -515,257 +533,292 @@ function CreateDemoDialog({
     setDemoLanguages(["en"]);
     setLogoFile(null);
     setLogoPreview(null);
+    setSelectedIndustry("");
+    setShowAdvanced(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); reset(); } }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Neue Demo erstellen</DialogTitle>
-          <DialogDescription>
-            Gib die Website des Interessenten ein — wir extrahieren Logo, Farben und Namen automatisch.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-0 gap-0">
 
-        <div className="space-y-6 mt-2">
-          <div className="space-y-2">
-            <Label>Website-Adresse</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="z.B. pflegedienst-muenchen.de"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && extractBranding()}
-              />
-              <Button onClick={extractBranding} disabled={extracting || !websiteUrl} className="gap-2 shrink-0">
-                {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Extrahieren
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Wir lesen Logo, Markenfarbe und Firmennamen automatisch aus.
-            </p>
+        <div className="px-6 pt-6 pb-4 border-b border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">New Demo</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-0.5">
+              Paste a prospect's website — we scan it and build a branded landing page instantly.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <div className="px-6 py-5 space-y-6">
+
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g. growthmonk.ai"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && extractBranding()}
+              className="flex-1"
+            />
+            <Button onClick={extractBranding} disabled={extracting || !websiteUrl} className="gap-2 shrink-0">
+              {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {extracting ? "Scanning..." : "Scan"}
+            </Button>
           </div>
 
-          <Separator />
+          {branding.companyName && (
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
+              {logoPreview ? (
+                <img
+                  src={logoPreview}
+                  alt=""
+                  className="h-10 w-10 rounded-lg object-contain bg-white p-1 shrink-0 border border-border"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              ) : (
+                <div
+                  className="h-10 w-10 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
+                  style={{ backgroundColor: branding.primaryColor || "#6366f1" }}
+                >
+                  {branding.companyName.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm leading-tight">{branding.companyName}</p>
+                {branding.tagline && (
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{branding.tagline}</p>
+                )}
+              </div>
+              {branding.primaryColor && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <div
+                    className="h-4 w-4 rounded-full border border-border/60"
+                    style={{ backgroundColor: branding.primaryColor }}
+                  />
+                  <span className="text-xs font-mono text-muted-foreground">{branding.primaryColor}</span>
+                </div>
+              )}
+            </div>
+          )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 col-span-2">
-              <Label>Unternehmensname *</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Business Type</Label>
+            <div className="grid grid-cols-5 gap-2">
+              {INDUSTRY_OPTIONS.map(({ value, label, emoji }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setSelectedIndustry((prev) => prev === value ? "" : value)}
+                  className={[
+                    "flex flex-col items-center gap-1 rounded-xl border py-3 px-1 text-xs font-medium transition-all",
+                    selectedIndustry === value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-muted/30 hover:border-muted-foreground/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground",
+                  ].join(" ")}
+                >
+                  <span className="text-xl leading-none">{emoji}</span>
+                  <span className="leading-tight text-center">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Company Name <span className="text-destructive">*</span></Label>
               <Input
-                placeholder="Pflegedienst München GmbH"
+                placeholder="e.g. City Dental Clinic"
                 value={branding.companyName}
                 onChange={(e) => updateField("companyName", e.target.value)}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label>Demo-Slug *</Label>
-              <div className="flex items-center gap-1">
-                <span className="text-sm text-muted-foreground">/demo/</span>
-                <Input
-                  placeholder="pflegedienst-muenchen"
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">URL Slug <span className="text-destructive">*</span></Label>
+              <div className="flex items-center rounded-md border border-input bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <span className="px-3 py-2 text-sm text-muted-foreground bg-muted border-r border-input select-none shrink-0">/demo/</span>
+                <input
+                  className="flex-1 px-3 py-2 text-sm font-mono bg-transparent outline-none"
+                  placeholder="city-dental"
                   value={branding.slug}
                   onChange={(e) => updateField("slug", slugify(e.target.value))}
-                  className="font-mono text-sm"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Stadt</Label>
-              <Input
-                placeholder="München"
-                value={branding.city ?? ""}
-                onChange={(e) => updateField("city", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Primärfarbe</Label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  value={branding.primaryColor || "#A8C334"}
-                  onChange={(e) => updateField("primaryColor", e.target.value)}
-                  className="h-10 w-14 rounded border border-input cursor-pointer"
-                />
-                <Input
-                  placeholder="#A8C334"
-                  value={branding.primaryColor ?? ""}
-                  onChange={(e) => updateField("primaryColor", e.target.value)}
-                  className="font-mono text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Sekundärfarbe</Label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  value={branding.secondaryColor || "#1a3a1a"}
-                  onChange={(e) => updateField("secondaryColor", e.target.value)}
-                  className="h-10 w-14 rounded border border-input cursor-pointer"
-                />
-                <Input
-                  placeholder="#1a3a1a"
-                  value={branding.secondaryColor ?? ""}
-                  onChange={(e) => updateField("secondaryColor", e.target.value)}
-                  className="font-mono text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label>Tagline / Slogan</Label>
-              <Input
-                placeholder="Professionelle Pflege mit Herz"
-                value={branding.tagline ?? ""}
-                onChange={(e) => updateField("tagline", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label>Hero-Überschrift</Label>
-              <Input
-                placeholder="Pflege, der Sie vertrauen können."
-                value={branding.heroHeadline ?? ""}
-                onChange={(e) => updateField("heroHeadline", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label>Demo-Sprachen</Label>
-              <p className="text-xs text-muted-foreground">
-                Welche Sprachen soll die Demo-Seite unterstützen? Die erste ausgewählte wird die Standardsprache.
-              </p>
-              <div className="flex gap-4 flex-wrap pt-1">
-                {LANG_OPTIONS.map(({ value, label, flag }) => (
-                  <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={demoLanguages.includes(value)}
-                      onChange={() => toggleLanguage(value)}
-                      className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
-                    />
-                    <span className="text-sm font-medium">{flag} {label}</span>
-                  </label>
-                ))}
-              </div>
-              {demoLanguages.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Standard: {LANG_OPTIONS.find((o) => o.value === demoLanguages[0])?.flag}{" "}
-                  {LANG_OPTIONS.find((o) => o.value === demoLanguages[0])?.label}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Telefon</Label>
-              <Input
-                placeholder="+49 89 12345678"
-                value={branding.phone ?? ""}
-                onChange={(e) => updateField("phone", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Website-URL</Label>
-              <Input
-                placeholder="https://pflegedienst-muenchen.de"
-                value={branding.websiteUrl ?? ""}
-                onChange={(e) => updateField("websiteUrl", e.target.value)}
-              />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Logo</Label>
-            <div className="flex items-start gap-4">
-              {logoPreview ? (
-                <div className="relative">
-                  <img
-                    src={logoPreview}
-                    alt="Logo-Vorschau"
-                    className="h-16 w-16 rounded-lg object-contain bg-muted p-1 border border-border"
-                    onError={(e) => { (e.target as HTMLImageElement).src = ""; setLogoPreview(null); }}
-                  />
-                  <button
-                    className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-4 h-4 text-xs flex items-center justify-center"
-                    onClick={() => { setLogoFile(null); setLogoPreview(null); }}
-                  >×</button>
-                </div>
-              ) : (
-                <div className="h-16 w-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1 space-y-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="cursor-pointer"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleLogoFile(file);
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Logo hochladen oder URL automatisch aus der Website übernehmen
-                </p>
-                {!logoFile && (
-                  <Input
-                    placeholder="https://example.com/logo.png"
-                    value={branding.logoUrl ?? ""}
-                    onChange={(e) => {
-                      updateField("logoUrl", e.target.value);
-                      setLogoPreview(e.target.value || null);
-                    }}
-                    className="text-xs"
-                  />
-                )}
-              </div>
+            <Label className="text-sm font-semibold">Languages</Label>
+            <div className="flex gap-2 flex-wrap">
+              {LANG_OPTIONS.map(({ value, label, flag }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => toggleLanguage(value)}
+                  className={[
+                    "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
+                    demoLanguages.includes(value)
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/60",
+                  ].join(" ")}
+                >
+                  {flag} {label}
+                </button>
+              ))}
             </div>
+            {demoLanguages.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Default: {LANG_OPTIONS.find((o) => o.value === demoLanguages[0])?.flag}{" "}
+                {LANG_OPTIONS.find((o) => o.value === demoLanguages[0])?.label}
+              </p>
+            )}
           </div>
 
-          {branding.primaryColor && (
-            <div className="rounded-lg p-4 border border-border" style={{ backgroundColor: branding.primaryColor + "22" }}>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Vorschau</p>
-              <div className="flex items-center gap-3">
-                {logoPreview && (
-                  <img src={logoPreview} alt="" className="h-10 w-10 rounded object-contain bg-white p-0.5"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                )}
-                <div>
-                  <p className="font-extrabold text-lg" style={{ color: branding.primaryColor }}>
-                    {branding.companyName || "Unternehmensname"}
-                  </p>
-                  {branding.tagline && <p className="text-xs text-muted-foreground">{branding.tagline}</p>}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+          >
+            <Settings2 className="h-4 w-4" />
+            Customize colors, logo &amp; more...
+            {showAdvanced ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />}
+          </button>
+
+          {showAdvanced && (
+            <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Primary Color</Label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="color"
+                      value={branding.primaryColor || "#A8C334"}
+                      onChange={(e) => updateField("primaryColor", e.target.value)}
+                      className="h-9 w-12 rounded border border-input cursor-pointer bg-transparent"
+                    />
+                    <Input
+                      placeholder="#A8C334"
+                      value={branding.primaryColor ?? ""}
+                      onChange={(e) => updateField("primaryColor", e.target.value)}
+                      className="font-mono text-sm h-9"
+                    />
+                  </div>
                 </div>
-                <div className="ml-auto">
-                  <div className="rounded-full px-3 py-1 text-xs font-bold text-white" style={{ backgroundColor: branding.primaryColor }}>
-                    WhatsApp
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Secondary Color</Label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="color"
+                      value={branding.secondaryColor || "#1a3a1a"}
+                      onChange={(e) => updateField("secondaryColor", e.target.value)}
+                      className="h-9 w-12 rounded border border-input cursor-pointer bg-transparent"
+                    />
+                    <Input
+                      placeholder="#1a3a1a"
+                      value={branding.secondaryColor ?? ""}
+                      onChange={(e) => updateField("secondaryColor", e.target.value)}
+                      className="font-mono text-sm h-9"
+                    />
                   </div>
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tagline</Label>
+                <Input
+                  placeholder="Professional care with heart"
+                  value={branding.tagline ?? ""}
+                  onChange={(e) => updateField("tagline", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Hero Headline</Label>
+                <Input
+                  placeholder="Care you can trust."
+                  value={branding.heroHeadline ?? ""}
+                  onChange={(e) => updateField("heroHeadline", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Logo</Label>
+                <div className="flex items-center gap-3">
+                  {logoPreview ? (
+                    <div className="relative shrink-0">
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
+                        className="h-12 w-12 rounded-lg object-contain bg-white p-1 border border-border"
+                        onError={(e) => { (e.target as HTMLImageElement).src = ""; setLogoPreview(null); }}
+                      />
+                      <button
+                        className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full w-4 h-4 text-xs flex items-center justify-center leading-none"
+                        onClick={() => { setLogoFile(null); setLogoPreview(null); }}
+                      >×</button>
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg bg-background border-2 border-dashed border-border flex items-center justify-center shrink-0">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="cursor-pointer text-xs h-9"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoFile(f); }}
+                    />
+                    {!logoFile && (
+                      <Input
+                        placeholder="https://example.com/logo.png"
+                        value={branding.logoUrl ?? ""}
+                        onChange={(e) => { updateField("logoUrl", e.target.value); setLogoPreview(e.target.value || null); }}
+                        className="text-xs h-9"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Phone</Label>
+                  <Input
+                    placeholder="+1 555 000 0000"
+                    value={branding.phone ?? ""}
+                    onChange={(e) => updateField("phone", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">City</Label>
+                  <Input
+                    placeholder="Dubai"
+                    value={branding.city ?? ""}
+                    onChange={(e) => updateField("city", e.target.value)}
+                  />
+                </div>
+              </div>
+
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => { onClose(); reset(); }}>
-              Abbrechen
-            </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={creating || uploading || !branding.companyName}
-              className="gap-2"
-            >
-              {(creating || uploading) && <Loader2 className="h-4 w-4 animate-spin" />}
-              Demo erstellen
-            </Button>
-          </div>
         </div>
+
+        <div className="px-6 pb-6">
+          <Button
+            onClick={handleCreate}
+            disabled={creating || uploading || !branding.companyName}
+            className="w-full h-11 gap-2 text-sm font-semibold"
+          >
+            {(creating || uploading) ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Creating...</>
+            ) : (
+              <><Sparkles className="h-4 w-4" /> Create demo{branding.companyName ? ` for ${branding.companyName}` : ""}</>
+            )}
+          </Button>
+        </div>
+
       </DialogContent>
     </Dialog>
   );
