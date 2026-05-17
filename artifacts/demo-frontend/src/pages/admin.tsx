@@ -83,6 +83,16 @@ interface DemoClient {
   branding: BrandingConfig;
 }
 
+function getAuthHeader(): Record<string, string> {
+  try {
+    const stored = sessionStorage.getItem("dashboard_basic_auth");
+    if (!stored) return {};
+    const { user, pass } = JSON.parse(stored) as { user: string; pass: string };
+    if (user && pass) return { Authorization: `Basic ${btoa(`${user}:${pass}`)}` };
+  } catch { /* ignore */ }
+  return {};
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -386,7 +396,7 @@ function CreateDemoDialog({
     try {
       const res = await fetch("/api/admin/extract-branding", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({ url: websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}` }),
       });
       if (!res.ok) {
@@ -427,7 +437,7 @@ function CreateDemoDialog({
     try {
       const meta = await fetch("/api/storage/uploads/request-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({ name: logoFile.name, size: logoFile.size, contentType: logoFile.type }),
       });
       if (!meta.ok) throw new Error("Could not get upload URL");
@@ -469,7 +479,7 @@ function CreateDemoDialog({
       };
       const res = await fetch("/api/admin/clients", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
