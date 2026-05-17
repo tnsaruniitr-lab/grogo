@@ -40,6 +40,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useListDemoClients,
   useDeleteDemoClient,
+  useUpdateDemoClient,
 } from "@workspace/api-client-react";
 import {
   Globe,
@@ -53,6 +54,8 @@ import {
   Upload,
   LayoutDashboard,
   BookOpen,
+  MessageCircle,
+  Save,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -97,6 +100,7 @@ export default function AdminPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
+  const [whatsappClient, setWhatsappClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -268,6 +272,14 @@ export default function AdminPage() {
                           </Button>
                           <Button
                             size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                            onClick={() => setWhatsappClient(client)}
+                          >
+                            <MessageCircle className="h-3 w-3" /> WhatsApp
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="ghost"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => {
@@ -302,6 +314,17 @@ export default function AdminPage() {
         <KnowledgeDialog
           slug={knowledgeSlug}
           onClose={() => setKnowledgeSlug(null)}
+        />
+      )}
+
+      {whatsappClient && (
+        <WhatsAppLinkDialog
+          client={whatsappClient}
+          onClose={() => setWhatsappClient(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+            setWhatsappClient(null);
+          }}
         />
       )}
     </div>
@@ -728,3 +751,151 @@ function CreateDemoDialog({
 }
 
 /* KnowledgeDialog is now in @/components/knowledge-dialog */
+
+function buildWaLink(twilioSender: string, slug: string, message: string): string {
+  const number = twilioSender.replace(/^whatsapp:/i, "").replace(/[^0-9+]/g, "");
+  const text = encodeURIComponent(`[${slug}] ${message}`);
+  return `https://wa.me/${number}?text=${text}`;
+}
+
+function WhatsAppLinkDialog({
+  client,
+  onClose,
+  onSaved,
+}: {
+  client: DemoClient;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const defaultMsg =
+    (client.branding as BrandingConfig & { defaultMessage?: string | null }).defaultMessage ??
+    `Hi, I'd like to learn more about ${client.branding.companyName}`;
+
+  const [twilioSender, setTwilioSender] = useState(
+    (client as DemoClient & { twilioSender?: string }).twilioSender ?? ""
+  );
+  const [message, setMessage] = useState(defaultMsg);
+  const [copied, setCopied] = useState(false);
+
+  const waLink = buildWaLink(twilioSender, client.slug, message);
+
+  const updateMutation = useUpdateDemoClient({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+        toast({ title: "Saved", description: "WhatsApp link settings updated." });
+        onSaved();
+      },
+      onError: () => {
+        toast({ title: "Error", description: "Failed to save settings.", variant: "destructive" });
+      },
+    },
+  });
+
+  const handleSave = () => {
+    const existingBranding = client.branding as unknown as Record<string, unknown>;
+    updateMutation.mutate({
+      id: client.id,
+      data: {
+        twilioSender,
+        branding: {
+          ...existingBranding,
+          defaultMessage: message,
+        } as Parameters<typeof updateMutation.mutate>[0]["data"]["branding"],
+      },
+    });
+  };
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(waLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-green-500" />
+            WhatsApp Link — {client.branding.companyName}
+          </DialogTitle>
+          <DialogDescription>
+            Embed this link on the client's website. Incoming messages route automatically to this brand's bot and knowledge base.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5 mt-2">
+          <div className="space-y-2">
+            <Label>Twilio Sender Number</Label>
+            <Input
+              value={twilioSender}
+              onChange={(e) => setTwilioSender(e.target.value)}
+              placeholder="whatsapp:+4915234567890"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              Format: <code>whatsapp:+{"{country}{number}"}</code>. All brands can share the same number — the slug tag routes correctly.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Default Pre-fill Message</Label>
+            <div className="flex items-center gap-2 rounded-md border border-input bg-muted px-3 py-2 text-sm">
+              <span className="font-mono text-xs text-muted-foreground shrink-0 select-none">
+                [{client.slug}]
+              </span>
+              <input
+                className="flex-1 bg-transparent outline-none text-sm"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder={`Hi, I'd like to learn more about ${client.branding.companyName}`}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The <code>[{client.slug}]</code> prefix is locked — it's how the system identifies which brand this message belongs to. It's stripped before the bot sees it.
+            </p>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label>Generated Link</Label>
+            <div className="flex gap-2">
+              <Input
+                readOnly
+                value={waLink}
+                className="font-mono text-xs bg-muted"
+              />
+              <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={copyLink}>
+                {copied ? <><CheckCheck className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Paste as an <code>href</code> on any button or link. Works on mobile (opens WhatsApp app) and desktop (opens WhatsApp Web).
+            </p>
+          </div>
+
+          <div className="rounded-md bg-muted/50 border border-border p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-semibold text-foreground text-sm">HTML embed snippet</p>
+            <code className="block break-all text-xs">
+              {`<a href="${waLink}" target="_blank" rel="noopener">Chat on WhatsApp</a>`}
+            </code>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSave} disabled={updateMutation.isPending} className="gap-2">
+            {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

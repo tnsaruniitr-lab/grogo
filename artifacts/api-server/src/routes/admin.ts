@@ -532,6 +532,7 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     vertical: (cfg.vertical as string | null | undefined) ?? "healthcare",
     heroImageUrl: (cfg.heroImageUrl as string | null | undefined) ?? null,
     twilioSender: client.twilioSender ?? null,
+    defaultMessage: (cfg.defaultMessage as string | null | undefined) ?? null,
   };
 }
 

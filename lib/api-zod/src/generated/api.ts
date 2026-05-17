@@ -182,6 +182,7 @@ export const ExtractBrandingResponse = zod.object({
   industry: zod.string().nullish(),
   vertical: zod.string().nullish(),
   twilioSender: zod.string().nullish(),
+  defaultMessage: zod.string().nullish(),
 });
 
 /**
@@ -210,6 +211,7 @@ export const ListDemoClientsResponseItem = zod.object({
     industry: zod.string().nullish(),
     vertical: zod.string().nullish(),
     twilioSender: zod.string().nullish(),
+    defaultMessage: zod.string().nullish(),
   }),
 });
 export const ListDemoClientsResponse = zod.array(ListDemoClientsResponseItem);
@@ -236,6 +238,7 @@ export const CreateDemoClientBody = zod.object({
       industry: zod.string().nullish(),
       vertical: zod.string().nullish(),
       twilioSender: zod.string().nullish(),
+      defaultMessage: zod.string().nullish(),
     })
     .optional(),
 });
@@ -266,6 +269,7 @@ export const UpdateDemoClientBody = zod.object({
       industry: zod.string().nullish(),
       vertical: zod.string().nullish(),
       twilioSender: zod.string().nullish(),
+      defaultMessage: zod.string().nullish(),
     })
     .optional(),
 });
@@ -292,6 +296,7 @@ export const UpdateDemoClientResponse = zod.object({
     industry: zod.string().nullish(),
     vertical: zod.string().nullish(),
     twilioSender: zod.string().nullish(),
+    defaultMessage: zod.string().nullish(),
   }),
 });
 
@@ -457,6 +462,7 @@ export const GetClientBrandingResponse = zod.object({
   industry: zod.string().nullish(),
   vertical: zod.string().nullish(),
   twilioSender: zod.string().nullish(),
+  defaultMessage: zod.string().nullish(),
 });
 
 /**

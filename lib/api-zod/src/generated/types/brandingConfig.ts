@@ -33,4 +33,6 @@ export interface BrandingConfig {
   vertical?: string | null;
   /** @nullable */
   twilioSender?: string | null;
+  /** @nullable */
+  defaultMessage?: string | null;
 }
