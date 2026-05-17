@@ -14,7 +14,7 @@ export function useAuth() {
 }
 
 function applyStoredCredentials(): boolean {
-  const stored = sessionStorage.getItem(STORAGE_KEY);
+  const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return false;
   try {
     const { user, pass } = JSON.parse(stored) as { user: string; pass: string };
@@ -23,7 +23,7 @@ function applyStoredCredentials(): boolean {
       return true;
     }
   } catch {
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
   }
   return false;
 }
@@ -36,10 +36,9 @@ export function LoginGate({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Listen for 401s from the query client — clear auth if credentials rejected
     function handleUnauth(e: CustomEvent) {
       if (e.detail?.status === 401) {
-        sessionStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY);
         setBasicAuth(null, null);
         setAuthed(false);
         setError("Session expired — please log in again.");
@@ -50,7 +49,7 @@ export function LoginGate({ children }: { children: ReactNode }) {
   }, []);
 
   function logout() {
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
     setBasicAuth(null, null);
     setAuthed(false);
     setUser("");
@@ -63,7 +62,6 @@ export function LoginGate({ children }: { children: ReactNode }) {
     setLoading(true);
     setError("");
 
-    // Test credentials against a lightweight endpoint before proceeding
     const encoded = btoa(`${user}:${pass}`);
     try {
       const res = await fetch("/api/dashboard/stats?clientId=1", {
@@ -74,8 +72,7 @@ export function LoginGate({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
       }
-      // Any other response (200 or even 400 from bad params) means auth passed
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ user, pass }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, pass }));
       setBasicAuth(user, pass);
       setAuthed(true);
     } catch {
@@ -99,7 +96,7 @@ export function LoginGate({ children }: { children: ReactNode }) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 mb-4">
             <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0v4h8z" />
             </svg>
           </div>
           <h1 className="text-2xl font-semibold text-white">GrowthMonk</h1>

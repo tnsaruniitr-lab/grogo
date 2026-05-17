@@ -93,9 +93,9 @@ function getAuthHeader(): Record<string, string> {
   const header = getBasicAuthHeader();
   if (header) return { Authorization: header };
 
-  // Fallback: restore from sessionStorage (survives HMR / full reloads)
+  // Fallback: restore from localStorage (shared across all frames and tabs)
   try {
-    const stored = sessionStorage.getItem("dashboard_basic_auth");
+    const stored = localStorage.getItem("dashboard_basic_auth");
     if (stored) {
       const { user, pass } = JSON.parse(stored) as { user: string; pass: string };
       if (user && pass) {
