@@ -47,20 +47,21 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Stethoscope, Activity, Smile, Shield, Leaf, Wind,
 };
 
+const _IB = import.meta.env.BASE_URL;
 const INDUSTRY_IMAGES: Record<string, string> = {
-  aesthetics:          "/images/industry/aesthetics.webp",
-  wellness:            "/images/industry/wellness.webp",
-  care:                "/images/industry/care.png",
-  medical:             "/images/industry/care.png",
-  healthcare:          "/images/industry/care.png",
-  "cosmetic-surgery":  "/images/industry/cosmetic-surgery.webp",
-  hair:                "/images/industry/hair.webp",
-  "weight-management": "/images/industry/weight-management.webp",
-  "iv-therapy":        "/images/industry/iv-therapy.webp",
-  fertility:           "/images/industry/fertility.webp",
-  dental:              "/images/industry/dental.webp",
-  physiotherapy:       "/images/industry/physiotherapy.webp",
-  "laser-eye":         "/images/industry/laser-eye.webp",
+  aesthetics:          `${_IB}images/industry/aesthetics.webp`,
+  wellness:            `${_IB}images/industry/wellness.webp`,
+  care:                `${_IB}images/industry/care.png`,
+  medical:             `${_IB}images/industry/care.png`,
+  healthcare:          `${_IB}images/industry/care.png`,
+  "cosmetic-surgery":  `${_IB}images/industry/cosmetic-surgery.webp`,
+  hair:                `${_IB}images/industry/hair.webp`,
+  "weight-management": `${_IB}images/industry/weight-management.webp`,
+  "iv-therapy":        `${_IB}images/industry/iv-therapy.webp`,
+  fertility:           `${_IB}images/industry/fertility.webp`,
+  dental:              `${_IB}images/industry/dental.webp`,
+  physiotherapy:       `${_IB}images/industry/physiotherapy.webp`,
+  "laser-eye":         `${_IB}images/industry/laser-eye.webp`,
 };
 
 function getIndustryImage(industry?: string | null): string {

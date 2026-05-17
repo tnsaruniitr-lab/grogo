@@ -649,19 +649,20 @@ const THEME_MAP: Record<string, IndustryTheme> = {
   "weight-management": medicalTheme,
 };
 
-/** Maps industry key → video filename served from /videos/ */
+const _VB = import.meta.env.BASE_URL;
+/** Maps industry key → video filename served from /admin/videos/ */
 export const INDUSTRY_VIDEO_MAP: Record<string, string> = {
-  aesthetics: "/videos/medspa-treatment.mp4",
-  wellness: "/videos/wellness-meditation.mp4",
-  care: "/videos/care-compassion.mp4",
-  dental: "/videos/dental-smile.mp4",
-  hair: "/videos/hair-clinic.mp4",
-  physiotherapy: "/videos/physio-rehab.mp4",
-  "iv-therapy": "/videos/iv-therapy.mp4",
-  "cosmetic-surgery": "/videos/cosmetic-surgery.mp4",
-  "laser-eye": "/videos/laser-eye.mp4",
-  fertility: "/videos/fertility-ivf.mp4",
-  "weight-management": "/videos/weight-management.mp4",
+  aesthetics: `${_VB}videos/medspa-treatment.mp4`,
+  wellness: `${_VB}videos/wellness-meditation.mp4`,
+  care: `${_VB}videos/care-compassion.mp4`,
+  dental: `${_VB}videos/dental-smile.mp4`,
+  hair: `${_VB}videos/hair-clinic.mp4`,
+  physiotherapy: `${_VB}videos/physio-rehab.mp4`,
+  "iv-therapy": `${_VB}videos/iv-therapy.mp4`,
+  "cosmetic-surgery": `${_VB}videos/cosmetic-surgery.mp4`,
+  "laser-eye": `${_VB}videos/laser-eye.mp4`,
+  fertility: `${_VB}videos/fertility-ivf.mp4`,
+  "weight-management": `${_VB}videos/weight-management.mp4`,
 };
 
 export const INDUSTRY_OPTIONS: Array<{ value: string; label: string; emoji: string }> = [

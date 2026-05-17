@@ -67,7 +67,7 @@ interface HeroConfig {
 
 const CONFIGS: Record<string, HeroConfig> = {
   aesthetics: {
-    video: "/videos/medspa-treatment.mp4",
+    video: `${import.meta.env.BASE_URL}videos/medspa-treatment.mp4`,
     accent: "#C4882A",
     bg: "#0E0804",
     overlayH:
@@ -87,7 +87,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["CQC Registered", "GMC Certified", "500+ 5★ Reviews", "Award Winner 2024"],
   },
   wellness: {
-    video: "/videos/wellness-meditation.mp4",
+    video: `${import.meta.env.BASE_URL}videos/wellness-meditation.mp4`,
     accent: "#8BAF6A",
     bg: "#0D1209",
     overlayH:
@@ -107,7 +107,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["200+ Classes/Month", "Expert Instructors", "All Levels Welcome", "7-Day Free Trial"],
   },
   care: {
-    video: "/videos/care-compassion.mp4",
+    video: `${import.meta.env.BASE_URL}videos/care-compassion.mp4`,
     accent: "#E8A84C",
     bg: "#1A0E06",
     overlayH:
@@ -132,7 +132,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     },
   },
   "cosmetic-surgery": {
-    video: "/videos/cosmetic-surgery.mp4",
+    video: `${import.meta.env.BASE_URL}videos/cosmetic-surgery.mp4`,
     accent: "#C9B99A",
     bg: "#0B0907",
     overlayH:
@@ -151,7 +151,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["Board-Certified Surgeons", "Accredited Facility", "10yr Aftercare", "5★ Reviews"],
   },
   hair: {
-    video: "/videos/hair-clinic.mp4",
+    video: `${import.meta.env.BASE_URL}videos/hair-clinic.mp4`,
     accent: "#2A9BD4",
     bg: "#060E14",
     overlayH:
@@ -170,7 +170,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["8,000+ Procedures", "GMC Registered", "Lifetime Guarantee", "0% Finance"],
   },
   "weight-management": {
-    video: "/videos/weight-management.mp4",
+    video: `${import.meta.env.BASE_URL}videos/weight-management.mp4`,
     accent: "#4CAF80",
     bg: "#040C07",
     overlayH:
@@ -189,7 +189,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["Doctor-Led Programme", "Clinically Proven", "Personalised Plans", "Ongoing Support"],
   },
   "iv-therapy": {
-    video: "/videos/iv-therapy.mp4",
+    video: `${import.meta.env.BASE_URL}videos/iv-therapy.mp4`,
     accent: "#9B72CF",
     bg: "#080512",
     overlayH:
@@ -208,7 +208,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["Nurse-Administered", "Pharmaceutical Grade", "Same-Day Appointments", "Home Visits"],
   },
   fertility: {
-    video: "/videos/fertility-ivf.mp4",
+    video: `${import.meta.env.BASE_URL}videos/fertility-ivf.mp4`,
     accent: "#C4788A",
     bg: "#140B0E",
     overlayH:
@@ -227,7 +227,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["HFEA Licensed", "75% Success Rate", "Compassionate Care", "Full Transparency"],
   },
   dental: {
-    video: "/videos/dental-smile.mp4",
+    video: `${import.meta.env.BASE_URL}videos/dental-smile.mp4`,
     accent: "#3B9BD4",
     bg: "#040C14",
     overlayH:
@@ -246,7 +246,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["GDC Registered", "Invisalign Diamond", "Sedation Available", "0% Finance"],
   },
   physiotherapy: {
-    video: "/videos/physio-rehab.mp4",
+    video: `${import.meta.env.BASE_URL}videos/physio-rehab.mp4`,
     accent: "#4A9B6A",
     bg: "#060E08",
     overlayH:
@@ -265,7 +265,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["HCPC Registered", "Same-Day Bookings", "Sports Specialists", "All Insurers"],
   },
   "laser-eye": {
-    video: "/videos/laser-eye.mp4",
+    video: `${import.meta.env.BASE_URL}videos/laser-eye.mp4`,
     accent: "#2A74CB",
     bg: "#04080F",
     overlayH:
@@ -284,7 +284,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["CQC Registered", "10,000+ Procedures", "Lifetime Guarantee", "0% Finance"],
   },
   medical: {
-    video: "/videos/care-compassion.mp4",
+    video: `${import.meta.env.BASE_URL}videos/care-compassion.mp4`,
     accent: "#3A9BBF",
     bg: "#040D12",
     overlayH:
@@ -303,7 +303,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     trustItems: ["Fully Licensed", "Certified Professionals", "24/7 Availability", "Home Visits"],
   },
   healthcare: {
-    video: "/videos/care-compassion.mp4",
+    video: `${import.meta.env.BASE_URL}videos/care-compassion.mp4`,
     accent: "#3A9BBF",
     bg: "#040D12",
     overlayH:
@@ -324,7 +324,7 @@ const CONFIGS: Record<string, HeroConfig> = {
 };
 
 const DEFAULT_CONFIG: HeroConfig = {
-  video: "/videos/forest-canopy-hero.mp4",
+  video: `${import.meta.env.BASE_URL}videos/forest-canopy-hero.mp4`,
   accent: "#22C55E",
   bg: "#030712",
   overlayH:
