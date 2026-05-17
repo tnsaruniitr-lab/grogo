@@ -37,6 +37,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-heroes/FertilityV3.tsx": () => import("../components/mockups/landing-heroes/FertilityV3.tsx"),
   "./components/mockups/landing-heroes/GrowthMonkMultiV2.tsx": () => import("../components/mockups/landing-heroes/GrowthMonkMultiV2.tsx"),
   "./components/mockups/landing-heroes/HairClinicV3.tsx": () => import("../components/mockups/landing-heroes/HairClinicV3.tsx"),
+  "./components/mockups/landing-heroes/HealthcareZoomOut.tsx": () => import("../components/mockups/landing-heroes/HealthcareZoomOut.tsx"),
   "./components/mockups/landing-heroes/HomecareClinical.tsx": () => import("../components/mockups/landing-heroes/HomecareClinical.tsx"),
   "./components/mockups/landing-heroes/HomecareEditorial.tsx": () => import("../components/mockups/landing-heroes/HomecareEditorial.tsx"),
   "./components/mockups/landing-heroes/HomecareWarm.tsx": () => import("../components/mockups/landing-heroes/HomecareWarm.tsx"),
