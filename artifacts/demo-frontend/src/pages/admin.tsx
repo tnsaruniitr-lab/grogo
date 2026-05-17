@@ -41,6 +41,7 @@ import {
   useListDemoClients,
   useDeleteDemoClient,
   useUpdateDemoClient,
+  createDemoClient,
   getBasicAuthHeader,
   setBasicAuth,
 } from "@workspace/api-client-react";
@@ -506,22 +507,15 @@ function CreateDemoDialog({
           demoLanguages,
         },
       };
-      const res = await fetch("/api/admin/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeader() },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        toast({ title: "Fehler", description: err.error ?? "Demo konnte nicht erstellt werden", variant: "destructive" });
-        return;
-      }
-      const created: DemoClient = await res.json();
+      const created = await createDemoClient(payload);
       toast({
         title: "Demo erstellt!",
         description: `Demo-Link: /demo/${created.slug}`,
       });
       onCreated();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Demo konnte nicht erstellt werden";
+      toast({ title: "Fehler", description: msg, variant: "destructive" });
     } finally {
       setCreating(false);
     }
