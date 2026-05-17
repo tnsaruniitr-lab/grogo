@@ -444,7 +444,7 @@ function Testimonials() {
   const testimonials = [
     {
       quote:
-        "GrowthMonk helped us launch a live AI-assisted documentation workflow that turns manual inputs into structured care records in real time. It's a strong first step in our AI transformation, and we're excited to explore their AI Growth Engine across more areas of our business.",
+        "We were tired of trying to adapt generic tools to the realities of outpatient care. GrowthMonk helped us launch a healthcare-focused WhatsApp CRM with AI documentation, workforce measurement, and efficiency tracking built around how our team actually works. Even at the pilot stage, it shows strong potential to reduce admin effort, improve operational visibility, and support our broader AI transformation. We're excited to expand this further with their AI Growth Engine.",
       company: "Dosteli",
       country: "Germany",
       flag: "🇩🇪",
