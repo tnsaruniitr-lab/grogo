@@ -779,6 +779,8 @@ function WhatsAppLinkDialog({
   );
   const [message, setMessage] = useState(defaultMsg);
   const [copied, setCopied] = useState(false);
+  const [snippetTab, setSnippetTab] = useState<"raw" | "inline" | "float">("inline");
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const waLink = buildWaLink(twilioSender, client.slug, message);
 
@@ -809,22 +811,59 @@ function WhatsAppLinkDialog({
     });
   };
 
+  const WA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>`;
+
+  const snippets: Record<"raw" | "inline" | "float", { label: string; hint: string; code: string }> = {
+    raw: {
+      label: "Raw link",
+      hint: "Use when the dev already has a button component. Just swap in this href.",
+      code: waLink,
+    },
+    inline: {
+      label: "Inline button",
+      hint: "Self-contained styled button. Paste inside any section — no CSS file needed.",
+      code: `<a href="${waLink}" target="_blank" rel="noopener noreferrer"
+   style="display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#ffffff;padding:12px 24px;border-radius:8px;font-family:sans-serif;font-size:15px;font-weight:600;text-decoration:none;">
+  ${WA_SVG}
+  Chat on WhatsApp
+</a>`,
+    },
+    float: {
+      label: "Floating widget",
+      hint: "Fixed bottom-right bubble. Paste once before </body>. Works on every page automatically.",
+      code: `<!-- WhatsApp floating button — paste before </body> -->
+<style>
+  #wa-float{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;justify-content:center;width:56px;height:56px;background:#25D366;border-radius:50%;box-shadow:0 4px 16px rgba(0,0,0,.28);text-decoration:none;transition:transform .2s,box-shadow .2s;}
+  #wa-float:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(0,0,0,.32);}
+</style>
+<a id="wa-float" href="${waLink}" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#fff" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+</a>`,
+    },
+  };
+
   const copyLink = async () => {
     await navigator.clipboard.writeText(waLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copySnippet = async () => {
+    await navigator.clipboard.writeText(snippets[snippetTab].code);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
+  };
+
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-green-500" />
             WhatsApp Link — {client.branding.companyName}
           </DialogTitle>
           <DialogDescription>
-            Embed this link on the client's website. Incoming messages route automatically to this brand's bot and knowledge base.
+            Incoming messages route automatically to this brand's bot and knowledge base.
           </DialogDescription>
         </DialogHeader>
 
@@ -838,14 +877,14 @@ function WhatsAppLinkDialog({
               className="font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              Format: <code>whatsapp:+{"{country}{number}"}</code>. All brands can share the same number — the slug tag routes correctly.
+              All brands can share the same number — the slug tag handles routing automatically.
             </p>
           </div>
 
           <div className="space-y-2">
             <Label>Default Pre-fill Message</Label>
             <div className="flex items-center gap-2 rounded-md border border-input bg-muted px-3 py-2 text-sm">
-              <span className="font-mono text-xs text-muted-foreground shrink-0 select-none">
+              <span className="font-mono text-xs text-muted-foreground shrink-0 select-none bg-background border border-border rounded px-1.5 py-0.5">
                 [{client.slug}]
               </span>
               <input
@@ -856,34 +895,72 @@ function WhatsAppLinkDialog({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              The <code>[{client.slug}]</code> prefix is locked — it's how the system identifies which brand this message belongs to. It's stripped before the bot sees it.
+              The <code>[{client.slug}]</code> prefix is locked for routing. It's stripped before the bot or the lead ever sees it.
             </p>
           </div>
 
           <Separator />
 
-          <div className="space-y-2">
-            <Label>Generated Link</Label>
-            <div className="flex gap-2">
-              <Input
-                readOnly
-                value={waLink}
-                className="font-mono text-xs bg-muted"
-              />
-              <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={copyLink}>
-                {copied ? <><CheckCheck className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Generated link</Label>
+              <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={copyLink}>
+                {copied ? <><CheckCheck className="h-3 w-3" /> Copied</> : <><Copy className="h-3 w-3" /> Copy link</>}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Paste as an <code>href</code> on any button or link. Works on mobile (opens WhatsApp app) and desktop (opens WhatsApp Web).
-            </p>
+            <Input readOnly value={waLink} className="font-mono text-xs bg-muted" />
           </div>
 
-          <div className="rounded-md bg-muted/50 border border-border p-3 text-xs text-muted-foreground space-y-1">
-            <p className="font-semibold text-foreground text-sm">HTML embed snippet</p>
-            <code className="block break-all text-xs">
-              {`<a href="${waLink}" target="_blank" rel="noopener">Chat on WhatsApp</a>`}
-            </code>
+          <div className="space-y-3">
+            <Label>Embed snippet</Label>
+
+            <div className="flex gap-1 p-1 bg-muted rounded-lg">
+              {(["inline", "float", "raw"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setSnippetTab(tab)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    snippetTab === tab
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {snippets[tab].label}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">{snippets[snippetTab].hint}</p>
+
+            <div className="relative">
+              <pre className="rounded-md bg-muted border border-border p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all leading-relaxed max-h-48 overflow-y-auto">
+                <code>{snippets[snippetTab].code}</code>
+              </pre>
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute top-2 right-2 h-7 gap-1.5 text-xs bg-background"
+                onClick={copySnippet}
+              >
+                {copiedSnippet ? <><CheckCheck className="h-3 w-3" /> Copied</> : <><Copy className="h-3 w-3" /> Copy</>}
+              </Button>
+            </div>
+
+            {snippetTab === "inline" && (
+              <p className="text-xs text-muted-foreground">
+                Drop inside a <code>{"<section>"}</code>, CTA div, or footer. Positioning is wherever you place it in the HTML.
+              </p>
+            )}
+            {snippetTab === "float" && (
+              <p className="text-xs text-muted-foreground">
+                Fixed <strong>bottom-right</strong> on every page. Paste once before <code>{"</body>"}</code> — the CSS and icon are self-contained, no extra files needed.
+              </p>
+            )}
+            {snippetTab === "raw" && (
+              <p className="text-xs text-muted-foreground">
+                Works on mobile (opens WhatsApp app) and desktop (opens WhatsApp Web). Wrap in any existing button or link element.
+              </p>
+            )}
           </div>
         </div>
 
