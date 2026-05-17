@@ -218,8 +218,8 @@ export function VideoHero() {
       {/* Hero content */}
       <div className="gm-hero-body" style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 32px", maxWidth: "1100px", width: "100%" }}>
 
-        {/* Headline */}
-        <div className="vh-in2" style={{ marginBottom: "28px" }}>
+        {/* Headline — semantic h1 for AI crawler topic anchor */}
+        <h1 className="vh-in2" style={{ marginBottom: "28px", fontFamily: "inherit", padding: 0, margin: "0 0 28px", fontWeight: "inherit" }}>
           <div className="gm-hero-headline" style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", color: "white", marginBottom: "0.04em" }}>
             The AI Growth Engine
           </div>
@@ -240,7 +240,12 @@ export function VideoHero() {
               {WORDS[wordIdx]}
             </span>
           </div>
-        </div>
+        </h1>
+
+        {/* Definition paragraph — crawlable by AI engines, visually hidden */}
+        <p className="sr-only">
+          GrowthMonk is an AI-powered growth platform for healthcare and wellness businesses that automates lead capture from WhatsApp and social media, qualifies patient enquiries automatically in under 90 seconds, and books consultations directly into your calendar — available 24/7 in English, German, Turkish, and Arabic. Built to optimise for AI search discovery so practices appear in ChatGPT and Perplexity results before competitors.
+        </p>
 
         {/* Subtext */}
         <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.82)", maxWidth: "520px", marginBottom: "40px", fontWeight: 600 }}>

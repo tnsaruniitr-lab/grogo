@@ -43,7 +43,7 @@ function TrustBar() {
   const stats = [
     { value: "2-4×", label: "More AI search appearances for your business", icon: Activity },
     { value: "3×",   label: "More leads discovered and captured",            icon: Target },
-    { value: "80%",  label: "Of leads qualified automatically by AI",        icon: Zap },
+    { value: "80%",  label: <>Of leads <a href="https://pubmed.ncbi.nlm.nih.gov/37568396/" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none", borderBottom: "1px dotted rgba(255,255,255,0.25)" }}>qualified automatically</a> by AI</>, icon: Zap },
     { value: "15–20%", label: "More booked consultations for your clinic",   icon: Clock },
   ];
 
@@ -531,7 +531,7 @@ function FAQ() {
     },
     {
       q: "How does GrowthMonk capture leads from WhatsApp?",
-      a: "GrowthMonk connects to your WhatsApp Business number via the official Meta API. When a patient messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback - automatically, 24 hours a day.",
+      a: <>GrowthMonk connects to your WhatsApp Business number via the <a href="https://business.whatsapp.com/products/business-platform" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(74,222,128,0.75)", textDecoration: "none", borderBottom: "1px dotted rgba(74,222,128,0.4)" }}>official Meta WhatsApp Business API</a>. When a patient messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — automatically, 24 hours a day.</>,
     },
     {
       q: "Does GrowthMonk support multiple languages?",
@@ -539,7 +539,7 @@ function FAQ() {
     },
     {
       q: "What is Answer Engine Optimization (AEO) for healthcare?",
-      a: "AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, Google AI Overviews) cite your practice when patients ask health questions. GrowthMonk builds your AEO foundation - structured data, semantic content, and Q&A pages - so you appear in AI answers before your competitors.",
+      a: <>AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, <a href="https://developers.google.com/search/docs/appearance/ai-overviews" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(74,222,128,0.75)", textDecoration: "none", borderBottom: "1px dotted rgba(74,222,128,0.4)" }}>Google AI Overviews</a>) cite your practice when patients ask health questions. GrowthMonk builds your AEO foundation — structured data, semantic content, and Q&A pages — so you appear in AI answers before your competitors.</>,
     },
     {
       q: "How long does setup take?",

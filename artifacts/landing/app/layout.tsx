@@ -80,6 +80,19 @@ const jsonLd = {
         "AI growth engine for healthcare and wellness businesses. Helps clinics, medspas, dental practices, and care providers get discovered in AI search, capture leads from WhatsApp and social media, and convert them to booked patients automatically.",
       foundingDate: "2024",
       areaServed: "Worldwide",
+      logo: {
+        "@type": "ImageObject",
+        url: `${BASE_URL}/og-image.jpg`,
+      },
+      sameAs: [
+        "https://twitter.com/growthmonk",
+        "https://linkedin.com/company/growthmonk",
+      ],
+      contactPoint: {
+        "@type": "ContactPoint",
+        email: "hello@answermonk.ai",
+        contactType: "customer support",
+      },
       knowsAbout: [
         "AI marketing automation",
         "Healthcare lead generation",
@@ -96,6 +109,8 @@ const jsonLd = {
       applicationSubCategory: "Healthcare Marketing Automation",
       operatingSystem: "Web",
       url: BASE_URL,
+      datePublished: "2025-01-01",
+      dateModified: "2026-05-17",
       description:
         "GrowthMonk is an AI-powered growth platform for healthcare and wellness businesses. It captures leads from WhatsApp, Instagram, and social media, qualifies them automatically in any language, and converts them to booked appointments 24/7.",
       featureList: [
@@ -133,7 +148,7 @@ const jsonLd = {
           name: "How does GrowthMonk capture leads from WhatsApp?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "GrowthMonk connects to your WhatsApp Business number via the official API. When a patient sends a message, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — all automatically, 24 hours a day.",
+            text: "GrowthMonk connects to your WhatsApp Business number via the official Meta WhatsApp Business API. When a patient sends a message, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — all automatically, 24 hours a day.",
           },
         },
         {
@@ -149,7 +164,7 @@ const jsonLd = {
           name: "What is Answer Engine Optimization (AEO) for healthcare?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Answer Engine Optimization (AEO) is the practice of structuring your online content so that AI search engines like ChatGPT, Perplexity, and Google AI Overviews will cite your practice when patients ask health-related questions. GrowthMonk helps healthcare businesses get discovered in these AI-powered search results.",
+            text: "Answer Engine Optimization (AEO) is the practice of structuring your online content so that AI search engines like ChatGPT, Perplexity, and Google AI Overviews will cite your practice when patients ask health-related questions. GrowthMonk helps healthcare businesses get discovered in these AI-powered search results, following Google's AI Overviews guidelines for structured content.",
           },
         },
         {
@@ -158,6 +173,14 @@ const jsonLd = {
           acceptedAnswer: {
             "@type": "Answer",
             text: "GrowthMonk serves medical clinics, dental practices, medspas and aesthetic clinics, physiotherapy and rehabilitation centers, mental health practices, care services and home nursing providers, and wellness and nutrition businesses.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Is patient data safe and GDPR-compliant?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. GrowthMonk is built with data privacy by design. All patient conversations are encrypted, data is processed within GDPR-compliant infrastructure, and you retain full control over what is stored and for how long.",
           },
         },
       ],
