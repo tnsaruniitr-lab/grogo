@@ -32,6 +32,14 @@ export function setBasicAuth(user: string | null, pass: string | null): void {
 }
 
 /**
+ * Returns the current Basic Auth header value, or null if not set.
+ * Use this to add auth to raw fetch() calls outside the generated hooks.
+ */
+export function getBasicAuthHeader(): string | null {
+  return _basicAuthHeader;
+}
+
+/**
  * Set a base URL that is prepended to every relative request URL
  * (i.e. paths that start with `/`).
  *
