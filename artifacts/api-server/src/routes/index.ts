@@ -21,13 +21,13 @@ router.use(respondRouter);           // Respond.io: API-key-validated internally
 router.use(respondEventsRouter);     // Respond.io events: API-key-validated internally
 router.use(manychatRouter);          // ManyChat: x-api-key-validated internally
 router.use(extractBrandingRouter);   // Public URL fetcher — no DB access, no auth needed
+router.use(adminRouter);             // Demo client management — no auth needed
+router.use(crawlRouter);             // Website crawl/branding — no auth needed
+router.use(storageRouter);           // Object storage (logo uploads) — no auth needed
 
-// Protected — Basic Auth required for all dashboard / admin / data routes
+// Protected — Basic Auth required for leads / dashboard
 router.use(requireDashboardAuth);
 router.use(leadsRouter);
 router.use(dashboardRouter);
-router.use(adminRouter);
-router.use(storageRouter);
-router.use(crawlRouter);
 
 export default router;

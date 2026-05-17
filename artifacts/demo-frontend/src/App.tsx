@@ -30,15 +30,24 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Hub} />
-      <Route path="/admin" component={Admin} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/mockups" component={Mockups} />
+      {/* Public demo pages — no login required */}
       <Route path="/demo/:slug/dashboard" component={DemoDashboard} />
       <Route path="/demo/:slug" component={Demo} />
       <Route path="/:vertical/:slug/dashboard" component={DemoDashboard} />
       <Route path="/:vertical/:slug" component={Demo} />
-      <Route component={NotFound} />
+
+      {/* Admin / internal pages — login required */}
+      <Route path="/">
+        <LoginGate>
+          <Switch>
+            <Route path="/" component={Hub} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/mockups" component={Mockups} />
+            <Route component={NotFound} />
+          </Switch>
+        </LoginGate>
+      </Route>
     </Switch>
   );
 }
@@ -47,12 +56,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <LoginGate>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </LoginGate>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

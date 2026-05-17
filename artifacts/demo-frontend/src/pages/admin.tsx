@@ -42,8 +42,6 @@ import {
   useDeleteDemoClient,
   useUpdateDemoClient,
   createDemoClient,
-  getBasicAuthHeader,
-  setBasicAuth,
 } from "@workspace/api-client-react";
 import {
   Globe,
@@ -89,24 +87,6 @@ interface DemoClient {
   branding: BrandingConfig;
 }
 
-function getAuthHeader(): Record<string, string> {
-  // Try module-level state (set by LoginGate on mount)
-  const header = getBasicAuthHeader();
-  if (header) return { Authorization: header };
-
-  // Fallback: restore from localStorage (shared across all frames and tabs)
-  try {
-    const stored = localStorage.getItem("dashboard_basic_auth");
-    if (stored) {
-      const { user, pass } = JSON.parse(stored) as { user: string; pass: string };
-      if (user && pass) {
-        setBasicAuth(user, pass);
-        return { Authorization: `Basic ${btoa(`${user}:${pass}`)}` };
-      }
-    }
-  } catch { /* ignore */ }
-  return {};
-}
 
 function slugify(text: string): string {
   return text
@@ -426,7 +406,7 @@ function CreateDemoDialog({
     try {
       const res = await fetch("/api/admin/extract-branding", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}` }),
       });
       if (!res.ok) {
@@ -467,7 +447,7 @@ function CreateDemoDialog({
     try {
       const meta = await fetch("/api/storage/uploads/request-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: logoFile.name, size: logoFile.size, contentType: logoFile.type }),
       });
       if (!meta.ok) throw new Error("Could not get upload URL");
@@ -507,7 +487,7 @@ function CreateDemoDialog({
           demoLanguages,
         },
       };
-      const created = await createDemoClient(payload, { headers: getAuthHeader() });
+      const created = await createDemoClient(payload);
       toast({
         title: "Demo erstellt!",
         description: `Demo-Link: /demo/${created.slug}`,
