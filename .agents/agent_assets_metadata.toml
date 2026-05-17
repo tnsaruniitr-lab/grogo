@@ -210,6 +210,12 @@ uri = "file://artifacts/landing/public/features/reactivation.png"
 type = "image"
 title = "patient reactivation chat bubbles no text"
 
+[[generated]]
+id = "46f5DtTLw471pIUQHNb_8"
+uri = "file://attached_assets/generated_images/hero-replacement-frame.png"
+type = "image"
+title = "medspa wellness hero frame warm"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
@@ -221,3 +227,9 @@ id = "cngxGdMNlXMz4x-g10F2k"
 uri = "file://artifacts/landing/public/features/reactivation.png"
 type = "image"
 title = "Patient Reactivation — updated"
+
+[[outputs]]
+id = "8nz8bhkD-FsQnANbWndo2"
+uri = "file://attached_assets/generated_images/hero-replacement-frame.png"
+type = "image"
+title = "Replacement video concept — medspa facial treatment"
