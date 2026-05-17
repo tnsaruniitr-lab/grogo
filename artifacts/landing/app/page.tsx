@@ -239,6 +239,7 @@ const featuresList = [
     icon: TrendingUp,
     tag: "Patient Reactivation",
     title: "Turn cold leads and past patients into booked appointments",
+    small: true,
     bullets: [
       "AI identifies leads who went cold, patients overdue for a follow-up, or consultations that were never converted - and re-engages them automatically via WhatsApp",
       "Sends personalised, context-aware messages at the right moment - not generic blasts that get ignored",
@@ -246,7 +247,7 @@ const featuresList = [
       "Post-appointment care built in: AI checks in after treatment, asks how the patient is feeling, and prompts a rebooking or review at exactly the right time",
       "Smart recall intervals for every specialty - physio course completions, medspa top-up windows, dental check-up reminders - all handled without manual effort",
     ],
-    img: "/features/analytics.png",
+    img: "/features/reactivation.png",
   },
   {
     icon: BarChart3,
@@ -262,13 +263,13 @@ const featuresList = [
   },
 ];
 
-function FeatureBullet({ text }: { text: string }) {
+function FeatureBullet({ text, small }: { text: string; small?: boolean }) {
   return (
-    <div style={{ display: "flex", gap: 11, alignItems: "flex-start", marginBottom: 12 }}>
+    <div style={{ display: "flex", gap: 11, alignItems: "flex-start", marginBottom: small ? 9 : 12 }}>
       <div style={{ flexShrink: 0, marginTop: 3, width: 18, height: 18, borderRadius: "50%", background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Check className="h-2.5 w-2.5 text-green-400" strokeWidth={2.5} />
       </div>
-      <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 15, lineHeight: 1.6, fontWeight: 500 }}>{text}</span>
+      <span style={{ color: "rgba(255,255,255,0.62)", fontSize: small ? 13 : 15, lineHeight: 1.6, fontWeight: 500 }}>{text}</span>
     </div>
   );
 }
@@ -336,7 +337,7 @@ function Features() {
                   </h3>
                   <div>
                     {f.bullets.map((b, bi) => (
-                      <FeatureBullet key={bi} text={b} />
+                      <FeatureBullet key={bi} text={b} small={f.small} />
                     ))}
                   </div>
                 </div>

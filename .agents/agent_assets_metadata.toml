@@ -204,8 +204,20 @@ uri = "file://artifacts/landing/public/features/analytics.png"
 type = "image"
 title = "analytics-dashboard"
 
+[[generated]]
+id = "s0OtZnAv7Rqdgx55y02Gd"
+uri = "file://artifacts/landing/public/features/reactivation.png"
+type = "image"
+title = "patient reactivation re-engagement"
+
 [[outputs]]
 id = "lnqRHWNNhwVNfOh1JM8CA"
 uri = "file://artifacts/demo-frontend/public/dosteli_logo_nobg.png"
 type = "image"
 title = "Background-removed Dosteli logo — does content survive?"
+
+[[outputs]]
+id = "cngxGdMNlXMz4x-g10F2k"
+uri = "file://artifacts/landing/public/features/reactivation.png"
+type = "image"
+title = "Patient Reactivation feature illustration"
