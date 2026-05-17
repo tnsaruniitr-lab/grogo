@@ -243,8 +243,13 @@ export function VideoHero() {
         </div>
 
         {/* Subtext */}
-        <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.65)", maxWidth: "580px", marginBottom: "40px", fontWeight: 500 }}>
-          Get discovered in AI search, capture every WhatsApp, website and social media lead, qualify leads automatically, and turn more enquiries into booked consultations - 24/7.
+        <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.82)", maxWidth: "520px", marginBottom: "40px", fontWeight: 600 }}>
+          Get discovered in{" "}
+          <span style={{ color: "rgba(255,255,255,1)" }}>AI search</span>
+          , capture every{" "}
+          <span style={{ color: "rgba(255,255,255,1)" }}>WhatsApp</span>
+          , website and social media lead, qualify leads automatically, and turn more enquiries into booked consultations -{" "}
+          <span style={{ color: "rgba(255,255,255,1)" }}>24/7</span>.
         </p>
 
         {/* CTAs */}
