@@ -236,6 +236,19 @@ const featuresList = [
     img: "/features/booking.png",
   },
   {
+    icon: TrendingUp,
+    tag: "Patient Reactivation",
+    title: "Turn cold leads and past patients into booked appointments",
+    bullets: [
+      "AI identifies leads who went cold, patients overdue for a follow-up, or consultations that were never converted - and re-engages them automatically via WhatsApp",
+      "Sends personalised, context-aware messages at the right moment - not generic blasts that get ignored",
+      "Recovers abandoned conversations - patients who started an enquiry and dropped off before booking are followed up automatically",
+      "Post-appointment care built in: AI checks in after treatment, asks how the patient is feeling, and prompts a rebooking or review at exactly the right time",
+      "Smart recall intervals for every specialty - physio course completions, medspa top-up windows, dental check-up reminders - all handled without manual effort",
+    ],
+    img: "/features/analytics.png",
+  },
+  {
     icon: BarChart3,
     tag: "Live Analytics Dashboard",
     title: "Complete visibility - zero manual tracking",
