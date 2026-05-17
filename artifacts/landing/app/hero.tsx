@@ -1,6 +1,15 @@
-import { ArrowRight } from "lucide-react";
+"use client";
+import { ArrowRight, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export function VideoHero() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navLinks = [
+    { label: "Features",     href: "#features"     },
+    { label: "How It Works", href: "#how-it-works"  },
+    { label: "Industries",   href: "#industries"    },
+    { label: "FAQ",          href: "#faq"           },
+  ];
   return (
     <section style={{
       position: "relative",
@@ -101,23 +110,50 @@ export function VideoHero() {
         .vh-in5 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
         .vh-glow { animation: glowPulseVH 2s ease-in-out infinite; }
 
+        /* ── Hamburger dropdown ── */
+        .gm-menu-dropdown {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          min-width: 200px;
+          background: rgba(5,10,20,0.97);
+          border: 1px solid rgba(34,197,94,0.18);
+          border-radius: 14px;
+          padding: 8px 0;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+          display: none;
+          flex-direction: column;
+          z-index: 100;
+          backdrop-filter: blur(12px);
+        }
+        .gm-menu-dropdown.open { display: flex; }
+        .gm-menu-dropdown a {
+          padding: 12px 20px;
+          color: rgba(255,255,255,0.75);
+          font-size: 15px;
+          font-weight: 500;
+          text-decoration: none;
+          transition: color 0.15s, background 0.15s;
+        }
+        .gm-menu-dropdown a:hover {
+          color: #4ade80;
+          background: rgba(34,197,94,0.07);
+        }
         /* ── Mobile ── */
         @media (max-width: 768px) {
-          .gm-nav        { padding: 16px 20px !important; }
-          .gm-nav-links  { display: none !important; }
-          .gm-nav-cta    { padding: 9px 16px !important; font-size: 13px !important; }
-          .gm-hero-body  { padding: 0 24px !important; }
+          .gm-nav       { padding: 16px 20px !important; }
+          .gm-hero-body { padding: 0 24px !important; }
           .gm-hero-headline {
             font-size: 48px !important;
             letter-spacing: -1.5px !important;
             line-height: 1.08 !important;
           }
-          .gm-hero-sub   {
+          .gm-hero-sub {
             font-size: 17px !important;
             line-height: 1.7 !important;
             margin-bottom: 36px !important;
           }
-          .gm-hero-ctas  { gap: 10px !important; }
+          .gm-hero-ctas { gap: 10px !important; }
           .gm-hero-cta-primary  { padding: 15px 32px !important; font-size: 16px !important; }
           .gm-hero-cta-secondary { display: none !important; }
         }
@@ -159,17 +195,28 @@ export function VideoHero() {
           <span style={{ color: "#22c55e" }}>Growth</span><span style={{ color: "white" }}>Monk</span>
         </a>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          <div className="gm-nav-links" style={{ display: "flex", gap: "28px" }}>
-            {(["Features", "How It Works", "Industries", "FAQ"] as const).map((label) => (
-              <a key={label} href={`#${label.toLowerCase().replace(/ /g, "-")}`} style={{ color: "rgba(255,255,255,0.55)", fontSize: "14px", fontWeight: 500, textDecoration: "none" }}>
-                {label}
+        {/* Hamburger */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", color: "white" }}
+          >
+            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+
+          <div className={`gm-menu-dropdown${menuOpen ? " open" : ""}`}>
+            {navLinks.map((link) => (
+              <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                {link.label}
               </a>
             ))}
+            <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "6px 0" }} />
+            <a href="#cta" onClick={() => setMenuOpen(false)} style={{ color: "#4ade80", fontWeight: 700 }}>
+              Book a Demo →
+            </a>
           </div>
-          <a className="gm-nav-cta" href="#cta" style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: "#22c55e", color: "#030712", padding: "10px 22px", borderRadius: "100px", fontWeight: 700, fontSize: "14px", textDecoration: "none" }}>
-            Book a Demo <ArrowRight size={14} />
-          </a>
         </div>
       </nav>
 
