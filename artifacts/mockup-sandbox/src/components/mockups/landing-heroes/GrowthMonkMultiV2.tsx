@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 
 // GrowthMonk Multi-Video Hero V2
-// Cycles: wellness-meditation → medspa-treatment → dental-smile → care-compassion → physio-rehab
+// Cycles: care-compassion → wellness-meditation → medspa-treatment → dental-smile → physio-rehab
 // Slightly brighter overlay (0.78 vs 0.90) — same dark green/navy brand palette
 
 export function GrowthMonkMultiV2() {
@@ -17,9 +17,10 @@ export function GrowthMonkMultiV2() {
         @keyframes gmv2cfl4 { 0%{opacity:0} 57.5%{opacity:0} 60%{opacity:1} 77.5%{opacity:1} 80%{opacity:0} 100%{opacity:0} }
         @keyframes gmv2cfl5 { 0%{opacity:0} 77.5%{opacity:0} 80%{opacity:1} 97.5%{opacity:1} 100%{opacity:0} }
 
-        @keyframes gmv2hlw1 { 0%{opacity:1} 29.2%{opacity:1} 33.3%{opacity:0} 95.8%{opacity:0} 100%{opacity:1} }
-        @keyframes gmv2hlw2 { 0%{opacity:0} 29.2%{opacity:0} 33.3%{opacity:1} 62.5%{opacity:1} 66.7%{opacity:0} 100%{opacity:0} }
-        @keyframes gmv2hlw3 { 0%{opacity:0} 62.5%{opacity:0} 66.7%{opacity:1} 95.8%{opacity:1} 100%{opacity:0} }
+        @keyframes gmv2hlw1 { 0%{opacity:1} 20%{opacity:1} 23%{opacity:0} 97%{opacity:0} 100%{opacity:1} }
+        @keyframes gmv2hlw2 { 0%{opacity:0} 20%{opacity:0} 23%{opacity:1} 45%{opacity:1} 48%{opacity:0} 100%{opacity:0} }
+        @keyframes gmv2hlw3 { 0%{opacity:0} 45%{opacity:0} 48%{opacity:1} 70%{opacity:1} 73%{opacity:0} 100%{opacity:0} }
+        @keyframes gmv2hlw4 { 0%{opacity:0} 70%{opacity:0} 73%{opacity:1} 95%{opacity:1} 98%{opacity:0} 100%{opacity:0} }
 
         @keyframes gmv2rise { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes gmv2glow { 0%,100%{opacity:0.65} 50%{opacity:1} }
@@ -29,9 +30,10 @@ export function GrowthMonkMultiV2() {
         .gmv2-v3 { animation: gmv2cfl3 40s ease-in-out infinite; }
         .gmv2-v4 { animation: gmv2cfl4 40s ease-in-out infinite; }
         .gmv2-v5 { animation: gmv2cfl5 40s ease-in-out infinite; }
-        .gmv2-w1 { animation: gmv2hlw1 24s ease-in-out infinite; }
-        .gmv2-w2 { animation: gmv2hlw2 24s ease-in-out infinite; opacity: 0; }
-        .gmv2-w3 { animation: gmv2hlw3 24s ease-in-out infinite; opacity: 0; }
+        .gmv2-w1 { animation: gmv2hlw1 28s ease-in-out infinite; }
+        .gmv2-w2 { animation: gmv2hlw2 28s ease-in-out infinite; opacity: 0; }
+        .gmv2-w3 { animation: gmv2hlw3 28s ease-in-out infinite; opacity: 0; }
+        .gmv2-w4 { animation: gmv2hlw4 28s ease-in-out infinite; opacity: 0; }
         .gmv2-i1 { animation: gmv2rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
         .gmv2-i2 { animation: gmv2rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
         .gmv2-i3 { animation: gmv2rise 0.9s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
@@ -43,19 +45,19 @@ export function GrowthMonkMultiV2() {
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <video autoPlay muted loop playsInline className="gmv2-v1"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}>
-          <source src="/__mockup/videos/wellness-meditation.mp4" type="video/mp4" />
+          <source src="/__mockup/videos/care-compassion.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="gmv2-v2"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0 }}>
-          <source src="/__mockup/videos/medspa-treatment.mp4" type="video/mp4" />
+          <source src="/__mockup/videos/wellness-meditation.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="gmv2-v3"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0 }}>
-          <source src="/__mockup/videos/dental-smile.mp4" type="video/mp4" />
+          <source src="/__mockup/videos/medspa-treatment.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="gmv2-v4"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0 }}>
-          <source src="/__mockup/videos/care-compassion.mp4" type="video/mp4" />
+          <source src="/__mockup/videos/dental-smile.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="gmv2-v5"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0 }}>
@@ -96,11 +98,12 @@ export function GrowthMonkMultiV2() {
             <span style={{ color: 'white', marginRight: '0.25em' }}>for</span>
             <span style={{ position: 'relative', display: 'inline-block' }}>
               <span style={{ visibility: 'hidden', pointerEvents: 'none' }}>
-                <span style={{ background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Healthcare</span>
+                <span style={{ background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Wellness Centres</span>
               </span>
               <span className="gmv2-w1" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Healthcare</span>
-              <span className="gmv2-w2" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Wellness</span>
-              <span className="gmv2-w3" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Clinics</span>
+              <span className="gmv2-w2" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Clinics</span>
+              <span className="gmv2-w3" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Medspas</span>
+              <span className="gmv2-w4" style={{ position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap', background: 'linear-gradient(90deg, #22c55e, #4ade80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Wellness Centres</span>
             </span>
           </div>
         </div>
