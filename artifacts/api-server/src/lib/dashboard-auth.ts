@@ -22,6 +22,17 @@ export function requireDashboardAuth(req: Request, res: Response, next: NextFunc
 
   const authHeader = req.headers["authorization"] ?? "";
   if (!authHeader.startsWith("Basic ")) {
+    logger.warn(
+      {
+        path: req.path,
+        method: req.method,
+        ip: req.ip,
+        authHeaderPresent: !!authHeader,
+        authHeaderPrefix: authHeader.slice(0, 12) || "(empty)",
+        allHeaders: Object.keys(req.headers),
+      },
+      "Dashboard auth — missing or malformed Authorization header",
+    );
     res.status(401).json({ error: "Authentication required" });
     return;
   }
