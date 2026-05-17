@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | GrowthMonk",
   },
   description:
-    "GrowthMonk is the AI growth engine for healthcare and wellness businesses. Get discovered in AI search and social media. Capture leads from WhatsApp and Instagram. Convert them to booked patients automatically — 24/7, multilingual.",
+    "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses grow revenue, capture more patient leads from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — automatically, 24/7, multilingual.",
   keywords: [
     "AI healthcare marketing",
     "wellness lead generation",
@@ -77,7 +77,7 @@ const jsonLd = {
       name: "GrowthMonk",
       url: BASE_URL,
       description:
-        "AI growth engine for healthcare and wellness businesses. Helps clinics, medspas, dental practices, and care providers get discovered in AI search, capture leads from WhatsApp and social media, and convert them to booked patients automatically.",
+        "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses grow revenue, capture more patient leads, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews before competitors.",
       foundingDate: "2024",
       areaServed: "Worldwide",
       logo: {
@@ -112,7 +112,7 @@ const jsonLd = {
       datePublished: "2025-01-01",
       dateModified: "2026-05-17",
       description:
-        "GrowthMonk is an AI-powered growth platform for healthcare and wellness businesses. It captures leads from WhatsApp, Instagram, and social media, qualifies them automatically in any language, and converts them to booked appointments 24/7.",
+        "GrowthMonk is an AI growth platform that helps clinics, medspas, dental practices, and healthcare businesses grow revenue, generate more leads, and get discovered in AI search. It captures leads from WhatsApp, Instagram, and social media, qualifies them automatically in any language in under 90 seconds, and converts them to booked appointments 24/7.",
       featureList: [
         "AI search discovery and optimization",
         "WhatsApp and Instagram lead capture",
@@ -140,7 +140,7 @@ const jsonLd = {
           name: "What is GrowthMonk?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "GrowthMonk is an AI growth engine for healthcare and wellness businesses. It helps clinics, medspas, dental practices, and care providers get discovered in AI search engines like ChatGPT and Perplexity, capture leads from WhatsApp and social media, and automatically qualify and convert those leads into booked appointments.",
+            text: "GrowthMonk is an AI growth engine that helps clinics, medspas, dental practices, and wellness businesses grow revenue, capture more patient leads from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews before competitors. It qualifies leads automatically and converts enquiries into booked appointments — 24/7, in multiple languages.",
           },
         },
         {

@@ -244,7 +244,7 @@ export function VideoHero() {
 
         {/* Definition paragraph — crawlable by AI engines, visually hidden */}
         <p className="sr-only">
-          GrowthMonk is an AI-powered growth platform for healthcare and wellness businesses that automates lead capture from WhatsApp and social media, qualifies patient enquiries automatically in under 90 seconds, and books consultations directly into your calendar — available 24/7 in English, German, Turkish, and Arabic. Built to optimise for AI search discovery so practices appear in ChatGPT and Perplexity results before competitors.
+          GrowthMonk helps clinics, medspas, dental practices, and wellness centres grow revenue, capture more patient leads from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — before competitors. It qualifies patient enquiries automatically in under 90 seconds and books consultations directly into your calendar, available 24/7 in English, German, Turkish, and Arabic.
         </p>
 
         {/* Subtext */}
