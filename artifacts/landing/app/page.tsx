@@ -30,6 +30,7 @@ export default function LandingPage() {
         <ProblemSolution />
         <Features />
         <HowItWorks />
+        <Testimonials />
         <Industries />
         <FAQ />
         <CTASection />
@@ -433,6 +434,118 @@ function HowItWorks() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const testimonials = [
+    {
+      quote:
+        "GrowthMonk helped us launch a live AI-assisted documentation workflow that turns manual inputs into structured care records in real time. It's a strong first step in our AI transformation, and we're excited to explore their AI Growth Engine across more areas of our business.",
+      company: "Dosteli",
+      country: "Germany",
+      flag: "🇩🇪",
+      wordmark: { letters: "Do", color: "#22c55e" },
+    },
+    {
+      quote:
+        "GrowthMonk helped us identify key AI-search visibility and website structure gaps, with clear technical recommendations that our team could implement to improve how our healthcare services are discovered and understood online.",
+      company: "FeelValeo",
+      country: "United Kingdom",
+      flag: "🇬🇧",
+      wordmark: { letters: "FV", color: "#4ade80" },
+    },
+  ];
+
+  return (
+    <section
+      style={{ backgroundColor: "#030712", position: "relative", overflow: "hidden" }}
+      className="px-6 py-24"
+      aria-labelledby="testimonials-heading"
+    >
+      {/* Ambient glow */}
+      <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%,-50%)", width: 800, height: 500, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.10) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
+
+      <div className="relative mx-auto max-w-5xl" style={{ zIndex: 1 }}>
+        {/* Header */}
+        <div className="mb-16 text-center">
+          <p style={{ color: "#22c55e", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>
+            Customer Stories
+          </p>
+          <h2
+            id="testimonials-heading"
+            style={{ color: "white", fontWeight: 900, fontSize: "clamp(28px,4vw,44px)", letterSpacing: "-1px", lineHeight: 1.1, margin: "0 0 16px" }}
+          >
+            Trusted by healthcare businesses
+          </h2>
+        </div>
+
+        {/* Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+          {testimonials.map((t) => (
+            <div
+              key={t.company}
+              style={{
+                position: "relative",
+                borderRadius: 20,
+                background: "rgba(17,24,39,0.6)",
+                border: "1px solid rgba(55,65,81,0.6)",
+                padding: "36px 32px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 28,
+                overflow: "hidden",
+              }}
+            >
+              {/* Green bottom line */}
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent 0%, #22c55e 50%, transparent 100%)", opacity: 0.6 }} />
+
+              {/* Opening quote mark */}
+              <div style={{ fontSize: 72, lineHeight: 1, color: "rgba(34,197,94,0.20)", fontFamily: "Georgia, serif", position: "absolute", top: 16, right: 28, userSelect: "none" }}>&ldquo;</div>
+
+              {/* Wordmark logo */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(34,197,94,0.12)",
+                  border: "1px solid rgba(34,197,94,0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: 15,
+                  color: t.wordmark.color,
+                  letterSpacing: "-0.5px",
+                  flexShrink: 0,
+                }}>
+                  {t.wordmark.letters}
+                </div>
+                <div>
+                  <div style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{t.company}</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
+                    <span>{t.flag}</span>
+                    <span>{t.country}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quote */}
+              <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, lineHeight: 1.75, fontWeight: 500, margin: 0, position: "relative", zIndex: 1 }}>
+                &ldquo;{t.quote}&rdquo;
+              </p>
+
+              {/* Verified badge */}
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.18)", borderRadius: 100, padding: "4px 12px", width: "fit-content" }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
+                <span style={{ color: "#4ade80", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em" }}>VERIFIED CUSTOMER</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
