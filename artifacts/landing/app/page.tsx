@@ -340,20 +340,27 @@ function HowItWorks() {
   const steps = [
     {
       number: "01",
+      title: "Audit your AI search presence and outpace competitors",
+      description:
+        "We scan how your practice appears across ChatGPT, Perplexity, and Google AI Overviews - then benchmark it against your top competitors. You get a clear picture of the gap, quick wins to close it fast, and a strategic roadmap to rank above competitors in AI search.",
+      detail: "AI search audit · Competitor analysis · Strategic roadmap",
+    },
+    {
+      number: "02",
       title: "Connect your channels",
       description:
         "Link your WhatsApp Business number, Instagram, and other social media channels to GrowthMonk in minutes. No technical skills needed - we handle the integration.",
       detail: "WhatsApp · Instagram · Facebook · Website chat",
     },
     {
-      number: "02",
+      number: "03",
       title: "AI captures and qualifies every lead",
       description:
         "The moment a potential patient sends a message, our AI responds instantly - in their language. It asks the right questions, understands their need, and qualifies their intent automatically.",
       detail: "24/7 response · Multilingual · Zero staff time",
     },
     {
-      number: "03",
+      number: "04",
       title: "You receive booked appointments",
       description:
         "Qualified patients are booked into your calendar or scheduled for a callback automatically. You open your dashboard to a list of warm, qualified leads ready to convert.",
@@ -380,8 +387,8 @@ function HowItWorks() {
           Up and running in 24 hours
         </h2>
         <p className="mx-auto mb-16 max-w-xl text-center text-gray-400">
-          Three steps from sign-up to a fully automated lead pipeline for your
-          healthcare business.
+          Four steps from sign-up to a fully automated, AI-visible lead pipeline
+          for your healthcare business.
         </p>
 
         <div className="relative">
