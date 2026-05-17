@@ -1,15 +1,35 @@
 "use client";
 import { ArrowRight, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+
+const WORDS = ["Healthcare", "Clinics", "Medspas", "Wellness Centres"];
+const HOLD_MS = 6000;
+const FADE_MS = 450;
 
 export function VideoHero() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [wordIdx, setWordIdx] = useState(0);
+  const [wordVisible, setWordVisible] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      setWordVisible(false);
+      timerRef.current = setTimeout(() => {
+        setWordIdx((i) => (i + 1) % WORDS.length);
+        setWordVisible(true);
+      }, FADE_MS);
+    }, HOLD_MS);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [wordIdx]);
+
   const navLinks = [
     { label: "Features",     href: "#features"     },
     { label: "How It Works", href: "#how-it-works"  },
     { label: "Industries",   href: "#industries"    },
     { label: "FAQ",          href: "#faq"           },
   ];
+
   return (
     <section style={{
       position: "relative",
@@ -65,28 +85,6 @@ export function VideoHero() {
           97.5% { opacity: 1; }
           100%  { opacity: 0; }
         }
-        @keyframes hlw1 {
-          0%     { opacity: 1; }
-          29.2%  { opacity: 1; }
-          33.3%  { opacity: 0; }
-          95.8%  { opacity: 0; }
-          100%   { opacity: 1; }
-        }
-        @keyframes hlw2 {
-          0%     { opacity: 0; }
-          29.2%  { opacity: 0; }
-          33.3%  { opacity: 1; }
-          62.5%  { opacity: 1; }
-          66.7%  { opacity: 0; }
-          100%   { opacity: 0; }
-        }
-        @keyframes hlw3 {
-          0%     { opacity: 0; }
-          62.5%  { opacity: 0; }
-          66.7%  { opacity: 1; }
-          95.8%  { opacity: 1; }
-          100%   { opacity: 0; }
-        }
         @keyframes riseVH {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -100,9 +98,6 @@ export function VideoHero() {
         .vh-vid3 { animation: cfl3 40s ease-in-out infinite; }
         .vh-vid4 { animation: cfl4 40s ease-in-out infinite; }
         .vh-vid5 { animation: cfl5 40s ease-in-out infinite; }
-        .vh-word1 { animation: hlw1 24s ease-in-out infinite; }
-        .vh-word2 { animation: hlw2 24s ease-in-out infinite; }
-        .vh-word3 { animation: hlw3 24s ease-in-out infinite; }
         .vh-in1 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
         .vh-in2 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
         .vh-in3 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
@@ -159,35 +154,35 @@ export function VideoHero() {
         }
       ` }} />
 
-      {/* Video backgrounds */}
+      {/* Video backgrounds — care first, then wellness, medspa, dental, physio */}
       <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
         <video autoPlay muted loop playsInline className="vh-vid1"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}>
-          <source src="/videos/wellness-meditation.mp4" type="video/mp4" />
+          <source src="/videos/care-compassion.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid2"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src="/videos/caregiver-hands-healthcare.mp4" type="video/mp4" />
+          <source src="/videos/wellness-meditation.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid3"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src="/videos/physio-rehab.mp4" type="video/mp4" />
+          <source src="/videos/medspa-treatment.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid4"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src="/videos/dental-clinic-lobby.mp4" type="video/mp4" />
+          <source src="/videos/dental-smile.mp4" type="video/mp4" />
         </video>
         <video autoPlay muted loop playsInline className="vh-vid5"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
-          <source src="/videos/optical-frames-boutique.mp4" type="video/mp4" />
+          <source src="/videos/physio-rehab.mp4" type="video/mp4" />
         </video>
       </div>
 
-      {/* Dark overlay */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(160deg, rgba(3,7,18,0.90) 0%, rgba(5,25,12,0.55) 50%, rgba(3,7,18,0.88) 100%)" }} />
+      {/* Dark overlay — slightly brighter to let more footage through */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 1, background: "linear-gradient(160deg, rgba(3,7,18,0.78) 0%, rgba(5,25,12,0.40) 50%, rgba(3,7,18,0.75) 100%)" }} />
 
       {/* Green glow */}
-      <div style={{ position: "absolute", top: "35%", left: "50%", transform: "translateX(-50%)", width: "700px", height: "400px", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.13) 0%, transparent 70%)", zIndex: 1, pointerEvents: "none" }} />
+      <div className="vh-glow" style={{ position: "absolute", top: "35%", left: "50%", transform: "translateX(-50%)", width: "700px", height: "400px", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(34,197,94,0.20) 0%, transparent 70%)", zIndex: 1, pointerEvents: "none" }} />
 
       {/* Nav */}
       <nav className="gm-nav" style={{ position: "absolute", top: 0, width: "100%", padding: "22px 48px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 20, boxSizing: "border-box" }}>
@@ -228,15 +223,21 @@ export function VideoHero() {
           <div className="gm-hero-headline" style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", color: "white", marginBottom: "0.04em" }}>
             The AI Growth Engine
           </div>
-          <div className="gm-hero-headline" style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", display: "flex", justifyContent: "center", alignItems: "baseline" }}>
-            <span style={{ color: "white", marginRight: "0.25em" }}>for</span>
-            <span style={{ position: "relative", display: "inline-block" }}>
-              <span style={{ visibility: "hidden", pointerEvents: "none" }}>
-                <span style={{ background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare</span>
-              </span>
-              <span className="vh-word1" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Healthcare</span>
-              <span className="vh-word2" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Wellness</span>
-              <span className="vh-word3" style={{ position: "absolute", left: 0, top: 0, whiteSpace: "nowrap", background: "linear-gradient(90deg, #22c55e, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", opacity: 0 }}>Clinics</span>
+          <div className="gm-hero-headline" style={{ fontSize: "clamp(38px,7.5vw,100px)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-3.5px", display: "flex", justifyContent: "center", alignItems: "baseline", gap: "0.22em" }}>
+            <span style={{ color: "white" }}>for</span>
+            {/* Single rotating word — React state fade, no overlap, always centered */}
+            <span
+              style={{
+                background: "linear-gradient(90deg, #22c55e, #4ade80)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                opacity: wordVisible ? 1 : 0,
+                transition: `opacity ${FADE_MS}ms ease`,
+                whiteSpace: "nowrap",
+                display: "inline-block",
+              }}
+            >
+              {WORDS[wordIdx]}
             </span>
           </div>
         </div>
