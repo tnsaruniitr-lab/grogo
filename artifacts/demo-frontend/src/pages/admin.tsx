@@ -507,7 +507,7 @@ function CreateDemoDialog({
           demoLanguages,
         },
       };
-      const created = await createDemoClient(payload);
+      const created = await createDemoClient(payload, { headers: getAuthHeader() });
       toast({
         title: "Demo erstellt!",
         description: `Demo-Link: /demo/${created.slug}`,

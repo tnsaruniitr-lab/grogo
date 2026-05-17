@@ -18,6 +18,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
 let _basicAuthHeader: string | null = null;
+let _basicAuthFallback: (() => string | null) | null = null;
 
 /**
  * Set HTTP Basic Auth credentials used for every request.
@@ -32,11 +33,20 @@ export function setBasicAuth(user: string | null, pass: string | null): void {
 }
 
 /**
+ * Register a fallback getter that is called when the module-level Basic Auth
+ * header is null (e.g. after an HMR module reset).  The getter should return
+ * a full "Basic <base64>" string or null.
+ */
+export function setBasicAuthFallback(fn: (() => string | null) | null): void {
+  _basicAuthFallback = fn;
+}
+
+/**
  * Returns the current Basic Auth header value, or null if not set.
  * Use this to add auth to raw fetch() calls outside the generated hooks.
  */
 export function getBasicAuthHeader(): string | null {
-  return _basicAuthHeader;
+  return _basicAuthHeader ?? _basicAuthFallback?.() ?? null;
 }
 
 /**
@@ -372,8 +382,10 @@ export async function customFetch<T = unknown>(
 
   // Attach Basic Auth or Bearer token when configured and no explicit header present.
   if (!headers.has("authorization")) {
-    if (_basicAuthHeader) {
-      headers.set("authorization", _basicAuthHeader);
+    const basicAuth = _basicAuthHeader ?? _basicAuthFallback?.() ?? null;
+    if (basicAuth) {
+      if (!_basicAuthHeader) _basicAuthHeader = basicAuth; // re-hydrate module state
+      headers.set("authorization", basicAuth);
     } else if (_authTokenGetter) {
       const token = await _authTokenGetter();
       if (token) {

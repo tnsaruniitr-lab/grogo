@@ -1,17 +1,21 @@
-import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
-import { setBasicAuth } from "@workspace/api-client-react";
+import { useState, useEffect, type ReactNode } from "react";
+import { setBasicAuth, setBasicAuthFallback } from "@workspace/api-client-react";
+import { AuthContext } from "./auth-context";
 
 const STORAGE_KEY = "dashboard_basic_auth";
 
-interface AuthCtx {
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthCtx>({ logout: () => {} });
-
-export function useAuth() {
-  return useContext(AuthContext);
-}
+// Register a fallback getter immediately at module-load time.
+// Every customFetch call can recover credentials from localStorage
+// even if the module-level _basicAuthHeader was cleared (e.g. after HMR reset).
+setBasicAuthFallback(() => {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) return null;
+  try {
+    const { user, pass } = JSON.parse(stored) as { user: string; pass: string };
+    if (user && pass) return `Basic ${btoa(`${user}:${pass}`)}`;
+  } catch { /* ignore */ }
+  return null;
+});
 
 function applyStoredCredentials(): boolean {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -34,6 +38,19 @@ export function LoginGate({ children }: { children: ReactNode }) {
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Render-time credential integrity check.
+  // React Fast Refresh can preserve authed=true across hot reloads even when
+  // localStorage is empty (e.g. after a code migration or HMR module reset).
+  // Calling setState during render triggers an immediate re-render with the new
+  // state — React's documented pattern for synchronous derived-state correction.
+  if (authed && !localStorage.getItem(STORAGE_KEY)) {
+    setBasicAuth(null, null);
+    setAuthed(false);
+  } else if (authed) {
+    // Re-apply credentials to module state in case HMR reset _basicAuthHeader.
+    applyStoredCredentials();
+  }
 
   useEffect(() => {
     function handleUnauth(e: CustomEvent) {
