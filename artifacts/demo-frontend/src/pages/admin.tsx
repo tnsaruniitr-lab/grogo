@@ -42,6 +42,7 @@ import {
   useDeleteDemoClient,
   useUpdateDemoClient,
   getBasicAuthHeader,
+  setBasicAuth,
 } from "@workspace/api-client-react";
 import {
   Globe,
@@ -85,8 +86,22 @@ interface DemoClient {
 }
 
 function getAuthHeader(): Record<string, string> {
+  // Try module-level state (set by LoginGate on mount)
   const header = getBasicAuthHeader();
-  return header ? { Authorization: header } : {};
+  if (header) return { Authorization: header };
+
+  // Fallback: restore from sessionStorage (survives HMR / full reloads)
+  try {
+    const stored = sessionStorage.getItem("dashboard_basic_auth");
+    if (stored) {
+      const { user, pass } = JSON.parse(stored) as { user: string; pass: string };
+      if (user && pass) {
+        setBasicAuth(user, pass);
+        return { Authorization: `Basic ${btoa(`${user}:${pass}`)}` };
+      }
+    }
+  } catch { /* ignore */ }
+  return {};
 }
 
 function slugify(text: string): string {
