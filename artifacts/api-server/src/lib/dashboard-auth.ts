@@ -11,8 +11,8 @@ function safeCompare(a: string, b: string): boolean {
 }
 
 export function requireDashboardAuth(req: Request, res: Response, next: NextFunction): void {
-  const expectedUser = (process.env["DASHBOARD_USER"] ?? process.env["DASH_USER"])?.trim();
-  const expectedPass = (process.env["DASHBOARD_PASS"] ?? process.env["DASH_PASS"])?.trim();
+  const expectedUser = (process.env["DASH_USER"] ?? process.env["DASHBOARD_USER"])?.trim();
+  const expectedPass = (process.env["DASH_PASS"] ?? process.env["DASHBOARD_PASS"])?.trim();
 
   if (!expectedUser || !expectedPass) {
     logger.error({ path: req.path }, "DASHBOARD_USER or DASHBOARD_PASS not set — blocking request");
