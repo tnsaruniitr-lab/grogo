@@ -12,18 +12,55 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
 
   const { url } = parsed.data;
 
+  const baseUrl = new URL(url);
+  const hostname = baseUrl.hostname.replace(/^www\./, "");
+
+  const slugFromHost = hostname
+    .replace(/\.[a-z]{2,}$/, "")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .toLowerCase();
+
+  const nameFromHost = hostname
+    .replace(/\.[a-z]{2,}$/, "")
+    .replace(/[-_.]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  /** Return a minimal best-effort response when fetch is unavailable */
+  const fallbackResponse = () =>
+    res.json({
+      companyName: nameFromHost,
+      slug: slugFromHost,
+      tagline: null,
+      heroHeadline: null,
+      primaryColor: null,
+      secondaryColor: null,
+      logoUrl: `https://logo.clearbit.com/${hostname}`,
+      city: null,
+      phone: null,
+      websiteUrl: url,
+    });
+
+  let html = "";
   try {
     const response = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; DosteliBrandBot/1.0)" },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(12000),
     });
 
     if (!response.ok) {
-      res.status(400).json({ error: `Failed to fetch URL: ${response.status}` });
+      req.log.warn({ status: response.status, url }, "extract-branding: non-OK response, using fallback");
+      fallbackResponse();
       return;
     }
 
-    const html = await response.text();
+    html = await response.text();
+  } catch (fetchErr) {
+    req.log.warn({ err: fetchErr, url }, "extract-branding: fetch failed, using fallback");
+    fallbackResponse();
+    return;
+  }
+
+  try {
 
     const meta = (attr: string, value: string): string | null => {
       const patterns = [
@@ -45,7 +82,6 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
       html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*icon[^"']*["']/i);
     const rawFavicon = faviconMatch?.[1] ?? null;
 
-    const baseUrl = new URL(url);
     const resolve = (u: string | null): string | null => {
       if (!u) return null;
       try { return new URL(u, baseUrl.origin).href; } catch { return u; }
@@ -56,14 +92,8 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
     const ogTitle = meta("property", "og:title");
     const ogDescription = meta("property", "og:description");
 
-    let companyName = ogTitle || titleTag || baseUrl.hostname.replace(/^www\./, "");
+    let companyName = ogTitle || titleTag || nameFromHost;
     companyName = companyName.split(/\s*[\|–—-]\s*/)[0].trim();
-
-    const slug = baseUrl.hostname
-      .replace(/^www\./, "")
-      .replace(/\.[a-z]{2,}$/, "")
-      .replace(/[^a-z0-9]+/gi, "-")
-      .toLowerCase();
 
     const findLogoUrl = (): string | null => {
       const logoPatterns = [
@@ -85,7 +115,7 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
 
     res.json({
       companyName,
-      slug,
+      slug: slugFromHost,
       tagline: ogDescription ?? null,
       heroHeadline: null,
       primaryColor: themeColor ?? null,
@@ -97,7 +127,7 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to extract branding");
-    res.status(400).json({ error: "Failed to fetch or parse the URL" });
+    fallbackResponse();
   }
 });
 
