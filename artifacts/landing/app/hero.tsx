@@ -1,5 +1,5 @@
 "use client";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X, Globe, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { Lang, Translations } from "./i18n/translations";
 
@@ -12,6 +12,89 @@ const LANG_OPTIONS: { code: Lang; label: string; href: string }[] = [
   { code: "tr", label: "TR", href: "/tr" },
   { code: "ar", label: "AR", href: "/ar" },
 ];
+
+const LANG_LABELS: Record<Lang, string> = { en: "English", de: "Deutsch", tr: "Türkçe", ar: "العربية" };
+
+function LangDropdown({ lang }: { lang: Lang }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          height: 40, padding: "0 14px",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.07)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          cursor: "pointer", color: "white",
+          fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
+          direction: "ltr",
+        }}
+        aria-label="Select language"
+        aria-expanded={open}
+      >
+        <Globe size={14} style={{ color: "#4ade80", flexShrink: 0 }} />
+        <span>{lang.toUpperCase()}</span>
+        <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.4)", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", right: 0,
+          background: "rgba(5,10,20,0.97)",
+          border: "1px solid rgba(34,197,94,0.18)",
+          borderRadius: 12, padding: "6px",
+          boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
+          backdropFilter: "blur(12px)",
+          zIndex: 200, minWidth: 148, direction: "ltr",
+        }}>
+          {LANG_OPTIONS.map((l) => (
+            <a
+              key={l.code}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 12px", borderRadius: 8,
+                textDecoration: "none",
+                background: lang === l.code ? "rgba(34,197,94,0.12)" : "transparent",
+                transition: "background 0.12s",
+              }}
+            >
+              <span style={{
+                width: 28, height: 20, borderRadius: 4,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 800, letterSpacing: "0.06em",
+                background: lang === l.code ? "#22c55e" : "rgba(255,255,255,0.08)",
+                color: lang === l.code ? "#030712" : "rgba(255,255,255,0.5)",
+                flexShrink: 0,
+              }}>
+                {l.label}
+              </span>
+              <span style={{
+                fontSize: 13, fontWeight: 500,
+                color: lang === l.code ? "#4ade80" : "rgba(255,255,255,0.65)",
+              }}>
+                {LANG_LABELS[l.code]}
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -148,30 +231,8 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
 
         {/* Right side: lang switcher + hamburger */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Language switcher */}
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {LANG_OPTIONS.map((l) => (
-              <a
-                key={l.code}
-                href={l.href}
-                style={{
-                  padding: "5px 11px",
-                  borderRadius: 100,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.05em",
-                  color: lang === l.code ? "#030712" : "rgba(255,255,255,0.55)",
-                  background: lang === l.code ? "#22c55e" : "rgba(255,255,255,0.05)",
-                  border: lang === l.code ? "none" : "1px solid rgba(255,255,255,0.12)",
-                  textDecoration: "none",
-                  transition: "all 0.15s",
-                  direction: "ltr",
-                }}
-              >
-                {l.label}
-              </a>
-            ))}
-          </div>
+          {/* Language dropdown */}
+          <LangDropdown lang={lang} />
 
           {/* Hamburger */}
           <div style={{ position: "relative" }}>
