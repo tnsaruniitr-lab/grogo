@@ -108,6 +108,39 @@ function extractOgImage(html: string): string | null {
   );
 }
 
+function extractLogoUrl(html: string, baseUrl: string): string | null {
+  const base = new URL(baseUrl);
+
+  const makeAbsolute = (href: string): string => {
+    try {
+      return new URL(href, base.origin).href;
+    } catch {
+      return href;
+    }
+  };
+
+  // 1. apple-touch-icon — high-res, brand-approved icon (180×180+)
+  const appleTouch =
+    html.match(/<link[^>]+rel=["']apple-touch-icon["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']apple-touch-icon["']/i)?.[1];
+  if (appleTouch) return makeAbsolute(appleTouch);
+
+  // 2. SVG favicon — vector, scales perfectly
+  const svgIcon =
+    html.match(/<link[^>]+type=["']image\/svg\+xml["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<link[^>]+href=["']([^"']+\.svg)["'][^>]+rel=["'][^"']*icon[^"']*["']/i)?.[1];
+  if (svgIcon) return makeAbsolute(svgIcon);
+
+  // 3. Large PNG favicon (≥32px implied by sizes attribute)
+  const pngIcon =
+    html.match(/<link[^>]+sizes=["'](?:192|180|128|96|64|48|32)[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<link[^>]+href=["']([^"']+)["'][^>]+sizes=["'](?:192|180|128|96|64|48|32)[^"']*["']/i)?.[1];
+  if (pngIcon) return makeAbsolute(pngIcon);
+
+  // 4. Clearbit logo API — reliable fallback given domain
+  return `https://logo.clearbit.com/${base.hostname}`;
+}
+
 export async function extractBrand(
   clientId: number,
   websiteUrl: string,
@@ -120,6 +153,7 @@ export async function extractBrand(
     let html = "";
     let ogImage: string | null = null;
     let metaColor: string | null = null;
+    let logoUrl: string | null = null;
 
     try {
       const res = await fetch(websiteUrl, {
@@ -130,7 +164,8 @@ export async function extractBrand(
         html = await res.text();
         metaColor = extractMetaColor(html) ?? extractCssVar(html);
         ogImage = extractOgImage(html);
-        log.info({ metaColor, hasOgImage: !!ogImage }, "HTML meta extraction done");
+        logoUrl = extractLogoUrl(html, websiteUrl);
+        log.info({ metaColor, hasOgImage: !!ogImage, logoUrl }, "HTML meta extraction done");
       }
     } catch (err) {
       log.warn({ err }, "Homepage HTML fetch failed — will use stored text only");
@@ -217,6 +252,8 @@ For heroHeadline: create a 3–7 word punchy headline (NOT a full sentence) capt
     if (!existing.tagline && brand.tagline) updates.tagline = brand.tagline;
     // Only set industry if not already manually configured
     if (!existing.industry) updates.industry = brand.industry;
+    // Logo: extracted from apple-touch-icon / SVG / Clearbit — only set if not already uploaded
+    if (!existing.logoUrl && logoUrl) updates.logoUrl = logoUrl;
     if (ogImage) updates.heroImageUrl = ogImage;
 
     await db

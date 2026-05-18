@@ -663,6 +663,7 @@ export const INDUSTRY_VIDEO_MAP: Record<string, string> = {
   "laser-eye": `${_VB}videos/laser-eye.mp4`,
   fertility: `${_VB}videos/fertility-ivf.mp4`,
   "weight-management": `${_VB}videos/weight-management.mp4`,
+  other: `${_VB}videos/forest-canopy-hero.mp4`,
 };
 
 export const INDUSTRY_OPTIONS: Array<{ value: string; label: string; emoji: string }> = [
