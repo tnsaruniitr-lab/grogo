@@ -596,16 +596,16 @@ function PreviewModal({
               className="absolute inset-0 w-full h-full border-0 bg-white"
               title={`Preview: ${client.branding.companyName}`}
             />
-            {/* Persistent fallback bar — many sites block iframe embedding */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-black/70 backdrop-blur-sm pointer-events-auto">
+            {/* Fallback bar — external sites often block iframe embedding */}
+            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-black/80 backdrop-blur-sm pointer-events-auto">
               <p className="text-white/50 text-xs truncate">
-                If the site isn't loading, it may block previews — open it directly instead.
+                {mode === "site" ? "Most sites block preview — open directly to view" : "If the demo isn't loading, open it directly"}
               </p>
               <a
                 href={activeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 text-xs font-medium text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+                className="shrink-0 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded px-2.5 py-1 transition-colors"
               >
                 Open in new tab ↗
               </a>

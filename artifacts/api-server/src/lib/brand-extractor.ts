@@ -215,8 +215,8 @@ For heroHeadline: create a 3–7 word punchy headline (NOT a full sentence) capt
     if (!existing.secondaryColor) updates.secondaryColor = brand.secondaryColor;
     if (!existing.heroHeadline) updates.heroHeadline = brand.heroHeadline;
     if (!existing.tagline && brand.tagline) updates.tagline = brand.tagline;
-    // Always update industry + ogImage (these are always auto-derived)
-    updates.industry = brand.industry;
+    // Only set industry if not already manually configured
+    if (!existing.industry) updates.industry = brand.industry;
     if (ogImage) updates.heroImageUrl = ogImage;
 
     await db

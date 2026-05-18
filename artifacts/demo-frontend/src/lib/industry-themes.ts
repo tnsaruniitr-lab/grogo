@@ -678,6 +678,7 @@ export const INDUSTRY_OPTIONS: Array<{ value: string; label: string; emoji: stri
   { value: "weight-management",label: "Weight Mgmt",    emoji: "📉" },
   { value: "care",             label: "Home Care",      emoji: "🏠" },
   { value: "medical",          label: "Medical / GP",   emoji: "🩺" },
+  { value: "other",            label: "Other / SaaS",   emoji: "🔧" },
 ];
 
 export function getIndustryTheme(industry?: string | null): IndustryTheme {

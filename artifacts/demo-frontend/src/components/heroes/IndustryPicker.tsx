@@ -113,6 +113,14 @@ const INDUSTRIES = [
     bg: "rgba(42,116,203,0.12)",
     desc: "LASIK · LASEK · Lens replacement",
   },
+  {
+    key: "other",
+    label: "Other / SaaS",
+    brand: "NEXUS",
+    color: "#6B7280",
+    bg: "rgba(107,114,128,0.12)",
+    desc: "Tech · SaaS · Professional services",
+  },
 ];
 
 export function IndustryPicker({ branding, onSelect }: IndustryPickerProps) {
