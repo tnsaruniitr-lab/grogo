@@ -1,0 +1,70 @@
+Yes, add admin/settings. It is the right move. Otherwise you’ll keep redeploying just to change models, thresholds, crawl depth, or whether web research is enabled.
+
+And yes, web research enrichment is already in the plan as Phase 5. I’d rename it slightly to make it clearer:
+
+Phase 5 — Web Research Enrichment + Corroboration
+Because it is doing both:
+
+enriching thin fields when the website is incomplete
+corroborating risky fields before activation
+For admin/settings, I’d add a new phase before the model-heavy work:
+
+Phase 0.5 — System Settings Layer
+
+Add a global settings page and DB-backed config for model/crawl/review/enrichment behaviour.
+
+Initial settings:
+
+Models
+- pageExtractionModel
+- profileSynthesisModel
+- webResearchModel
+- liveChatModel
+- embeddingModel
+
+Crawl
+- maxPagesPerCrawl
+- crawlConcurrency
+- enableStructuredDataParsing
+- enableJsRenderFallback
+- minTextWordsBeforeJsFallback
+
+Review / activation
+- requireHumanActivation
+- allowAutoApproveManualEntries
+- minExtractionConfidence
+- riskFlagsBlockingActivation
+
+Web enrichment
+- enableWebResearch
+- fieldsToResearch: pricingPolicy, geography, trustSignals, whatItDoes
+- requireExternalSourceReview
+- ownDomainAutoTrusted
+
+Retrieval
+- approvedOnlyForLiveChat
+- factsPackEnabled
+- sameLanguageBoost
+- manualSourceBoost
+Implementation shape I’d recommend:
+
+system_settings
+- key
+- value JSONB
+- updated_at
+- updated_by nullable
+Or one row:
+
+system_settings
+- id = "global"
+- settings JSONB
+- updated_at
+- updated_by nullable
+For this app, one global JSONB row is probably enough.
+
+Important guardrail: don’t make every setting freely editable text. For model names, use dropdowns / allowlisted values. For numeric settings, use min/max validation. Bad settings can quietly ruin bot quality.
+
+So the revised plan should say:
+
+All model names, crawl thresholds, enrichment toggles, and review gates are read from admin/settings with sane defaults. Code has fallback defaults, but production behaviour is configurable without redeploy.
+This makes the system much more operator-friendly and future-proof.
