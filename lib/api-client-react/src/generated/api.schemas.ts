@@ -156,12 +156,52 @@ export interface ExtractBrandingInput {
   url: string;
 }
 
+export type KnowledgeLanguage =
+  (typeof KnowledgeLanguage)[keyof typeof KnowledgeLanguage];
+
+export const KnowledgeLanguage = {
+  en: "en",
+  de: "de",
+  tr: "tr",
+  fr: "fr",
+  ar: "ar",
+  nl: "nl",
+  es: "es",
+  pl: "pl",
+  pt: "pt",
+  it: "it",
+  ru: "ru",
+  zh: "zh",
+  hi: "hi",
+  ur: "ur",
+  fa: "fa",
+  ko: "ko",
+  ja: "ja",
+} as const;
+
+export type KnowledgeCategory =
+  (typeof KnowledgeCategory)[keyof typeof KnowledgeCategory];
+
+export const KnowledgeCategory = {
+  about: "about",
+  services: "services",
+  service: "service",
+  pricing: "pricing",
+  faq: "faq",
+  process: "process",
+  identity: "identity",
+  team: "team",
+  location: "location",
+  contact: "contact",
+  other: "other",
+} as const;
+
 export interface KnowledgeEntry {
   id: number;
-  category: string;
+  category: KnowledgeCategory;
   question: string;
   answer: string;
-  language: string;
+  language: KnowledgeLanguage;
   priority: number;
   source: string;
   /** @nullable */
@@ -170,18 +210,18 @@ export interface KnowledgeEntry {
 }
 
 export interface CreateKnowledgeEntryBody {
-  category: string;
+  category: KnowledgeCategory;
   question: string;
   answer: string;
-  language?: string;
+  language?: KnowledgeLanguage;
   priority?: number;
 }
 
 export interface UpdateKnowledgeEntryBody {
-  category?: string;
+  category?: KnowledgeCategory;
   question?: string;
   answer?: string;
-  language?: string;
+  language?: KnowledgeLanguage;
 }
 
 export interface KnowledgeListResponse {

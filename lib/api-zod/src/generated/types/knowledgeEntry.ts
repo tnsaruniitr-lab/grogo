@@ -5,13 +5,15 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { KnowledgeCategory } from "./knowledgeCategory";
+import type { KnowledgeLanguage } from "./knowledgeLanguage";
 
 export interface KnowledgeEntry {
   id: number;
-  category: string;
+  category: KnowledgeCategory;
   question: string;
   answer: string;
-  language: string;
+  language: KnowledgeLanguage;
   priority: number;
   source: string;
   /** @nullable */

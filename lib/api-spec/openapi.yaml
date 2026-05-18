@@ -783,6 +783,14 @@ components:
         url:
           type: string
 
+    KnowledgeLanguage:
+      type: string
+      enum: [en, de, tr, fr, ar, nl, es, pl, pt, it, ru, zh, hi, ur, fa, ko, ja]
+
+    KnowledgeCategory:
+      type: string
+      enum: [about, services, service, pricing, faq, process, identity, team, location, contact, other]
+
     KnowledgeEntry:
       type: object
       required: [id, category, question, answer, language, priority, source, createdAt]
@@ -790,13 +798,13 @@ components:
         id:
           type: integer
         category:
-          type: string
+          $ref: "#/components/schemas/KnowledgeCategory"
         question:
           type: string
         answer:
           type: string
         language:
-          type: string
+          $ref: "#/components/schemas/KnowledgeLanguage"
         priority:
           type: integer
         source:
@@ -811,14 +819,13 @@ components:
       required: [category, question, answer]
       properties:
         category:
-          type: string
+          $ref: "#/components/schemas/KnowledgeCategory"
         question:
           type: string
         answer:
           type: string
         language:
-          type: string
-          default: "en"
+          $ref: "#/components/schemas/KnowledgeLanguage"
         priority:
           type: integer
           default: 0
@@ -827,13 +834,13 @@ components:
       type: object
       properties:
         category:
-          type: string
+          $ref: "#/components/schemas/KnowledgeCategory"
         question:
           type: string
         answer:
           type: string
         language:
-          type: string
+          $ref: "#/components/schemas/KnowledgeLanguage"
 
     KnowledgeListResponse:
       type: object
