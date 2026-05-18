@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import { companyKnowledgeTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { embedText, cosineSimilarity, jsonToEmbedding } from "./embedder";
 import { logger } from "./logger";
 
@@ -9,41 +9,18 @@ export interface KnowledgeChunk {
   answer: string;
 }
 
-async function fetchEntriesForLanguage(
-  clientId: number,
-  language: string,
-): Promise<Array<{ question: string; answer: string; priority: number; embeddingJson: string | null }>> {
-  return db
-    .select({
-      question: companyKnowledgeTable.question,
-      answer: companyKnowledgeTable.answer,
-      priority: companyKnowledgeTable.priority,
-      embeddingJson: companyKnowledgeTable.embeddingJson,
-    })
-    .from(companyKnowledgeTable)
-    .where(
-      and(
-        eq(companyKnowledgeTable.clientId, clientId),
-        eq(companyKnowledgeTable.language, language),
-      ),
-    )
-    .orderBy(desc(companyKnowledgeTable.priority));
-}
-
 export async function retrieveKnowledge(
   clientId: number,
   language: string,
   userMessage: string,
   topK = 5,
 ): Promise<KnowledgeChunk[]> {
-  let primaryEntries = await fetchEntriesForLanguage(clientId, language);
-
-  // Cross-language supplement: always pull ALL client entries and rank by
-  // semantic similarity. Same-language entries get a score boost so they're
-  // preferred, but entries in other languages fill the gaps when there aren't
-  // enough primary-language entries for the question (e.g. an EN user asking
-  // about services when only DE knowledge exists, or pricing only added in EN).
-  const allClientEntries = await db
+  // Always retrieve across ALL client KB entries regardless of language.
+  // Retrieval is a relevance problem, not a language problem — language is
+  // handled at the GPT response layer (language lock in system prompt).
+  // Same-language entries get a 10% score boost so they're preferred when
+  // relevance is equal, but a more relevant cross-language entry always wins.
+  const allEntries = await db
     .select({
       question: companyKnowledgeTable.question,
       answer: companyKnowledgeTable.answer,
@@ -55,22 +32,15 @@ export async function retrieveKnowledge(
     .where(eq(companyKnowledgeTable.clientId, clientId))
     .orderBy(desc(companyKnowledgeTable.priority));
 
-  if (allClientEntries.length === 0) return [];
+  if (allEntries.length === 0) return [];
 
-  // If primary-language entries cover at least topK results, use only those
-  // for tighter, more language-appropriate answers.
-  const workingSet =
-    primaryEntries.length >= topK
-      ? primaryEntries.map((e) => ({ ...e, language }))
-      : allClientEntries; // cross-language pool
-
-  const hasEmbeddings = workingSet.some((e) => e.embeddingJson != null);
+  const hasEmbeddings = allEntries.some((e) => e.embeddingJson != null);
 
   if (hasEmbeddings) {
-    return retrieveByEmbedding(workingSet, userMessage, language, topK);
+    return retrieveByEmbedding(allEntries, userMessage, language, topK);
   }
 
-  return retrieveByKeyword(workingSet, userMessage, topK);
+  return retrieveByKeyword(allEntries, userMessage, language, topK);
 }
 
 async function retrieveByEmbedding(
@@ -83,33 +53,52 @@ async function retrieveByEmbedding(
 
   if (!queryEmbedding) {
     logger.warn("Embedding query failed — falling back to keyword search");
-    return retrieveByKeyword(entries, userMessage, topK);
+    return retrieveByKeyword(entries, userMessage, conversationLanguage, topK);
   }
 
   const scored = entries.map((entry) => {
     let score: number;
     if (!entry.embeddingJson) {
+      // Entry has no embedding: use keyword score normalised to [0, 0.6] so it
+      // can still compete against low-relevance embedded entries but won't
+      // beat a genuinely relevant embedded entry (cosine typically 0.7–0.95).
       const tokens = userMessage.toLowerCase().split(/\W+/).filter((w) => w.length >= 3);
       const haystack = `${entry.question} ${entry.answer}`.toLowerCase();
-      const keyScore = tokens.reduce((acc, t) => acc + (haystack.includes(t) ? 1 : 0), 0);
-      score = keyScore * 0.3;
+      const hits = tokens.reduce((acc, t) => acc + (haystack.includes(t) ? 1 : 0), 0);
+      const maxHits = Math.max(tokens.length, 1);
+      score = (hits / maxHits) * 0.6;
     } else {
       const vec = jsonToEmbedding(entry.embeddingJson);
       score = vec ? cosineSimilarity(queryEmbedding, vec) : 0;
     }
-    // Boost same-language entries by 10% so they rank above equally-relevant
-    // cross-language entries when the pool is mixed.
+    // Boost same-language entries by 10% so they're preferred when relevance is equal.
     if (entry.language === conversationLanguage) score *= 1.1;
     return { ...entry, score };
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, topK).map((e) => ({ question: e.question, answer: e.answer }));
+
+  const top = scored.slice(0, topK);
+  logger.info(
+    {
+      clientId: entries[0] ? undefined : undefined,
+      conversationLanguage,
+      retrieved: top.map((e) => ({
+        lang: e.language,
+        score: Math.round(e.score * 1000) / 1000,
+        q: e.question.slice(0, 60),
+      })),
+    },
+    "Knowledge retrieval complete",
+  );
+
+  return top.map((e) => ({ question: e.question, answer: e.answer }));
 }
 
 function retrieveByKeyword(
-  entries: Array<{ question: string; answer: string; priority: number }>,
+  entries: Array<{ question: string; answer: string; priority: number; language: string }>,
   userMessage: string,
+  conversationLanguage: string,
   topK: number,
 ): KnowledgeChunk[] {
   const tokens = userMessage
@@ -123,7 +112,10 @@ function retrieveByKeyword(
 
   const scored = entries.map((entry) => {
     const haystack = `${entry.question} ${entry.answer}`.toLowerCase();
-    const score = tokens.reduce((acc, token) => acc + (haystack.includes(token) ? 1 : 0), 0);
+    const hits = tokens.reduce((acc, token) => acc + (haystack.includes(token) ? 1 : 0), 0);
+    const maxHits = Math.max(tokens.length, 1);
+    let score = hits / maxHits;
+    if (entry.language === conversationLanguage) score *= 1.1;
     return { ...entry, score };
   });
 
