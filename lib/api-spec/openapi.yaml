@@ -721,7 +721,15 @@ components:
           type: ["string", "null"]
         industry:
           type: ["string", "null"]
+        industryLocked:
+          type: boolean
         vertical:
+          type: ["string", "null"]
+        demoLanguages:
+          type: array
+          items:
+            type: string
+        heroImageUrl:
           type: ["string", "null"]
         twilioSender:
           type: ["string", "null"]

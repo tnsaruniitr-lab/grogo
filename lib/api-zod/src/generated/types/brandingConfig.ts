@@ -29,8 +29,12 @@ export interface BrandingConfig {
   demoLanguage?: string | null;
   /** @nullable */
   industry?: string | null;
+  industryLocked?: boolean;
   /** @nullable */
   vertical?: string | null;
+  demoLanguages?: string[];
+  /** @nullable */
+  heroImageUrl?: string | null;
   /** @nullable */
   twilioSender?: string | null;
   /** @nullable */
