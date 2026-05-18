@@ -1,0 +1,45 @@
+his is a strong product direction, but I’d change one key thing:
+
+Do not make new crawled entries default is_approved = false if the bot only filters to approved entries. That can create a bad first-run experience where a new client crawls successfully, but the bot knows almost nothing until someone approves. For a demo/sales flow, that may feel broken.
+
+Better model:
+
+approval_status: approved | pending | rejected
+source: manual | crawl
+is_canonical: optional for critical facts
+Bot retrieval uses:
+approved always
+pending only if there are not enough approved entries, or while client is in draft/demo mode
+never rejected
+Or simpler:
+
+Existing and manual entries: approved
+New crawl entries: pending
+Bot live mode: approved only
+Bot preview/demo mode: approved + pending, clearly marked in admin
+That gives you quality control without starving the bot.
+
+Everything else is very sensible.
+
+I especially like:
+
+Critical Facts as a projection over KB, not a new table
+Review panel after crawl completion, not in create dialog
+Inline edits using existing PATCH endpoint
+Detailed section as an upgraded KnowledgeDialog
+Yellow “Pending review” badge vs green “Knowledge approved”
+One more refinement: the Critical Facts section should not depend too heavily on fuzzy rules like question contains "who". Add lightweight fields to KB over time:
+
+review_key: business_summary, target_customer, main_services, booking_path, pricing_policy, etc.
+is_canonical: true/false
+At first you can infer them from category/question. But long term, explicit review_key makes the panel reliable.
+
+So my build order would be:
+
+Add approval_status instead of boolean is_approved.
+Add retrieval filter with mode awareness: live vs preview.
+Add review endpoints.
+Build Critical Facts panel using inferred mapping first.
+Add review_key later once the UX proves itself.
+Build Detailed Knowledge review/approval.
+The concept is excellent. The main risk is making the bot too empty before approval. Use approval states, not just a hard boolean.
