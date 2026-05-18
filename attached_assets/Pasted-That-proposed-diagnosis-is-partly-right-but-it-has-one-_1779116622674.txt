@@ -1,0 +1,19 @@
+That proposed diagnosis is partly right, but it has one major factual error.
+The good diagnosis is this: retrieval should not rely on “same-language count >= 5” as a gate. That is a weak heuristic. Retrieval should rank all client KB entries by relevance first, then let GPT answer in the conversation language. Your instinct is correct: language is mostly a generation concern, not a retrieval concern.
+The bad diagnosis is this line:
+“Embeddings are not being generated at entry creation time.”
+That is false in the current repo. Manual KB create/update does call embeddings:
+[admin.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/routes/admin.ts:420) builds text = question + answer
+[admin.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/routes/admin.ts:422) calls embedText(text)
+[admin.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/routes/admin.ts:434) stores embeddingJson
+[admin.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/routes/admin.ts:476) regenerates embedding on edit
+Crawl-created entries also embed at crawl-pipeline.ts.
+So if DB entries have embedding_json = null, the better question is: did embedding generation fail silently because API key/base URL was missing, or were those rows created before the embedding wiring existed? The embedder catches errors and returns null, so missing OpenAI config would silently create unembedded KB rows.
+My evaluation: fix retrieval architecture, yes, but don’t assume “create route never embeds.” The smarter fix is:
+Remove the same-language-only branch in [knowledge.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/lib/knowledge.ts:60).
+Always retrieve across all client KB rows.
+Use embeddings where available, but make fallback scoring fair and not capped below real semantic matches.
+Add logging for retrieved chunk IDs/categories/languages/scores.
+Run/backfill embeddings and alert when embedding generation fails instead of silently storing null.
+Fix GrowthMonk’s industry/persona so it never gets a wellness prompt.
+That is the real root: prompt/persona mismatch plus brittle retrieval, not just “no embeddings.”
