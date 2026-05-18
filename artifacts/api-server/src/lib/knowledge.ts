@@ -37,13 +37,38 @@ export async function retrieveKnowledge(
 
   if (allEntries.length === 0) return [];
 
-  const hasEmbeddings = allEntries.some((e) => e.embeddingJson != null);
+  // Pinned identity slot: always include the highest-priority identity entry
+  // regardless of semantic relevance. This prevents "who are you?" drift on
+  // every turn — the bot always has its core identity in context.
+  // The pinned entry occupies slot 0; semantic retrieval fills the remaining
+  // topK-1 slots (deduped so the pinned entry never appears twice).
+  const identityEntry = allEntries.find((e) => e.category === "identity") ?? null;
 
-  if (hasEmbeddings) {
-    return retrieveByEmbedding(allEntries, userMessage, language, topK);
-  }
+  const semanticEntries = identityEntry
+    ? allEntries.filter((e) => e.id !== identityEntry.id)
+    : allEntries;
 
-  return retrieveByKeyword(allEntries, userMessage, language, topK);
+  const semanticTopK = identityEntry ? topK - 1 : topK;
+
+  const hasEmbeddings = semanticEntries.some((e) => e.embeddingJson != null);
+
+  const semanticChunks = hasEmbeddings
+    ? await retrieveByEmbedding(semanticEntries, userMessage, language, semanticTopK)
+    : retrieveByKeyword(semanticEntries, userMessage, language, semanticTopK);
+
+  if (!identityEntry) return semanticChunks;
+
+  const pinnedChunk: KnowledgeChunk = {
+    question: identityEntry.question,
+    answer: identityEntry.answer,
+  };
+
+  logger.info(
+    { id: identityEntry.id, lang: identityEntry.language, q: identityEntry.question.slice(0, 60) },
+    "Knowledge: pinned identity slot injected",
+  );
+
+  return [pinnedChunk, ...semanticChunks];
 }
 
 type EntryWithMeta = {
