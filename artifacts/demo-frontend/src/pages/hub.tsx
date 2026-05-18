@@ -800,7 +800,7 @@ function CreateDemoDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); reset(); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New Demo</DialogTitle>
           <DialogDescription>
@@ -879,7 +879,7 @@ function CreateDemoDialog({
               {/* Industry type selector */}
               <div className="space-y-2">
                 <Label className="text-xs">Business Type</Label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   {INDUSTRY_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
