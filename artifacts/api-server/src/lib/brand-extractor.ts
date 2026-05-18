@@ -62,7 +62,7 @@ const BRAND_TOOL: OpenAI.Chat.ChatCompletionTool = {
           type: "string",
           enum: INDUSTRY_VALUES,
           description:
-            "The company's primary industry category.",
+            "The company's own industry — what the company *is*, not the clients it serves. A SaaS platform, marketing tool, or software product that serves healthcare/wellness businesses is 'other', not 'wellness' or 'medical'. Only classify as care/aesthetics/dental/medical/wellness/fitness/etc. if the company itself directly delivers that service to end-patients or consumers.",
         },
         tagline: {
           type: "string",
