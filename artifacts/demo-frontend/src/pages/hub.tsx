@@ -51,6 +51,7 @@ import {
   X,
   ExternalLink,
   BookOpen,
+  ClipboardCheck,
   Cable,
   Save,
 } from "lucide-react";
@@ -624,6 +625,14 @@ function BrandCard({
           >
             <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
           </Link>
+
+          <button
+            onClick={onReview}
+            className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-[#A8C334] transition-colors"
+            title="Review & approve AI knowledge"
+          >
+            <ClipboardCheck className="h-3.5 w-3.5" /> Review
+          </button>
 
           <button
             onClick={onKnowledge}
