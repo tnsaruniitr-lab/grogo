@@ -52,6 +52,7 @@ import {
   ExternalLink,
   BookOpen,
   Cable,
+  Save,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
@@ -267,6 +268,11 @@ export default function HubPage() {
 function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => void }) {
   const [config, setConfig] = useState<{ manychatApiKey: string | null } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [welcomeText, setWelcomeText] = useState(
+    client.branding.defaultMessage ?? `[${client.slug}] `
+  );
+  const [saving, setSaving] = useState(false);
+  const [savedWelcome, setSavedWelcome] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/install-config")
@@ -281,21 +287,36 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const saveWelcome = async () => {
+    setSaving(true);
+    try {
+      await fetch(`/api/admin/clients/${client.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          branding: { ...client.branding, defaultMessage: welcomeText },
+        }),
+      });
+      setSavedWelcome(true);
+      setTimeout(() => setSavedWelcome(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const raw = client.branding.twilioSender ?? "";
   const digits = raw.replace("whatsapp:", "").replace(/^\+/, "");
   const waNumber = digits || "14155238886";
-  const waLink = waNumber
-    ? `https://wa.me/${waNumber}?text=${encodeURIComponent(`[${client.slug}] `)}`
-    : null;
+  const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(welcomeText)}`;
   const origin = window.location.origin;
   const manychatWebhook = `${origin}/api/webhook/manychat/${client.slug}`;
 
   const rows: { key: string; label: string; value: string | null; hint?: string }[] = [
-    { key: "slug",     label: "Slug",                value: client.slug,       hint: "Unique identifier for this client" },
-    { key: "wa",       label: "WhatsApp link",        value: waLink,            hint: "Paste this as the href of the WhatsApp button on their website" },
-    { key: "twilio",   label: "Twilio number",        value: waNumber ? `+${waNumber}` : null, hint: "The WhatsApp Business number for this client" },
-    { key: "webhook",  label: "ManyChat webhook URL", value: manychatWebhook,   hint: "POST endpoint — configure this in ManyChat under External Request" },
-    { key: "apikey",   label: "ManyChat API key",     value: config?.manychatApiKey ?? null, hint: "Send as x-api-key header in every ManyChat request" },
+    { key: "slug",    label: "Slug",                value: client.slug,                      hint: "Unique identifier — sent in every ManyChat request to route to this brand" },
+    { key: "wa",      label: "WhatsApp link",        value: waLink,                           hint: "Paste as the href of the WhatsApp button on their website" },
+    { key: "twilio",  label: "Twilio number",        value: `+${waNumber}`,                   hint: "Shared WhatsApp Business number (same for all brands using the sandbox)" },
+    { key: "webhook", label: "ManyChat webhook URL", value: manychatWebhook,                  hint: "Unique per brand — POST endpoint, configure in ManyChat → External Request" },
+    { key: "apikey",  label: "ManyChat API key",     value: config?.manychatApiKey ?? null,   hint: "Shared key — send as x-api-key header in every ManyChat request" },
   ];
 
   return (
@@ -307,11 +328,40 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
             Install & Connect — {client.branding.companyName}
           </DialogTitle>
           <DialogDescription className="text-white/50">
-            Copy these details to set up the WhatsApp button on their website and configure ManyChat.
+            Copy these details to configure ManyChat and add the WhatsApp button to their website.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 mt-2">
+
+          {/* Editable: Welcome text */}
+          <div className="rounded-xl border border-[#A8C334]/30 bg-[#A8C334]/5 p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#A8C334]/70">Welcome text</span>
+              <button
+                onClick={saveWelcome}
+                disabled={saving}
+                className="flex items-center gap-1 text-[11px] text-white/40 hover:text-[#A8C334] transition-colors disabled:opacity-40"
+              >
+                {saving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : savedWelcome ? (
+                  <><CheckCheck className="h-3.5 w-3.5 text-[#A8C334]" /> Saved!</>
+                ) : (
+                  <><Save className="h-3.5 w-3.5" /> Save</>
+                )}
+              </button>
+            </div>
+            <input
+              value={welcomeText}
+              onChange={(e) => setWelcomeText(e.target.value)}
+              className="w-full bg-transparent font-mono text-xs text-white/80 outline-none placeholder-white/20 border-none"
+              placeholder={`[${client.slug}] Hi, I'm interested in…`}
+            />
+            <p className="text-[10px] text-white/25 mt-1.5 leading-relaxed">Pre-filled message when the user taps the WhatsApp button — updates the link above live</p>
+          </div>
+
+          {/* Read-only copy rows */}
           {rows.map(({ key, label, value, hint }) => (
             <div key={key} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
               <div className="flex items-center justify-between gap-2 mb-1">
