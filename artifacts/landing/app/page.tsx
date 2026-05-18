@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import {
   MessageCircle,
   Search,
@@ -17,6 +19,7 @@ import {
   Activity,
   Target,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
 } from "lucide-react";
 import { VideoHero } from "./hero";
@@ -30,6 +33,7 @@ export default function LandingPage() {
         <Testimonials />
         <ProblemSolution />
         <Features />
+        <VideoSlider />
         <HowItWorks />
         <Industries />
         <FAQ />
@@ -344,6 +348,100 @@ function Features() {
               </div>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const VIDEO_SLIDES = [
+  {
+    id: "abf566f8383340358b39003375ef166f",
+    title: "GrowthMonk in Action",
+    description: "See how the AI bot captures, qualifies, and books leads automatically — start to finish.",
+  },
+];
+
+function VideoSlider() {
+  const [current, setCurrent] = useState(0);
+  const total = VIDEO_SLIDES.length;
+  const prev = () => setCurrent((c) => (c - 1 + total) % total);
+  const next = () => setCurrent((c) => (c + 1) % total);
+  const slide = VIDEO_SLIDES[current];
+
+  return (
+    <section className="px-6 py-24" style={{ backgroundColor: "#030712" }}>
+      <div className="mx-auto max-w-4xl">
+        {/* Label + heading */}
+        <div className="mb-4 text-center">
+          <span className="text-sm font-semibold uppercase tracking-widest text-green-500">
+            See It In Action
+          </span>
+        </div>
+        <h2 className="mb-4 text-center text-4xl font-extrabold text-white">
+          Watch GrowthMonk work
+        </h2>
+        <p className="mx-auto mb-12 max-w-xl text-center text-gray-400">
+          A live walkthrough of how GrowthMonk captures leads, qualifies them in seconds, and books appointments automatically.
+        </p>
+
+        {/* Video card */}
+        <div
+          className="relative rounded-2xl overflow-hidden"
+          style={{
+            border: "1px solid rgba(34,197,94,0.2)",
+            background: "linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(3,7,18,0) 60%)",
+          }}
+        >
+          {/* Video embed */}
+          <div style={{ position: "relative", paddingBottom: "52.6%", height: 0 }}>
+            <iframe
+              key={slide.id}
+              src={`https://www.loom.com/embed/${slide.id}`}
+              frameBorder="0"
+              allowFullScreen
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: "16px" }}
+              title={slide.title}
+            />
+          </div>
+
+          {/* Caption + arrows */}
+          <div className="flex items-center justify-between gap-4 px-6 py-4">
+            <div className="min-w-0">
+              <p className="font-semibold text-white truncate">{slide.title}</p>
+              <p className="text-sm text-gray-400 truncate">{slide.description}</p>
+            </div>
+
+            {total > 1 && (
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={prev}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-green-500/40 hover:bg-green-500/10 hover:text-green-400"
+                  aria-label="Previous video"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                {/* Dots */}
+                <div className="flex gap-1.5">
+                  {VIDEO_SLIDES.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrent(i)}
+                      className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-green-500" : "w-1.5 bg-white/20 hover:bg-white/40"}`}
+                      aria-label={`Go to video ${i + 1}`}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={next}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-green-500/40 hover:bg-green-500/10 hover:text-green-400"
+                  aria-label="Next video"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
