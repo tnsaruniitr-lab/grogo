@@ -1,0 +1,40 @@
+Live bot can still use unapproved crawl knowledge
+In knowledge.ts, retrieval selects all rows for clientId and does not filter approvalStatus = "approved". But crawl-pipeline.ts inserts new crawl entries as pending.
+Exact change: live bot retrieval must only use approved rows. Pending/rejected rows should only appear in admin preview/review mode.
+
+New crawl deletes old crawl knowledge before proving the new crawl is good
+crawl-pipeline.ts deletes previous source = "crawl" entries at the start. If the new crawl fails, extracts badly, or gets blocked, you lose the last good KB.
+Exact change: move to versioned crawl drafts. New crawl writes crawl_job_id / version rows as pending. Old approved crawl remains live until the new set is reviewed and activated.
+
+Extractor output is too thin for high-trust chatbot facts
+extractor.ts only drafts { category, question, answer, confidence, language }. That is okay for a basic KB, but not enough to prove accuracy.
+Exact change: extractor should also return evidenceQuote, sourceSection, reviewKey, canonicalCandidate, audience, and riskFlags. The review UI should show the evidence quote next to the drafted fact.
+
+No true business-profile synthesis pass exists
+brand-extractor.ts extracts colors, headline, logo, and industry. It does not synthesize the customer-facing truth of the business.
+Exact change: after page extraction, run a second stronger-model pass that drafts canonical facts: what the company does, who it serves, main services, pricing policy, booking path, geography, languages, trust signals, and “must not claim” rules.
+
+The current crawler misses modern websites
+crawler.ts fetches raw HTML and cleans it with regex. It does not parse JSON-LD, schema.org, FAQPage, Service, Product, Offer, or JS-rendered content.
+Exact change: add structured-data parsing first, Readability/main-content extraction second, and Playwright fallback only when raw text is too thin.
+
+Critical fact selection is heuristic, not canonical
+admin.ts derives critical facts using category/keyword matching. Also, candidate scoring treats priority === 1 as special, while your earlier direction was “higher priority wins.”
+Exact change: stop guessing critical facts from categories alone. Store canonical reviewKeys like what_it_does, target_customers, pricing_policy, booking_path. Higher priority should mean higher priority consistently.
+
+What I’d Change Exactly
+
+Add approval filtering to bot retrieval immediately. This is the reliability blocker.
+
+Replace destructive crawl refresh with draft crawl versions. Never delete the old live KB until the new one is approved.
+
+Upgrade extraction schema from “Q&A only” to “fact with evidence.” Every extracted claim should have a source URL and short evidence quote.
+
+Add a second “business profile synthesis” call using a stronger model. Keep gpt-4o-mini or another cheap model for page-level extraction if needed, but use the powerful model for the final canonical draft.
+
+Expand categories beyond the current extractor set. Use: identity, service, target_customer, pricing, process, booking, integration, location, language, trust, limitation, contact, faq, other.
+
+Parse JSON-LD/schema.org before LLM extraction. This will improve accuracy more than just changing the model.
+
+Add an extraction evaluation harness: crawl 5 known sites, snapshot expected critical facts, and fail CI if the extracted business identity, services, or pricing policy regress.
+

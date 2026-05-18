@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCheck,
@@ -361,7 +360,7 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 space-y-4">
 
             {/* Critical Facts */}
@@ -462,7 +461,7 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Footer */}
         <div className="border-t px-6 py-4 flex items-center justify-between bg-muted/20 shrink-0">
