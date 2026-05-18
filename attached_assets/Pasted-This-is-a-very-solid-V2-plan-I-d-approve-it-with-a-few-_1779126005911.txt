@@ -1,0 +1,67 @@
+This is a very solid V2 plan. I’d approve it with a few tightening changes before implementation.
+
+First: extractorVersion should probably be global default + per-client override, exactly as you wrote, but store the effective version on each crawl job too. That way a crawl is reproducible later even if settings change.
+
+Add to crawl_jobs:
+
+extractorVersion
+settingsSnapshot JSONB
+This is important. Otherwise six months later you won’t know which model/settings produced a profile.
+
+Second: don’t skip LLM extraction entirely when structured data exists. Structured data is high-signal, but often incomplete or stale. Better rule:
+
+Parse structured data first.
+Create high-confidence structured facts.
+Still run page extraction unless the page is pure structured FAQ with enough coverage.
+Deduplicate/merge later.
+Third: source = web_research should probably not be a normal live KB source at first. Web research should enrich client_profiles.evidence, not directly create chatbot KB rows unless a human approves/promotes it. External sources are useful for review, but risky as bot-facing truth.
+
+Fourth: approvalStatus gains archived is okay, but consider enforcing values with a DB check constraint or enum. Same for profile status. Loose text statuses will become painful.
+
+Fifth: add mustNotClaim to risk gating. That field is extremely valuable. If the profile says “must not claim fixed prices,” the chat prompt should receive that as an explicit negative instruction, not just a review artifact.
+
+I’d also add these exact fields:
+
+company_knowledge
+- sourceSection
+- sourceType: manual | crawl | structured_data
+- crawlJobId
+- reviewKey
+- evidenceQuote
+- riskFlags
+Keep sourceUrl as-is.
+
+For client_profiles.profile, I’d make the shape explicit:
+
+{
+  "whatItDoes": { "value": "...", "confidence": 0.91, "needsReview": false },
+  "targetCustomers": { "value": [...], "confidence": 0.87, "needsReview": false },
+  "mainServices": { "value": [...], "confidence": 0.9, "needsReview": false },
+  "pricingPolicy": { "value": "...", "confidence": 0.62, "needsReview": true },
+  "bookingPath": { "value": "...", "confidence": 0.84, "needsReview": false },
+  "geography": { "value": "...", "confidence": 0.78, "needsReview": true },
+  "languages": { "value": [...], "confidence": 0.8, "needsReview": false },
+  "trustSignals": { "value": [...], "confidence": 0.7, "needsReview": true },
+  "limitations": { "value": [...], "confidence": 0.8, "needsReview": false },
+  "escalationRules": { "value": [...], "confidence": 0.85, "needsReview": false },
+  "mustNotClaim": { "value": [...], "confidence": 0.9, "needsReview": false }
+}
+The biggest change I’d make to your rollout:
+
+Immediate fixes.
+Settings table with settings snapshot on crawl jobs.
+V2 schema.
+V2 extraction + profile synthesis behind flag.
+Review/activation.
+Structured data parsing.
+Web enrichment.
+Eval harness.
+Reason: review/activation matters before web enrichment. Once activation is solid, you can safely improve extraction quality without risking live bot output.
+
+Net: the plan is excellent. Just make every crawl reproducible, don’t overtrust structured data, keep external web research out of live KB until human activation, and push mustNotClaim into the live chat prompt.
+
+
+
+
+
+0:39
