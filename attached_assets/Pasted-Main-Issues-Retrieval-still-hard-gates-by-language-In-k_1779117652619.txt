@@ -1,0 +1,27 @@
+Main Issues
+
+Retrieval still hard-gates by language
+In [knowledge.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/lib/knowledge.ts:60), if there are at least 5 same-language entries, it ignores every other language. That is bad retrieval design. It should score all client entries first, then optionally boost same-language entries.
+
+Persona selection is too fragile
+[bot-pipeline.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/lib/bot-pipeline.ts:364) blindly trusts client.config.industry. If brand extraction mislabels GrowthMonk as wellness, the whole bot identity breaks. Worse, [brand-extractor.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/lib/brand-extractor.ts:218) always overwrites industry.
+
+Prompt has no contradiction handling
+[gpt-service.ts](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/lib/gpt-service.ts:121) makes persona identity higher priority than retrieved KB. If persona says “wellness centre” and KB says “B2B SaaS,” GPT gets conflicting authority. The prompt should explicitly say company facts from KB override generic industry persona wording.
+
+KB metadata is too loose
+[CreateKnowledgeEntryBody](/Users/arunsharma/Documents/New project/grogo/lib/api-zod/src/generated/api.ts:341) accepts free-form category and language. That allowed things like English content tagged as tr. Categories/languages should be enums or at least validated.
+
+Retrieval has no observability
+[retrieveKnowledge](/Users/arunsharma/Documents/New project/grogo/artifacts/api-server/src/lib/knowledge.ts:33) returns only question/answer. No IDs, categories, languages, source, or scores are logged. That makes incidents like this much harder to prove.
+
+Best Fix
+Make retrieval always semantic across all client KB rows. Add metadata and logs. Then make persona safer:
+
+Add saas profile.
+Stop brand extraction from overwriting manual industry.
+Add industryLocked or profileOverride in client config.
+Add canonical KB rows for identity and services.
+Validate language and core categories.
+Log retrieved chunk IDs/scores every bot turn.
+So: embeddings are fine, but the surrounding system is not optimal. The biggest weakness is not vector search; it’s brittle persona/config control plus overly restrictive retrieval filtering.
