@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,6 +51,7 @@ import {
   X,
   ExternalLink,
   BookOpen,
+  Cable,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
@@ -98,6 +99,7 @@ export default function HubPage() {
   const [previewClient, setPreviewClient] = useState<DemoClient | null>(null);
   const [previewMode, setPreviewMode] = useState<"demo" | "site">("demo");
   const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
+  const [installClient, setInstallClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -207,6 +209,7 @@ export default function HubPage() {
                       setPreviewMode(mode);
                     }}
                     onKnowledge={() => setKnowledgeSlug(client.slug)}
+                    onInstall={() => setInstallClient(client)}
                   />
                 </motion.div>
               ))}
@@ -250,7 +253,96 @@ export default function HubPage() {
           onClose={() => setKnowledgeSlug(null)}
         />
       )}
+
+      {installClient && (
+        <InstallPanel
+          client={installClient}
+          onClose={() => setInstallClient(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => void }) {
+  const [config, setConfig] = useState<{ manychatApiKey: string | null } | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/install-config")
+      .then((r) => r.json())
+      .then(setConfig)
+      .catch(() => setConfig({ manychatApiKey: null }));
+  }, []);
+
+  const copy = async (key: string, value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const raw = client.branding.twilioSender ?? "";
+  const digits = raw.replace("whatsapp:", "").replace(/^\+/, "");
+  const waNumber = digits || null;
+  const waLink = waNumber
+    ? `https://wa.me/${waNumber}?text=${encodeURIComponent(`[${client.slug}] `)}`
+    : null;
+  const origin = window.location.origin;
+  const manychatWebhook = `${origin}/api/webhook/manychat/${client.slug}`;
+
+  const rows: { key: string; label: string; value: string | null; hint?: string }[] = [
+    { key: "slug",     label: "Slug",                value: client.slug,       hint: "Unique identifier for this client" },
+    { key: "wa",       label: "WhatsApp link",        value: waLink,            hint: "Paste this as the href of the WhatsApp button on their website" },
+    { key: "twilio",   label: "Twilio number",        value: waNumber ? `+${waNumber}` : null, hint: "The WhatsApp Business number for this client" },
+    { key: "webhook",  label: "ManyChat webhook URL", value: manychatWebhook,   hint: "POST endpoint — configure this in ManyChat under External Request" },
+    { key: "apikey",   label: "ManyChat API key",     value: config?.manychatApiKey ?? null, hint: "Send as x-api-key header in every ManyChat request" },
+  ];
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Cable className="h-4 w-4 text-[#A8C334]" />
+            Install & Connect — {client.branding.companyName}
+          </DialogTitle>
+          <DialogDescription>
+            Copy these details to set up the WhatsApp button on their website and configure ManyChat.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-3 mt-2">
+          {rows.map(({ key, label, value, hint }) => (
+            <div key={key} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-white/40">{label}</span>
+                {value ? (
+                  <button
+                    onClick={() => copy(key, value)}
+                    className="flex items-center gap-1 text-[11px] text-white/40 hover:text-[#A8C334] transition-colors"
+                  >
+                    {copied === key ? <CheckCheck className="h-3.5 w-3.5 text-[#A8C334]" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied === key ? "Copied!" : "Copy"}
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-white/20 italic">not configured</span>
+                )}
+              </div>
+              <p className="font-mono text-xs text-white/70 break-all leading-relaxed">
+                {value ?? <span className="text-white/20 not-italic font-sans">—</span>}
+              </p>
+              {hint && <p className="text-[10px] text-white/25 mt-1.5 leading-relaxed">{hint}</p>}
+            </div>
+          ))}
+        </div>
+
+        {!config && (
+          <p className="text-xs text-white/30 text-center mt-1 flex items-center justify-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" /> Loading API key…
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -357,6 +449,7 @@ function BrandCard({
   onDelete,
   onPreview,
   onKnowledge,
+  onInstall,
 }: {
   client: DemoClient;
   copied: boolean;
@@ -365,6 +458,7 @@ function BrandCard({
   onDelete: () => void;
   onPreview: (mode: "demo" | "site") => void;
   onKnowledge: () => void;
+  onInstall: () => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
   const secondary = client.branding.secondaryColor || "#1a3a1a";
@@ -470,9 +564,16 @@ function BrandCard({
             <button
               onClick={onCopy}
               className="flex items-center gap-1 text-[11px] font-semibold text-white/40 hover:text-white/70 transition-colors"
-              title="Copy link"
+              title="Copy demo link"
             >
               {copied ? <CheckCheck className="h-3.5 w-3.5 text-[#A8C334]" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={onInstall}
+              className="text-white/30 hover:text-[#A8C334] transition-colors"
+              title="Install / Connect — WhatsApp link, ManyChat webhook, API key"
+            >
+              <Cable className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={onEdit}

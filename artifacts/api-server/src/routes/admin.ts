@@ -405,6 +405,13 @@ router.delete("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Re
   res.status(204).end();
 });
 
+// Install config — exposes shared webhook API key to the hub UI (admin-only route)
+router.get("/admin/install-config", (_req: Request, res: Response) => {
+  res.json({
+    manychatApiKey: process.env.WEBHOOK_API_KEY ?? null,
+  });
+});
+
 // Site proxy — strips X-Frame-Options/CSP so external sites can be embedded in the hub iframe
 router.get("/admin/site-proxy", async (req: Request, res: Response) => {
   const raw = req.query.url as string | undefined;
