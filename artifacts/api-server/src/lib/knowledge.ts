@@ -37,38 +37,43 @@ export async function retrieveKnowledge(
 
   if (allEntries.length === 0) return [];
 
-  // Pinned identity slot: always include the highest-priority identity entry
-  // regardless of semantic relevance. This prevents "who are you?" drift on
-  // every turn — the bot always has its core identity in context.
-  // The pinned entry occupies slot 0; semantic retrieval fills the remaining
-  // topK-1 slots (deduped so the pinned entry never appears twice).
-  const identityEntry = allEntries.find((e) => e.category === "identity") ?? null;
+  // Facts pack: always inject one entry from each of these categories as a
+  // fixed prefix, regardless of semantic relevance. This gives GPT a stable
+  // company identity + core offer + booking path on every single turn.
+  // Precedence within each category: highest priority first, then by id desc.
+  // The pinned entries are deduped from the semantic pool so they never repeat.
+  const FACTS_PACK_CATEGORIES = ["identity", "about", "process"] as const;
 
-  const semanticEntries = identityEntry
-    ? allEntries.filter((e) => e.id !== identityEntry.id)
-    : allEntries;
+  const pinnedEntries: EntryWithMeta[] = [];
+  for (const cat of FACTS_PACK_CATEGORIES) {
+    const match = allEntries.find((e) => e.category === cat);
+    if (match) pinnedEntries.push(match);
+  }
 
-  const semanticTopK = identityEntry ? topK - 1 : topK;
+  const pinnedIds = new Set(pinnedEntries.map((e) => e.id));
+  const semanticPool = allEntries.filter((e) => !pinnedIds.has(e.id));
+  const semanticTopK = Math.max(topK - pinnedEntries.length, 1);
 
-  const hasEmbeddings = semanticEntries.some((e) => e.embeddingJson != null);
+  const hasEmbeddings = semanticPool.some((e) => e.embeddingJson != null);
 
-  const semanticChunks = hasEmbeddings
-    ? await retrieveByEmbedding(semanticEntries, userMessage, language, semanticTopK)
-    : retrieveByKeyword(semanticEntries, userMessage, language, semanticTopK);
+  const semanticChunks =
+    semanticPool.length === 0
+      ? []
+      : hasEmbeddings
+        ? await retrieveByEmbedding(semanticPool, userMessage, language, semanticTopK)
+        : retrieveByKeyword(semanticPool, userMessage, language, semanticTopK);
 
-  if (!identityEntry) return semanticChunks;
+  if (pinnedEntries.length > 0) {
+    logger.info(
+      { pinned: pinnedEntries.map((e) => ({ id: e.id, cat: e.category, q: e.question.slice(0, 50) })) },
+      "Knowledge: facts pack injected",
+    );
+  }
 
-  const pinnedChunk: KnowledgeChunk = {
-    question: identityEntry.question,
-    answer: identityEntry.answer,
-  };
-
-  logger.info(
-    { id: identityEntry.id, lang: identityEntry.language, q: identityEntry.question.slice(0, 60) },
-    "Knowledge: pinned identity slot injected",
-  );
-
-  return [pinnedChunk, ...semanticChunks];
+  return [
+    ...pinnedEntries.map((e) => ({ question: e.question, answer: e.answer })),
+    ...semanticChunks,
+  ];
 }
 
 type EntryWithMeta = {
@@ -112,6 +117,9 @@ async function retrieveByEmbedding(
     }
     // Boost same-language entries by 10% so they're preferred when relevance is equal.
     if (entry.language === conversationLanguage) score *= 1.1;
+    // Boost manually-authored entries by 8% over crawl content — human-written
+    // answers are more reliable and should win ties against crawled text.
+    if (entry.source === "manual") score *= 1.08;
     return { ...entry, score };
   });
 
@@ -158,6 +166,7 @@ function retrieveByKeyword(
     const maxHits = Math.max(tokens.length, 1);
     let score = hits / maxHits;
     if (entry.language === conversationLanguage) score *= 1.1;
+    if (entry.source === "manual") score *= 1.08;
     return { ...entry, score };
   });
 
