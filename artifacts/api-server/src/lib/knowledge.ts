@@ -22,11 +22,14 @@ export async function retrieveKnowledge(
   // relevance is equal, but a more relevant cross-language entry always wins.
   const allEntries = await db
     .select({
+      id: companyKnowledgeTable.id,
       question: companyKnowledgeTable.question,
       answer: companyKnowledgeTable.answer,
       priority: companyKnowledgeTable.priority,
       embeddingJson: companyKnowledgeTable.embeddingJson,
       language: companyKnowledgeTable.language,
+      category: companyKnowledgeTable.category,
+      source: companyKnowledgeTable.source,
     })
     .from(companyKnowledgeTable)
     .where(eq(companyKnowledgeTable.clientId, clientId))
@@ -43,8 +46,19 @@ export async function retrieveKnowledge(
   return retrieveByKeyword(allEntries, userMessage, language, topK);
 }
 
+type EntryWithMeta = {
+  id: number;
+  question: string;
+  answer: string;
+  priority: number;
+  embeddingJson: string | null;
+  language: string;
+  category: string;
+  source: string;
+};
+
 async function retrieveByEmbedding(
-  entries: Array<{ question: string; answer: string; priority: number; embeddingJson: string | null; language: string }>,
+  entries: EntryWithMeta[],
   userMessage: string,
   conversationLanguage: string,
   topK: number,
@@ -81,10 +95,13 @@ async function retrieveByEmbedding(
   const top = scored.slice(0, topK);
   logger.info(
     {
-      clientId: entries[0] ? undefined : undefined,
       conversationLanguage,
+      totalEntries: entries.length,
       retrieved: top.map((e) => ({
+        id: e.id,
         lang: e.language,
+        category: e.category,
+        source: e.source,
         score: Math.round(e.score * 1000) / 1000,
         q: e.question.slice(0, 60),
       })),
@@ -96,7 +113,7 @@ async function retrieveByEmbedding(
 }
 
 function retrieveByKeyword(
-  entries: Array<{ question: string; answer: string; priority: number; language: string }>,
+  entries: EntryWithMeta[],
   userMessage: string,
   conversationLanguage: string,
   topK: number,
@@ -124,5 +141,22 @@ function retrieveByKeyword(
     return b.priority - a.priority;
   });
 
-  return scored.slice(0, topK).map((e) => ({ question: e.question, answer: e.answer }));
+  const top = scored.slice(0, topK);
+  logger.info(
+    {
+      conversationLanguage,
+      totalEntries: entries.length,
+      retrieved: top.map((e) => ({
+        id: e.id,
+        lang: e.language,
+        category: e.category,
+        source: e.source,
+        score: Math.round(e.score * 1000) / 1000,
+        q: e.question.slice(0, 60),
+      })),
+    },
+    "Knowledge retrieval complete (keyword)",
+  );
+
+  return top.map((e) => ({ question: e.question, answer: e.answer }));
 }

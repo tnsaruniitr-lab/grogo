@@ -14,11 +14,21 @@ import {
 import { startCrawlJob, runCrawlPipeline } from "../lib/crawl-pipeline";
 import { embedText } from "../lib/embedder";
 
+const KNOWLEDGE_LANGUAGES = [
+  "en", "de", "tr", "fr", "ar", "nl", "es", "pl",
+  "pt", "it", "ru", "zh", "hi", "ur", "fa", "ko", "ja",
+] as const;
+
+const KNOWLEDGE_CATEGORIES = [
+  "about", "services", "service", "pricing", "faq",
+  "process", "identity", "team", "location", "contact", "other",
+] as const;
+
 const CreateKnowledgeEntryBody = z.object({
-  category: z.string().min(1).max(64),
+  category: z.enum(KNOWLEDGE_CATEGORIES),
   question: z.string().min(1).max(1000),
   answer: z.string().min(1).max(4000),
-  language: z.string().default("en"),
+  language: z.enum(KNOWLEDGE_LANGUAGES).default("en"),
   priority: z.number().int().default(0),
 });
 
@@ -118,7 +128,22 @@ router.patch("/admin/clients/:id", async (req: Request, res: Response) => {
   const updates: Partial<typeof clientsTable.$inferInsert> = {};
   if (body.data.name) updates.name = body.data.name;
   if (body.data.twilioSender !== undefined) updates.twilioSender = body.data.twilioSender;
-  if (body.data.branding !== undefined) updates.config = body.data.branding as Record<string, unknown>;
+  if (body.data.branding !== undefined) {
+    const existingCfg = (existing.config ?? {}) as Record<string, unknown>;
+    const newCfg = body.data.branding as Record<string, unknown>;
+    // If industryLocked is true in the existing config, protect the industry field
+    // regardless of what the incoming PATCH sends. The only way to change industry
+    // for a locked client is to explicitly send industryLocked: false first.
+    if (existingCfg.industryLocked === true) {
+      updates.config = {
+        ...newCfg,
+        industryLocked: true,
+        industry: existingCfg.industry,
+      };
+    } else {
+      updates.config = newCfg;
+    }
+  }
 
   const [updated] = await db
     .update(clientsTable)
@@ -354,10 +379,10 @@ router.patch("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Res
   if (!existing) { res.status(404).json({ error: "Entry not found" }); return; }
 
   const body = z.object({
-    category: z.string().optional(),
-    question: z.string().optional(),
-    answer: z.string().optional(),
-    language: z.string().optional(),
+    category: z.enum(KNOWLEDGE_CATEGORIES).optional(),
+    question: z.string().min(1).max(1000).optional(),
+    answer: z.string().min(1).max(4000).optional(),
+    language: z.enum(KNOWLEDGE_LANGUAGES).optional(),
   }).safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.flatten() }); return; }
 
@@ -485,6 +510,7 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
         ? [(cfg.demoLanguage as string)]
         : ["en"],
     industry: (cfg.industry as string | null | undefined) ?? null,
+    industryLocked: (cfg.industryLocked as boolean | undefined) ?? false,
     vertical: (cfg.vertical as string | null | undefined) ?? "healthcare",
     heroImageUrl: (cfg.heroImageUrl as string | null | undefined) ?? null,
     twilioSender: client.twilioSender ?? null,

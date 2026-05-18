@@ -22,6 +22,7 @@ export const INDUSTRY_VALUES = [
   "hospitality",
   "education",
   "fitness",
+  "saas",
   "other",
 ] as const;
 export type Industry = (typeof INDUSTRY_VALUES)[number];
@@ -62,7 +63,7 @@ const BRAND_TOOL: OpenAI.Chat.ChatCompletionTool = {
           type: "string",
           enum: INDUSTRY_VALUES,
           description:
-            "The company's own industry — what the company *is*, not the clients it serves. A SaaS platform, marketing tool, or software product that serves healthcare/wellness businesses is 'other', not 'wellness' or 'medical'. Only classify as care/aesthetics/dental/medical/wellness/fitness/etc. if the company itself directly delivers that service to end-patients or consumers.",
+            "The company's own industry — what the company *is*, not the clients it serves. A SaaS platform, marketing tool, AI product, or software that serves healthcare/wellness businesses is 'saas', not 'wellness' or 'medical'. A B2B software or platform product of any kind is 'saas'. Only classify as care/aesthetics/dental/medical/wellness/fitness/etc. if the company itself directly delivers that service to end-patients or consumers.",
         },
         tagline: {
           type: "string",
@@ -85,6 +86,7 @@ const INDUSTRY_COLOR_HINTS: Record<Industry, string> = {
   hospitality: "welcoming tones — warm terracotta (#C1694F), gold, deep cream",
   education: "inspiring tones — bright cobalt (#2563EB), purple, warm yellow",
   fitness: "energetic tones — electric orange (#F97316), strong red, dark charcoal",
+  saas: "modern tech tones — electric indigo (#6366F1), deep blue (#1E3A5F), slate",
   other: "professional and distinctive tones for the brand",
 };
 
@@ -250,8 +252,14 @@ For heroHeadline: create a 3–7 word punchy headline (NOT a full sentence) capt
     if (!existing.secondaryColor) updates.secondaryColor = brand.secondaryColor;
     if (!existing.heroHeadline) updates.heroHeadline = brand.heroHeadline;
     if (!existing.tagline && brand.tagline) updates.tagline = brand.tagline;
-    // Only set industry if not already manually configured
-    if (!existing.industry) updates.industry = brand.industry;
+    // Only set industry if not already manually configured AND not locked
+    // industryLocked: true means a human has explicitly set the industry and
+    // brand extraction must never overwrite it — even across re-crawls.
+    if (!existing.industry && !existing.industryLocked) {
+      updates.industry = brand.industry;
+    } else if (existing.industryLocked) {
+      log.info({ lockedIndustry: existing.industry }, "industryLocked=true — skipping industry overwrite");
+    }
     // Logo: extracted from apple-touch-icon / SVG / Clearbit — only set if not already uploaded
     if (!existing.logoUrl && logoUrl) updates.logoUrl = logoUrl;
     if (ogImage) updates.heroImageUrl = ogImage;
