@@ -300,13 +300,13 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg bg-[#0f1117] border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-white">
             <Cable className="h-4 w-4 text-[#A8C334]" />
             Install & Connect — {client.branding.companyName}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-white/50">
             Copy these details to set up the WhatsApp button on their website and configure ManyChat.
           </DialogDescription>
         </DialogHeader>
