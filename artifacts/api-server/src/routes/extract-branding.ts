@@ -95,22 +95,27 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
     let companyName = ogTitle || titleTag || nameFromHost;
     companyName = companyName.split(/\s*[\|–—-]\s*/)[0].trim();
 
-    const findLogoUrl = (): string | null => {
-      const logoPatterns = [
-        /<img[^>]+(?:class|id|alt)=["'][^"']*logo[^"']*["'][^>]+src=["']([^"']+)["']/i,
-        /<img[^>]+src=["']([^"']+)["'][^>]+(?:class|id|alt)=["'][^"']*logo[^"']*["']/i,
-        /<img[^>]+src=["']([^"'\/][^"']*logo[^"']*\.[a-z]{2,5})["']/i,
-      ];
-      for (const pat of logoPatterns) {
-        const m = html.match(pat);
-        if (m?.[1] && !m[1].includes("data:")) return resolve(m[1]);
-      }
+    const findLogoUrl = (): string => {
+      // 1. apple-touch-icon — high-res, brand-approved (180×180+)
       const appleIcon =
         html.match(/<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
         html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*apple-touch-icon[^"']*["']/i)?.[1];
-      if (appleIcon) return resolve(appleIcon);
-      if (rawFavicon) return resolve(rawFavicon);
-      return ogImage ? resolve(ogImage) : null;
+      if (appleIcon) return resolve(appleIcon) ?? `https://logo.clearbit.com/${hostname}`;
+
+      // 2. SVG icon — vector, scales perfectly
+      const svgIcon =
+        html.match(/<link[^>]+type=["']image\/svg\+xml["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+        html.match(/<link[^>]+href=["']([^"']+\.svg)["'][^>]+rel=["'][^"']*icon[^"']*["']/i)?.[1];
+      if (svgIcon) return resolve(svgIcon) ?? `https://logo.clearbit.com/${hostname}`;
+
+      // 3. Large PNG favicon (≥32px)
+      const pngIcon =
+        html.match(/<link[^>]+sizes=["'](?:192|180|128|96|64|48|32)[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+        html.match(/<link[^>]+href=["']([^"']+)["'][^>]+sizes=["'](?:192|180|128|96|64|48|32)[^"']*["']/i)?.[1];
+      if (pngIcon) return resolve(pngIcon) ?? `https://logo.clearbit.com/${hostname}`;
+
+      // 4. Clearbit — reliable fallback by domain (never use og:image as logo; it's a social/hero image)
+      return `https://logo.clearbit.com/${hostname}`;
     };
 
     res.json({

@@ -590,26 +590,51 @@ function PreviewModal({
       <div className="flex-1 relative overflow-hidden">
         {activeUrl ? (
           <>
-            <iframe
-              key={activeUrl}
-              src={activeUrl}
-              className="absolute inset-0 w-full h-full border-0 bg-white"
-              title={`Preview: ${client.branding.companyName}`}
-            />
-            {/* Fallback bar — external sites often block iframe embedding */}
-            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-black/80 backdrop-blur-sm pointer-events-auto">
-              <p className="text-white/50 text-xs truncate">
-                {mode === "site" ? "Most sites block preview — open directly to view" : "If the demo isn't loading, open it directly"}
-              </p>
-              <a
-                href={activeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded px-2.5 py-1 transition-colors"
-              >
-                Open in new tab ↗
-              </a>
-            </div>
+            {/* Site mode: prominent full-screen message since external sites block iframes */}
+            {mode === "site" ? (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 px-8 text-center bg-[#0a0c10]">
+                <div className="flex flex-col items-center gap-3 max-w-sm">
+                  <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                    <Globe className="h-7 w-7 text-white/30" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-base mb-1">Can't preview in-app</p>
+                    <p className="text-white/40 text-sm leading-relaxed">
+                      Browsers block external websites from loading inside another page.
+                      Open <span className="text-white/60 font-mono text-xs">{new URL(activeUrl).hostname}</span> directly to view their current site.
+                    </p>
+                  </div>
+                  <a
+                    href={activeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-white text-black font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-white/90 transition-colors mt-1"
+                  >
+                    <ExternalLink className="h-4 w-4" /> Open {new URL(activeUrl).hostname}
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <>
+                <iframe
+                  key={activeUrl}
+                  src={activeUrl}
+                  className="absolute inset-0 w-full h-full border-0 bg-[#050505]"
+                  title={`Preview: ${client.branding.companyName}`}
+                />
+                {/* Subtle hint bar for demo mode only */}
+                <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-end gap-3 px-4 py-1.5 bg-black/60 backdrop-blur-sm pointer-events-auto">
+                  <a
+                    href={activeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" /> Open in new tab
+                  </a>
+                </div>
+              </>
+            )}
           </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
