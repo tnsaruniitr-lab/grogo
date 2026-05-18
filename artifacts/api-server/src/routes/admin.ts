@@ -400,10 +400,21 @@ router.get("/admin/clients/:slug/knowledge/review", async (req: Request, res: Re
 
   const serialised = entries.map((e) => ({ ...e, createdAt: e.createdAt.toISOString() }));
 
+  // Score candidates so manual/homepage entries beat deep listicle pages.
+  // Lower score = better. manual source = 0, priority 1 = 0, each URL segment = +1.
+  const urlDepth = (url: string | null) => {
+    if (!url) return 0;
+    try { return new URL(url).pathname.split("/").filter(Boolean).length; } catch { return 5; }
+  };
+  const candidateScore = (e: typeof serialised[number]) =>
+    (e.source === "manual" ? 0 : 10) + (e.priority === 1 ? 0 : 5) + urlDepth(e.sourceUrl);
+
   const criticalFacts = [
     { key: "business_name", label: "Business name", value: client.name, entryId: null as number | null },
     ...CRITICAL_FACT_RULES.map((rule) => {
-      const candidates = serialised.filter((e) => (rule.categories as readonly string[]).includes(e.category));
+      const candidates = serialised
+        .filter((e) => (rule.categories as readonly string[]).includes(e.category))
+        .sort((a, b) => candidateScore(a) - candidateScore(b));
       const match = rule.keywords
         ? (candidates.find((e) => rule.keywords!.some((kw) => e.question.toLowerCase().includes(kw))) ?? candidates[0] ?? null)
         : (candidates[0] ?? null);
@@ -412,6 +423,8 @@ router.get("/admin/clients/:slug/knowledge/review", async (req: Request, res: Re
         label: rule.label,
         value: match ? match.answer.slice(0, 400) : "",
         entryId: match ? match.id : null,
+        sourceUrl: match ? (match.sourceUrl ?? null) : null,
+        source: match ? match.source : null,
       };
     }),
   ];

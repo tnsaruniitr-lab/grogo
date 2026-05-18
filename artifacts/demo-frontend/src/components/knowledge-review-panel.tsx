@@ -54,6 +54,8 @@ function CriticalFactCard({
   label,
   value,
   entryId,
+  sourceUrl,
+  source,
   slug,
   onSaved,
 }: {
@@ -61,6 +63,8 @@ function CriticalFactCard({
   label: string;
   value: string;
   entryId: number | null;
+  sourceUrl: string | null;
+  source: string | null;
   slug: string;
   onSaved: () => void;
 }) {
@@ -126,9 +130,31 @@ function CriticalFactCard({
         </div>
       )}
       {factKey !== "business_name" && (
-        <p className="text-[10px] text-muted-foreground mt-1.5">
-          {entryId ? `KB entry #${entryId}` : "Not found in knowledge base"}
-        </p>
+        <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+          {entryId ? (
+            <>
+              <span className="text-[10px] text-muted-foreground">KB #{entryId}</span>
+              {source && (
+                <span className={`text-[10px] font-medium px-1 py-0 rounded ${SOURCE_COLORS[source] ?? "bg-muted text-muted-foreground"}`}>
+                  {source}
+                </span>
+              )}
+              {sourceUrl && (
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] text-blue-500 hover:underline truncate max-w-[220px]"
+                  title={sourceUrl}
+                >
+                  {(() => { try { return new URL(sourceUrl).pathname || sourceUrl; } catch { return sourceUrl; } })()}
+                </a>
+              )}
+            </>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">Not found in knowledge base</span>
+          )}
+        </div>
       )}
     </div>
   );
@@ -270,7 +296,7 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
   const qk = ["knowledge-review", slug];
 
   const { data, isLoading } = useGetKnowledgeReview<{
-    criticalFacts: Array<{ key: string; label: string; value: string; entryId: number | null }>;
+    criticalFacts: Array<{ key: string; label: string; value: string; entryId: number | null; sourceUrl: string | null; source: string | null }>;
     groups: Array<{ category: string; entries: Array<KnowledgeEntry & { approvalStatus: string }> }>;
     pendingCount: number;
     approvedCount: number;
@@ -365,6 +391,8 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
                           label={fact.label}
                           value={fact.value}
                           entryId={fact.entryId}
+                          sourceUrl={fact.sourceUrl}
+                          source={fact.source}
                           slug={slug}
                           onSaved={refresh}
                         />
