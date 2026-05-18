@@ -283,7 +283,7 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
 
   const raw = client.branding.twilioSender ?? "";
   const digits = raw.replace("whatsapp:", "").replace(/^\+/, "");
-  const waNumber = digits || null;
+  const waNumber = digits || "14155238886";
   const waLink = waNumber
     ? `https://wa.me/${waNumber}?text=${encodeURIComponent(`[${client.slug}] `)}`
     : null;
