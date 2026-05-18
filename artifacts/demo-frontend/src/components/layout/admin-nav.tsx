@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Globe, Settings } from "lucide-react";
+import { LayoutDashboard, Globe, Settings, SlidersHorizontal } from "lucide-react";
 
 export function AdminNav() {
   const [location] = useLocation();
@@ -35,6 +35,16 @@ export function AdminNav() {
           >
             <LayoutDashboard className="h-4 w-4" />
             Lead-Dashboard
+          </Link>
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-1.5 text-sm font-medium transition-colors",
+              location.startsWith("/settings") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Settings
           </Link>
           <Link
             href="/"

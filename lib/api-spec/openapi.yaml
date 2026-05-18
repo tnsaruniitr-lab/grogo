@@ -570,6 +570,90 @@ paths:
         "404":
           description: No crawl job found
 
+  /admin/settings:
+    get:
+      operationId: getSettings
+      tags: [admin]
+      summary: Get current system settings
+      responses:
+        "200":
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+    put:
+      operationId: updateSettings
+      tags: [admin]
+      summary: Update system settings (partial patch)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemSettings"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+        "400":
+          description: Invalid body
+
+  /admin/clients/{slug}/profile:
+    get:
+      operationId: getClientProfiles
+      tags: [admin]
+      summary: Get synthesized business profiles for a client (most recent first)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of client profiles (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientProfile"
+        "404":
+          description: Client not found
+
+  /admin/clients/{slug}/knowledge/activate:
+    post:
+      operationId: activateKnowledge
+      tags: [admin]
+      summary: Activate V2 knowledge — archive old approved rows, approve new pending rows, mark profile active
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivateKnowledgeInput"
+      responses:
+        "200":
+          description: Activation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivateKnowledgeResult"
+        "400":
+          description: No pending rows for crawl job or invalid body
+        "404":
+          description: Client not found
+
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -1020,6 +1104,8 @@ components:
           type: integer
         status:
           type: string
+        extractorVersion:
+          type: ["string", "null"]
         pagesFound:
           type: integer
         pagesCrawled:
@@ -1059,6 +1145,105 @@ components:
           type: ["string", "null"]
         crawledAt:
           type: ["string", "null"]
+
+    SystemSettings:
+      type: object
+      properties:
+        pageExtractionModel:
+          type: string
+        profileSynthesisModel:
+          type: string
+        webResearchModel:
+          type: string
+        liveChatModel:
+          type: string
+        embeddingModel:
+          type: string
+        extractorVersion:
+          type: string
+          enum: [v1, v2]
+        maxPagesPerCrawl:
+          type: integer
+        crawlConcurrency:
+          type: integer
+        enableStructuredDataParsing:
+          type: boolean
+        enableJsRenderFallback:
+          type: boolean
+        minTextWordsBeforeJsFallback:
+          type: integer
+        requireHumanActivation:
+          type: boolean
+        allowAutoApproveManualEntries:
+          type: boolean
+        minExtractionConfidence:
+          type: number
+        riskFlagsBlockingActivation:
+          type: array
+          items:
+            type: string
+        enableWebResearch:
+          type: boolean
+        fieldsToResearch:
+          type: array
+          items:
+            type: string
+        requireExternalSourceReview:
+          type: boolean
+        ownDomainAutoTrusted:
+          type: boolean
+        approvedOnlyForLiveChat:
+          type: boolean
+        factsPackEnabled:
+          type: boolean
+        sameLanguageBoost:
+          type: boolean
+        manualSourceBoost:
+          type: boolean
+
+    ClientProfile:
+      type: object
+      required: [id, clientId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        crawlJobId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [pending, active, archived, rejected]
+        profile:
+          description: Canonical profile JSON object (CanonicalProfile shape)
+        confidence:
+          type: ["number", "null"]
+        synthesisModel:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        activatedAt:
+          type: ["string", "null"]
+
+    ActivateKnowledgeInput:
+      type: object
+      required: [crawlJobId]
+      properties:
+        crawlJobId:
+          type: integer
+        profileId:
+          type: integer
+        archivePrevious:
+          type: boolean
+
+    ActivateKnowledgeResult:
+      type: object
+      required: [approvedCount]
+      properties:
+        approvedCount:
+          type: integer
+        profileId:
+          type: ["integer", "null"]
 
     UploadUrlInput:
       type: object

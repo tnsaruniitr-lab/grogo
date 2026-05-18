@@ -79,6 +79,7 @@ router.get("/admin/crawl/:slug/status", async (req: Request, res: Response) => {
   res.json({
     jobId: job.id,
     status: job.status,
+    extractorVersion: job.extractorVersion ?? null,
     pagesFound: job.pagesFound,
     pagesCrawled: job.pagesCrawled,
     pagesFailed: job.pagesFailed,

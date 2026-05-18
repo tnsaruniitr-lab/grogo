@@ -1,15 +1,16 @@
 import { db } from "@workspace/db";
 import { crawlJobsTable, crawlPagesTable, companyKnowledgeTable } from "@workspace/db";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, desc } from "drizzle-orm";
 import { fetchPage, fetchRobotsTxt, fetchSitemapUrls, isAllowed, withConcurrency } from "./crawler";
 import { extractKnowledge, deduplicateItems } from "./extractor";
+import { extractKnowledgeV2, deduplicateV2Items } from "./extractor-v2";
+import { synthesizeProfile } from "./profile-synthesizer";
 import { embedText, embeddingToJson } from "./embedder";
 import { extractBrand } from "./brand-extractor";
+import { getSettings } from "./settings";
 import { logger } from "./logger";
 
-const MAX_PAGES = 50;
 const MAX_DEPTH = 3;
-const CONCURRENCY = 5;
 
 const CATEGORY_PRIORITY: Record<string, number> = {
   contact: 10,
@@ -24,9 +25,15 @@ export async function startCrawlJob(
   clientId: number,
   websiteUrl: string,
 ): Promise<number> {
+  const settings = await getSettings();
   const [job] = await db
     .insert(crawlJobsTable)
-    .values({ clientId, status: "queued" })
+    .values({
+      clientId,
+      status: "queued",
+      extractorVersion: settings.extractorVersion,
+      settingsSnapshot: JSON.stringify(settings),
+    })
     .returning({ id: crawlJobsTable.id });
   return job!.id;
 }
@@ -36,7 +43,7 @@ export async function getLatestCrawlJob(clientId: number) {
     .select()
     .from(crawlJobsTable)
     .where(eq(crawlJobsTable.clientId, clientId))
-    .orderBy(crawlJobsTable.createdAt)
+    .orderBy(desc(crawlJobsTable.createdAt))
     .limit(1);
   return job ?? null;
 }
@@ -46,7 +53,12 @@ export async function runCrawlPipeline(
   websiteUrl: string,
   jobId: number,
 ): Promise<void> {
-  const log = logger.child({ clientId, jobId });
+  const settings = await getSettings();
+  const MAX_PAGES = settings.maxPagesPerCrawl;
+  const CONCURRENCY = settings.crawlConcurrency;
+  const isV2 = settings.extractorVersion === "v2";
+
+  const log = logger.child({ clientId, jobId, extractorVersion: settings.extractorVersion });
   log.info({ websiteUrl }, "Crawl pipeline starting");
 
   try {
@@ -62,15 +74,18 @@ export async function runCrawlPipeline(
     ]);
     log.info({ disallowed, sitemapCount: sitemapUrls.length }, "Robots.txt + sitemap parsed");
 
-    // Wipe previous crawl knowledge for this client (keep manual entries)
-    await db
-      .delete(companyKnowledgeTable)
-      .where(
-        and(
-          eq(companyKnowledgeTable.clientId, clientId),
-          eq(companyKnowledgeTable.source, "crawl"),
-        ),
-      );
+    // V1: wipe previous crawl knowledge (keep manual entries)
+    // V2: non-destructive — old approved rows stay live; new rows are written as pending with crawlJobId
+    if (!isV2) {
+      await db
+        .delete(companyKnowledgeTable)
+        .where(
+          and(
+            eq(companyKnowledgeTable.clientId, clientId),
+            eq(companyKnowledgeTable.source, "crawl"),
+          ),
+        );
+    }
 
     // Seed: homepage first, then sitemap URLs (up to MAX_PAGES cap)
     const homepageUrl = origin + new URL(websiteUrl).pathname.replace(/\/$/, "");
@@ -201,17 +216,42 @@ export async function runCrawlPipeline(
           })
           .where(and(eq(crawlPagesTable.jobId, jobId), eq(crawlPagesTable.url, url)));
 
-        // Extract structured knowledge
-        const items = await extractKnowledge(result.text, url);
-        const unique = deduplicateItems(items);
+        // Extract structured knowledge — route to v1 or v2 extractor
+        let uniqueLength = 0;
+        if (isV2) {
+          const v2Items = await extractKnowledgeV2(result.text, url);
+          const unique = deduplicateV2Items(v2Items);
+          uniqueLength = unique.length;
 
-        if (unique.length === 0) {
-          await db
-            .update(crawlPagesTable)
-            .set({ status: "extracted_empty", chunksExtracted: 0, extractedAt: new Date() })
-            .where(and(eq(crawlPagesTable.jobId, jobId), eq(crawlPagesTable.url, url)));
+          for (const item of unique) {
+            const embeddingInput = `${item.question} ${item.answer}`;
+            const embedding = await embedText(embeddingInput);
+            const embeddingJson = embedding ? embeddingToJson(embedding) : null;
+
+            await db.insert(companyKnowledgeTable).values({
+              clientId,
+              category: item.category,
+              question: item.question,
+              answer: item.answer,
+              language: item.language,
+              priority: CATEGORY_PRIORITY[item.category] ?? 5,
+              source: "crawl",
+              sourceUrl: url,
+              confidence: item.confidence,
+              embeddingJson,
+              approvalStatus: "pending",
+              crawlJobId: jobId,
+              reviewKey: item.reviewKey ?? null,
+              evidenceQuote: item.evidenceQuote ?? null,
+              sourceSection: item.sourceSection ?? null,
+              riskFlags: item.riskFlags && item.riskFlags.length > 0 ? JSON.stringify(item.riskFlags) : null,
+            });
+          }
         } else {
-          // Embed and insert knowledge rows
+          const items = await extractKnowledge(result.text, url);
+          const unique = deduplicateItems(items);
+          uniqueLength = unique.length;
+
           for (const item of unique) {
             const embeddingInput = `${item.question} ${item.answer}`;
             const embedding = await embedText(embeddingInput);
@@ -231,6 +271,15 @@ export async function runCrawlPipeline(
               approvalStatus: "pending",
             });
           }
+        }
+
+        if (uniqueLength === 0) {
+          await db
+            .update(crawlPagesTable)
+            .set({ status: "extracted_empty", chunksExtracted: 0, extractedAt: new Date() })
+            .where(and(eq(crawlPagesTable.jobId, jobId), eq(crawlPagesTable.url, url)));
+        } else {
+          const unique = { length: uniqueLength };
 
           totalChunks += unique.length;
 
@@ -256,7 +305,7 @@ export async function runCrawlPipeline(
             .where(eq(crawlJobsTable.id, jobId));
         }
 
-        log.info({ url, chunks: unique.length }, "Page processed");
+        log.info({ url, chunks: uniqueLength }, "Page processed");
       });
     }
 
@@ -305,6 +354,27 @@ export async function runCrawlPipeline(
     // Auto-extract brand colors + headline after successful crawl
     if (finalStatus !== "failed") {
       await extractBrand(clientId, websiteUrl);
+    }
+
+    // V2: synthesize canonical business profile from all extracted facts
+    if (isV2 && finalStatus !== "failed" && totalChunks > 0) {
+      const allFacts = await db
+        .select({
+          category: companyKnowledgeTable.category,
+          question: companyKnowledgeTable.question,
+          answer: companyKnowledgeTable.answer,
+          confidence: companyKnowledgeTable.confidence,
+          reviewKey: companyKnowledgeTable.reviewKey,
+          evidenceQuote: companyKnowledgeTable.evidenceQuote,
+        })
+        .from(companyKnowledgeTable)
+        .where(
+          and(
+            eq(companyKnowledgeTable.clientId, clientId),
+            eq(companyKnowledgeTable.crawlJobId, jobId),
+          ),
+        );
+      await synthesizeProfile(clientId, jobId, allFacts);
     }
   } catch (err) {
     logger.error({ err, clientId, jobId }, "Crawl pipeline fatal error");

@@ -5,6 +5,8 @@ import {
   useApproveKnowledgeEntries,
   useUpdateKnowledgeEntry,
   useDeleteKnowledgeEntry,
+  useGetCrawlStatus,
+  useActivateKnowledge,
 } from "@workspace/api-client-react";
 import type { KnowledgeEntry } from "@workspace/api-client-react";
 import {
@@ -27,6 +29,7 @@ import {
   Save,
   Trash2,
   X,
+  Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,6 +49,7 @@ const STATUS_COLORS: Record<string, string> = {
   approved: "bg-emerald-100 text-emerald-700",
   pending: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
+  archived: "bg-slate-100 text-slate-500",
 };
 
 function CriticalFactCard({
@@ -306,6 +310,10 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
     },
   });
 
+  const { data: crawlStatus } = useGetCrawlStatus(slug, {
+    query: { queryKey: ["crawl-status", slug], retry: false },
+  });
+
   const [criticalOpen, setCriticalOpen] = useState(true);
   const [detailOpen, setDetailOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -317,6 +325,19 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
         toast({ title: "All pending entries approved", description: `${result.updated} entries updated` });
       },
       onError: () => toast({ title: "Approve failed", variant: "destructive" }),
+    },
+  });
+
+  const activateMutation = useActivateKnowledge({
+    mutation: {
+      onSuccess: (result) => {
+        queryClient.invalidateQueries({ queryKey: qk });
+        toast({
+          title: "Knowledge activated",
+          description: `${result.approvedCount} entries are now live. Previous crawl rows archived.`,
+        });
+      },
+      onError: () => toast({ title: "Activation failed", variant: "destructive" }),
     },
   });
 
@@ -333,6 +354,19 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
   const approvedCount = data?.approvedCount ?? 0;
   const totalCount = pendingCount + approvedCount + (data?.groups.flatMap((g) => g.entries).filter((e) => e.approvalStatus === "rejected").length ?? 0);
 
+  const isV2Crawl = crawlStatus?.extractorVersion === "v2";
+  const canActivate = isV2Crawl && pendingCount > 0 && crawlStatus?.jobId != null &&
+    (crawlStatus.status === "completed" || crawlStatus.status === "partial");
+
+  const handleActivate = () => {
+    if (!crawlStatus?.jobId) return;
+    if (!confirm(`Activate ${pendingCount} pending entries? This will archive the current approved crawl rows and make the new ones live.`)) return;
+    activateMutation.mutate({
+      slug,
+      data: { crawlJobId: crawlStatus.jobId, archivePrevious: true },
+    });
+  };
+
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
@@ -343,6 +377,9 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
               Knowledge Review — <span className="font-mono text-primary">{slug}</span>
             </DialogTitle>
             <div className="flex gap-2 ml-auto">
+              {isV2Crawl && (
+                <Badge className="bg-violet-600 text-white text-[10px] h-5 px-1.5">V2</Badge>
+              )}
               {pendingCount > 0 && (
                 <Badge variant="outline" className="border-yellow-300 bg-yellow-50 text-yellow-700 font-semibold">
                   {pendingCount} pending
@@ -472,7 +509,18 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
-            {pendingCount > 0 && (
+            {canActivate ? (
+              <Button
+                size="sm"
+                className="gap-1.5 bg-violet-600 hover:bg-violet-700"
+                onClick={handleActivate}
+                disabled={activateMutation.isPending}
+                title="Archive current approved rows and activate new V2 entries"
+              >
+                {activateMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                Activate V2 Knowledge
+              </Button>
+            ) : pendingCount > 0 ? (
               <Button
                 size="sm"
                 className="gap-1.5"
@@ -482,7 +530,7 @@ export function KnowledgeReviewPanel({ slug, onClose }: { slug: string; onClose:
                 {approveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCheck className="h-3.5 w-3.5" />}
                 Approve All Pending
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </DialogContent>

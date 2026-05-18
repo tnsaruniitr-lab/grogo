@@ -718,6 +718,7 @@ export const GetCrawlStatusParams = zod.object({
 export const GetCrawlStatusResponse = zod.object({
   jobId: zod.number(),
   status: zod.string(),
+  extractorVersion: zod.string().nullish(),
   pagesFound: zod.number(),
   pagesCrawled: zod.number(),
   pagesFailed: zod.number(),
@@ -747,6 +748,133 @@ export const GetCrawlPagesResponseItem = zod.object({
   crawledAt: zod.string().nullish(),
 });
 export const GetCrawlPagesResponse = zod.array(GetCrawlPagesResponseItem);
+
+/**
+ * @summary Get current system settings
+ */
+export const GetSettingsResponse = zod.object({
+  pageExtractionModel: zod.string().optional(),
+  profileSynthesisModel: zod.string().optional(),
+  webResearchModel: zod.string().optional(),
+  liveChatModel: zod.string().optional(),
+  embeddingModel: zod.string().optional(),
+  extractorVersion: zod.enum(["v1", "v2"]).optional(),
+  maxPagesPerCrawl: zod.number().optional(),
+  crawlConcurrency: zod.number().optional(),
+  enableStructuredDataParsing: zod.boolean().optional(),
+  enableJsRenderFallback: zod.boolean().optional(),
+  minTextWordsBeforeJsFallback: zod.number().optional(),
+  requireHumanActivation: zod.boolean().optional(),
+  allowAutoApproveManualEntries: zod.boolean().optional(),
+  minExtractionConfidence: zod.number().optional(),
+  riskFlagsBlockingActivation: zod.array(zod.string()).optional(),
+  enableWebResearch: zod.boolean().optional(),
+  fieldsToResearch: zod.array(zod.string()).optional(),
+  requireExternalSourceReview: zod.boolean().optional(),
+  ownDomainAutoTrusted: zod.boolean().optional(),
+  approvedOnlyForLiveChat: zod.boolean().optional(),
+  factsPackEnabled: zod.boolean().optional(),
+  sameLanguageBoost: zod.boolean().optional(),
+  manualSourceBoost: zod.boolean().optional(),
+});
+
+/**
+ * @summary Update system settings (partial patch)
+ */
+export const UpdateSettingsBody = zod.object({
+  pageExtractionModel: zod.string().optional(),
+  profileSynthesisModel: zod.string().optional(),
+  webResearchModel: zod.string().optional(),
+  liveChatModel: zod.string().optional(),
+  embeddingModel: zod.string().optional(),
+  extractorVersion: zod.enum(["v1", "v2"]).optional(),
+  maxPagesPerCrawl: zod.number().optional(),
+  crawlConcurrency: zod.number().optional(),
+  enableStructuredDataParsing: zod.boolean().optional(),
+  enableJsRenderFallback: zod.boolean().optional(),
+  minTextWordsBeforeJsFallback: zod.number().optional(),
+  requireHumanActivation: zod.boolean().optional(),
+  allowAutoApproveManualEntries: zod.boolean().optional(),
+  minExtractionConfidence: zod.number().optional(),
+  riskFlagsBlockingActivation: zod.array(zod.string()).optional(),
+  enableWebResearch: zod.boolean().optional(),
+  fieldsToResearch: zod.array(zod.string()).optional(),
+  requireExternalSourceReview: zod.boolean().optional(),
+  ownDomainAutoTrusted: zod.boolean().optional(),
+  approvedOnlyForLiveChat: zod.boolean().optional(),
+  factsPackEnabled: zod.boolean().optional(),
+  sameLanguageBoost: zod.boolean().optional(),
+  manualSourceBoost: zod.boolean().optional(),
+});
+
+export const UpdateSettingsResponse = zod.object({
+  pageExtractionModel: zod.string().optional(),
+  profileSynthesisModel: zod.string().optional(),
+  webResearchModel: zod.string().optional(),
+  liveChatModel: zod.string().optional(),
+  embeddingModel: zod.string().optional(),
+  extractorVersion: zod.enum(["v1", "v2"]).optional(),
+  maxPagesPerCrawl: zod.number().optional(),
+  crawlConcurrency: zod.number().optional(),
+  enableStructuredDataParsing: zod.boolean().optional(),
+  enableJsRenderFallback: zod.boolean().optional(),
+  minTextWordsBeforeJsFallback: zod.number().optional(),
+  requireHumanActivation: zod.boolean().optional(),
+  allowAutoApproveManualEntries: zod.boolean().optional(),
+  minExtractionConfidence: zod.number().optional(),
+  riskFlagsBlockingActivation: zod.array(zod.string()).optional(),
+  enableWebResearch: zod.boolean().optional(),
+  fieldsToResearch: zod.array(zod.string()).optional(),
+  requireExternalSourceReview: zod.boolean().optional(),
+  ownDomainAutoTrusted: zod.boolean().optional(),
+  approvedOnlyForLiveChat: zod.boolean().optional(),
+  factsPackEnabled: zod.boolean().optional(),
+  sameLanguageBoost: zod.boolean().optional(),
+  manualSourceBoost: zod.boolean().optional(),
+});
+
+/**
+ * @summary Get synthesized business profiles for a client (most recent first)
+ */
+export const GetClientProfilesParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetClientProfilesResponseItem = zod.object({
+  id: zod.number(),
+  clientId: zod.number(),
+  crawlJobId: zod.number().nullish(),
+  status: zod.enum(["pending", "active", "archived", "rejected"]),
+  profile: zod
+    .unknown()
+    .optional()
+    .describe("Canonical profile JSON object (CanonicalProfile shape)"),
+  confidence: zod.number().nullish(),
+  synthesisModel: zod.string().nullish(),
+  createdAt: zod.string(),
+  activatedAt: zod.string().nullish(),
+});
+export const GetClientProfilesResponse = zod.array(
+  GetClientProfilesResponseItem,
+);
+
+/**
+ * @summary Activate V2 knowledge — archive old approved rows, approve new pending rows, mark profile active
+ */
+export const ActivateKnowledgeParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const ActivateKnowledgeBody = zod.object({
+  crawlJobId: zod.number(),
+  profileId: zod.number().optional(),
+  archivePrevious: zod.boolean().optional(),
+});
+
+export const ActivateKnowledgeResponse = zod.object({
+  approvedCount: zod.number(),
+  profileId: zod.number().nullish(),
+});
 
 /**
  * @summary Request a presigned upload URL for logo files

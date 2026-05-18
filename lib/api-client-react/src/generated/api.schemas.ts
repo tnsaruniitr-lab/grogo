@@ -286,6 +286,8 @@ export interface ClientContent {
 export interface CrawlJobStatus {
   jobId: number;
   status: string;
+  /** @nullable */
+  extractorVersion?: string | null;
   pagesFound: number;
   pagesCrawled: number;
   pagesFailed: number;
@@ -312,6 +314,79 @@ export interface CrawlPageDetail {
   lastError?: string | null;
   /** @nullable */
   crawledAt?: string | null;
+}
+
+export type SystemSettingsExtractorVersion =
+  (typeof SystemSettingsExtractorVersion)[keyof typeof SystemSettingsExtractorVersion];
+
+export const SystemSettingsExtractorVersion = {
+  v1: "v1",
+  v2: "v2",
+} as const;
+
+export interface SystemSettings {
+  pageExtractionModel?: string;
+  profileSynthesisModel?: string;
+  webResearchModel?: string;
+  liveChatModel?: string;
+  embeddingModel?: string;
+  extractorVersion?: SystemSettingsExtractorVersion;
+  maxPagesPerCrawl?: number;
+  crawlConcurrency?: number;
+  enableStructuredDataParsing?: boolean;
+  enableJsRenderFallback?: boolean;
+  minTextWordsBeforeJsFallback?: number;
+  requireHumanActivation?: boolean;
+  allowAutoApproveManualEntries?: boolean;
+  minExtractionConfidence?: number;
+  riskFlagsBlockingActivation?: string[];
+  enableWebResearch?: boolean;
+  fieldsToResearch?: string[];
+  requireExternalSourceReview?: boolean;
+  ownDomainAutoTrusted?: boolean;
+  approvedOnlyForLiveChat?: boolean;
+  factsPackEnabled?: boolean;
+  sameLanguageBoost?: boolean;
+  manualSourceBoost?: boolean;
+}
+
+export type ClientProfileStatus =
+  (typeof ClientProfileStatus)[keyof typeof ClientProfileStatus];
+
+export const ClientProfileStatus = {
+  pending: "pending",
+  active: "active",
+  archived: "archived",
+  rejected: "rejected",
+} as const;
+
+export interface ClientProfile {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  crawlJobId?: number | null;
+  status: ClientProfileStatus;
+  /** Canonical profile JSON object (CanonicalProfile shape) */
+  profile?: unknown;
+  /** @nullable */
+  confidence?: number | null;
+  /** @nullable */
+  synthesisModel?: string | null;
+  createdAt: string;
+  /** @nullable */
+  activatedAt?: string | null;
+}
+
+export interface ActivateKnowledgeInput {
+  crawlJobId: number;
+  profileId?: number;
+  archivePrevious?: boolean;
+}
+
+export interface ActivateKnowledgeResult {
+  approvedCount: number;
+  /** @nullable */
+  profileId?: number | null;
 }
 
 export interface UploadUrlInput {

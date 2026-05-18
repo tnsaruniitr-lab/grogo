@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
-import { clientsTable, companyKnowledgeTable } from "@workspace/db";
-import { eq, isNull, and, inArray, asc } from "drizzle-orm";
+import { clientsTable, companyKnowledgeTable, clientProfilesTable } from "@workspace/db";
+import { eq, isNull, and, inArray, asc, desc, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import { extractBrand } from "../lib/brand-extractor";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-zod";
 import { startCrawlJob, runCrawlPipeline } from "../lib/crawl-pipeline";
 import { embedText } from "../lib/embedder";
+import { getSettings, updateSettings } from "../lib/settings";
 
 const KNOWLEDGE_LANGUAGES = [
   "en", "de", "tr", "fr", "ar", "nl", "es", "pl",
@@ -610,6 +611,137 @@ router.get("/admin/site-proxy", async (req: Request, res: Response) => {
     req.log.warn({ err, url: target.href }, "site-proxy fetch failed");
     res.status(502).send("Could not fetch the site");
   }
+});
+
+// ─── System Settings ─────────────────────────────────────────────────────────
+
+router.get("/admin/settings", async (_req: Request, res: Response) => {
+  const settings = await getSettings();
+  res.json(settings);
+});
+
+router.put("/admin/settings", async (req: Request, res: Response) => {
+  const patch = req.body as Record<string, unknown>;
+  if (!patch || typeof patch !== "object") {
+    res.status(400).json({ error: "Invalid body" });
+    return;
+  }
+  const updated = await updateSettings(patch);
+  res.json(updated);
+});
+
+// ─── Client Profiles ─────────────────────────────────────────────────────────
+
+router.get("/admin/clients/:slug/profile", async (req: Request, res: Response) => {
+  const { slug } = req.params as { slug: string };
+
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const profiles = await db
+    .select()
+    .from(clientProfilesTable)
+    .where(eq(clientProfilesTable.clientId, client.id))
+    .orderBy(desc(clientProfilesTable.createdAt))
+    .limit(5);
+
+  if (profiles.length === 0) { res.json(null); return; }
+
+  res.json(profiles.map((p) => ({
+    id: p.id,
+    clientId: p.clientId,
+    crawlJobId: p.crawlJobId ?? null,
+    status: p.status,
+    profile: p.profile ? JSON.parse(p.profile) : null,
+    confidence: p.confidence ?? null,
+    synthesisModel: p.synthesisModel ?? null,
+    createdAt: p.createdAt.toISOString(),
+    activatedAt: p.activatedAt ? p.activatedAt.toISOString() : null,
+  })));
+});
+
+// ─── Knowledge Activation (V2) ───────────────────────────────────────────────
+
+const ActivateKnowledgeBody = z.object({
+  crawlJobId: z.number().int().positive(),
+  profileId: z.number().int().positive().optional(),
+  archivePrevious: z.boolean().default(true),
+});
+
+router.post("/admin/clients/:slug/knowledge/activate", async (req: Request, res: Response) => {
+  const { slug } = req.params as { slug: string };
+
+  const bodyResult = ActivateKnowledgeBody.safeParse(req.body);
+  if (!bodyResult.success) { res.status(400).json({ error: "Invalid body", issues: bodyResult.error.issues }); return; }
+  const { crawlJobId, profileId, archivePrevious } = bodyResult.data;
+
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const pendingRows = await db
+    .select({ id: companyKnowledgeTable.id })
+    .from(companyKnowledgeTable)
+    .where(
+      and(
+        eq(companyKnowledgeTable.clientId, client.id),
+        eq(companyKnowledgeTable.crawlJobId, crawlJobId),
+        eq(companyKnowledgeTable.approvalStatus, "pending"),
+        ne(companyKnowledgeTable.source, "manual"),
+      ),
+    );
+
+  if (pendingRows.length === 0) {
+    res.status(400).json({ error: "No pending knowledge rows for this crawl job" });
+    return;
+  }
+
+  const pendingIds = pendingRows.map((r) => r.id);
+
+  // Atomic activation: archive old approved crawl rows → approve new pending rows → activate profile
+  if (archivePrevious) {
+    await db
+      .update(companyKnowledgeTable)
+      .set({ approvalStatus: "archived" })
+      .where(
+        and(
+          eq(companyKnowledgeTable.clientId, client.id),
+          eq(companyKnowledgeTable.approvalStatus, "approved"),
+          ne(companyKnowledgeTable.source, "manual"),
+        ),
+      );
+  }
+
+  await db
+    .update(companyKnowledgeTable)
+    .set({ approvalStatus: "approved" })
+    .where(inArray(companyKnowledgeTable.id, pendingIds));
+
+  if (profileId) {
+    await db
+      .update(clientProfilesTable)
+      .set({ status: "active", activatedAt: new Date() })
+      .where(
+        and(
+          eq(clientProfilesTable.id, profileId),
+          eq(clientProfilesTable.clientId, client.id),
+        ),
+      );
+  }
+
+  req.log.info(
+    { clientId: client.id, crawlJobId, approvedCount: pendingIds.length, profileId },
+    "Knowledge activation complete",
+  );
+
+  res.json({ approvedCount: pendingIds.length, profileId: profileId ?? null });
 });
 
 function buildBranding(client: typeof clientsTable.$inferSelect) {

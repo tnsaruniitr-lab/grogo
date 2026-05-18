@@ -6,12 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./activateKnowledgeInput";
+export * from "./activateKnowledgeResult";
 export * from "./appointment";
 export * from "./approvalStatus";
 export * from "./approveKnowledgeBody";
 export * from "./approveKnowledgeEntries200";
 export * from "./brandingConfig";
 export * from "./clientContent";
+export * from "./clientProfile";
+export * from "./clientProfileStatus";
 export * from "./conversationMessage";
 export * from "./crawlJobStatus";
 export * from "./crawlPageDetail";
@@ -37,6 +41,8 @@ export * from "./leadDetail";
 export * from "./leadsPage";
 export * from "./leadUpdate";
 export * from "./listLeadsParams";
+export * from "./systemSettings";
+export * from "./systemSettingsExtractorVersion";
 export * from "./twilioWebhookPayload";
 export * from "./updateKnowledgeEntryBody";
 export * from "./updateLeadParams";

@@ -17,10 +17,13 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ActivateKnowledgeInput,
+  ActivateKnowledgeResult,
   ApproveKnowledgeBody,
   ApproveKnowledgeEntries200,
   BrandingConfig,
   ClientContent,
+  ClientProfile,
   CrawlJobStatus,
   CrawlPageDetail,
   CreateKnowledgeEntryBody,
@@ -40,6 +43,7 @@ import type {
   LeadUpdate,
   LeadsPage,
   ListLeadsParams,
+  SystemSettings,
   TwilioWebhookPayload,
   UpdateKnowledgeEntryBody,
   UpdateLeadParams,
@@ -2017,6 +2021,341 @@ export function useGetCrawlPages<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get current system settings
+ */
+export const getGetSettingsUrl = () => {
+  return `/api/admin/settings`;
+};
+
+export const getSettings = async (
+  options?: RequestInit,
+): Promise<SystemSettings> => {
+  return customFetch<SystemSettings>(getGetSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSettingsQueryKey = () => {
+  return [`/api/admin/settings`] as const;
+};
+
+export const getGetSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({
+    signal,
+  }) => getSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSettings>>
+>;
+export type GetSettingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get current system settings
+ */
+
+export function useGetSettings<
+  TData = Awaited<ReturnType<typeof getSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update system settings (partial patch)
+ */
+export const getUpdateSettingsUrl = () => {
+  return `/api/admin/settings`;
+};
+
+export const updateSettings = async (
+  systemSettings: SystemSettings,
+  options?: RequestInit,
+): Promise<SystemSettings> => {
+  return customFetch<SystemSettings>(getUpdateSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(systemSettings),
+  });
+};
+
+export const getUpdateSettingsMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSettings>>,
+    TError,
+    { data: BodyType<SystemSettings> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSettings>>,
+  TError,
+  { data: BodyType<SystemSettings> },
+  TContext
+> => {
+  const mutationKey = ["updateSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSettings>>,
+    { data: BodyType<SystemSettings> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSettings>>
+>;
+export type UpdateSettingsMutationBody = BodyType<SystemSettings>;
+export type UpdateSettingsMutationError = ErrorType<void>;
+
+/**
+ * @summary Update system settings (partial patch)
+ */
+export const useUpdateSettings = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSettings>>,
+    TError,
+    { data: BodyType<SystemSettings> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSettings>>,
+  TError,
+  { data: BodyType<SystemSettings> },
+  TContext
+> => {
+  return useMutation(getUpdateSettingsMutationOptions(options));
+};
+
+/**
+ * @summary Get synthesized business profiles for a client (most recent first)
+ */
+export const getGetClientProfilesUrl = (slug: string) => {
+  return `/api/admin/clients/${slug}/profile`;
+};
+
+export const getClientProfiles = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<ClientProfile[]> => {
+  return customFetch<ClientProfile[]>(getGetClientProfilesUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetClientProfilesQueryKey = (slug: string) => {
+  return [`/api/admin/clients/${slug}/profile`] as const;
+};
+
+export const getGetClientProfilesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getClientProfiles>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClientProfiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetClientProfilesQueryKey(slug);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getClientProfiles>>
+  > = ({ signal }) => getClientProfiles(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getClientProfiles>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetClientProfilesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getClientProfiles>>
+>;
+export type GetClientProfilesQueryError = ErrorType<void>;
+
+/**
+ * @summary Get synthesized business profiles for a client (most recent first)
+ */
+
+export function useGetClientProfiles<
+  TData = Awaited<ReturnType<typeof getClientProfiles>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClientProfiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetClientProfilesQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Activate V2 knowledge — archive old approved rows, approve new pending rows, mark profile active
+ */
+export const getActivateKnowledgeUrl = (slug: string) => {
+  return `/api/admin/clients/${slug}/knowledge/activate`;
+};
+
+export const activateKnowledge = async (
+  slug: string,
+  activateKnowledgeInput: ActivateKnowledgeInput,
+  options?: RequestInit,
+): Promise<ActivateKnowledgeResult> => {
+  return customFetch<ActivateKnowledgeResult>(getActivateKnowledgeUrl(slug), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(activateKnowledgeInput),
+  });
+};
+
+export const getActivateKnowledgeMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof activateKnowledge>>,
+    TError,
+    { slug: string; data: BodyType<ActivateKnowledgeInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof activateKnowledge>>,
+  TError,
+  { slug: string; data: BodyType<ActivateKnowledgeInput> },
+  TContext
+> => {
+  const mutationKey = ["activateKnowledge"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof activateKnowledge>>,
+    { slug: string; data: BodyType<ActivateKnowledgeInput> }
+  > = (props) => {
+    const { slug, data } = props ?? {};
+
+    return activateKnowledge(slug, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ActivateKnowledgeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof activateKnowledge>>
+>;
+export type ActivateKnowledgeMutationBody = BodyType<ActivateKnowledgeInput>;
+export type ActivateKnowledgeMutationError = ErrorType<void>;
+
+/**
+ * @summary Activate V2 knowledge — archive old approved rows, approve new pending rows, mark profile active
+ */
+export const useActivateKnowledge = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof activateKnowledge>>,
+    TError,
+    { slug: string; data: BodyType<ActivateKnowledgeInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof activateKnowledge>>,
+  TError,
+  { slug: string; data: BodyType<ActivateKnowledgeInput> },
+  TContext
+> => {
+  return useMutation(getActivateKnowledgeMutationOptions(options));
+};
 
 /**
  * @summary Request a presigned upload URL for logo files

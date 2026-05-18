@@ -2,6 +2,7 @@ import { pgTable, serial, integer, text, real, timestamp, index } from "drizzle-
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
+import { crawlJobsTable } from "./crawl-jobs";
 
 export const companyKnowledgeTable = pgTable(
   "company_knowledge",
@@ -20,6 +21,11 @@ export const companyKnowledgeTable = pgTable(
     confidence: real("confidence"),
     embeddingJson: text("embedding_json"),
     approvalStatus: text("approval_status").notNull().default("approved"),
+    crawlJobId: integer("crawl_job_id").references(() => crawlJobsTable.id),
+    reviewKey: text("review_key"),
+    evidenceQuote: text("evidence_quote"),
+    sourceSection: text("source_section"),
+    riskFlags: text("risk_flags"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Hub from "@/pages/hub";
 import Admin from "@/pages/admin";
+import Settings from "@/pages/settings";
 import Dashboard from "@/pages/dashboard";
 import Mockups from "@/pages/mockups";
 import Demo from "@/pages/demo";
@@ -41,6 +42,7 @@ function Router() {
         <LoginGate>
           <Switch>
             <Route path="/admin" component={Admin} />
+            <Route path="/settings" component={Settings} />
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/mockups" component={Mockups} />
             <Route path="/" component={Hub} />

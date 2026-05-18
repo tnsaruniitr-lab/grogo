@@ -15,6 +15,8 @@ export const crawlJobsTable = pgTable(
     pagesSkipped: integer("pages_skipped").notNull().default(0),
     chunksExtracted: integer("chunks_extracted").notNull().default(0),
     errorSummary: text("error_summary"),
+    extractorVersion: text("extractor_version"),
+    settingsSnapshot: text("settings_snapshot"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

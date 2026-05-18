@@ -9,3 +9,5 @@ export * from "./job-queue";
 export * from "./reactivations";
 export * from "./crawl-jobs";
 export * from "./crawl-pages";
+export * from "./system-settings";
+export * from "./client-profiles";

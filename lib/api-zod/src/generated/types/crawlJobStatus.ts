@@ -9,6 +9,8 @@
 export interface CrawlJobStatus {
   jobId: number;
   status: string;
+  /** @nullable */
+  extractorVersion?: string | null;
   pagesFound: number;
   pagesCrawled: number;
   pagesFailed: number;

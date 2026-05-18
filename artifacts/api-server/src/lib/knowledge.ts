@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import { companyKnowledgeTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { embedText, cosineSimilarity, jsonToEmbedding } from "./embedder";
 import { logger } from "./logger";
 
@@ -32,7 +32,12 @@ export async function retrieveKnowledge(
       source: companyKnowledgeTable.source,
     })
     .from(companyKnowledgeTable)
-    .where(eq(companyKnowledgeTable.clientId, clientId))
+    .where(
+      and(
+        eq(companyKnowledgeTable.clientId, clientId),
+        eq(companyKnowledgeTable.approvalStatus, "approved"),
+      ),
+    )
     .orderBy(desc(companyKnowledgeTable.priority));
 
   if (allEntries.length === 0) return [];
