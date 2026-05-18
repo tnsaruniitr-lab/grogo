@@ -449,7 +449,7 @@ function CrawlBadge({ slug, onCrawlComplete }: { slug: string; onCrawlComplete?:
   useEffect(() => {
     const prev = prevStatusRef.current;
     const curr = crawl?.status;
-    if ((prev === "queued" || prev === "running") && curr === "completed") {
+    if ((prev === "queued" || prev === "running") && (curr === "completed" || curr === "partial")) {
       onCrawlComplete?.();
     }
     prevStatusRef.current = curr;
