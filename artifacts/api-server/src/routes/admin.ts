@@ -405,6 +405,58 @@ router.delete("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Re
   res.status(204).end();
 });
 
+// Site proxy — strips X-Frame-Options/CSP so external sites can be embedded in the hub iframe
+router.get("/admin/site-proxy", async (req: Request, res: Response) => {
+  const raw = req.query.url as string | undefined;
+  if (!raw) { res.status(400).send("Missing url"); return; }
+
+  let target: URL;
+  try { target = new URL(raw); } catch { res.status(400).send("Invalid url"); return; }
+  if (!["http:", "https:"].includes(target.protocol)) { res.status(400).send("Only http/https"); return; }
+
+  try {
+    const upstream = await fetch(target.href, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "de,en;q=0.9",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(12_000),
+    });
+
+    const ct = upstream.headers.get("content-type") ?? "text/html";
+    if (!ct.includes("html")) {
+      res.status(400).send("Not an HTML page");
+      return;
+    }
+
+    let html = await upstream.text();
+
+    // Inject <base> tag so all relative paths resolve against the original origin
+    const baseTag = `<base href="${target.origin}${target.pathname}">`;
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, `$1${baseTag}`);
+    } else {
+      html = baseTag + html;
+    }
+
+    // Strip meta refresh redirects that could escape the iframe
+    html = html.replace(/<meta[^>]+http-equiv=["']refresh["'][^>]*>/gi, "");
+
+    res
+      .status(upstream.status)
+      .setHeader("Content-Type", "text/html; charset=utf-8")
+      // Critical: do NOT forward X-Frame-Options or CSP from upstream
+      .setHeader("X-Frame-Options", "SAMEORIGIN")
+      .setHeader("Cache-Control", "no-store")
+      .send(html);
+  } catch (err) {
+    req.log.warn({ err, url: target.href }, "site-proxy fetch failed");
+    res.status(502).send("Could not fetch the site");
+  }
+});
+
 function buildBranding(client: typeof clientsTable.$inferSelect) {
   const cfg = (client.config ?? {}) as Record<string, unknown>;
   return {
