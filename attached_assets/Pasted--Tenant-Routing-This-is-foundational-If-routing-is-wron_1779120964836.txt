@@ -1,0 +1,97 @@
+. Tenant Routing
+This is foundational. If routing is wrong, everything else collapses.
+
+You need:
+
+deterministic client resolution: slug/session/number rules with clear precedence
+a way to reset or switch a phone’s active client session
+logs that show phone → clientId → slug → industry → profile
+admin view showing which client a WhatsApp number is currently attached to
+safeguards against old leads hijacking new demos
+Best improvement: create a conversation_sessions table with phone, clientId, expiresAt, sourceSlug, and lastMessageAt, instead of relying only on historical leads.
+
+2. Knowledge Base Quality
+Embeddings are only as good as the content.
+
+Each client should have a launch checklist:
+
+identity: who are you
+core_offer: what do you do
+service: what services/features do you provide
+target_customer: who is this for
+process: how does it work
+pricing: what does it cost / pricing unknown
+booking: how to book demo/callback
+integration: WhatsApp, CRM, Meta API, calendar
+limitations: what you cannot answer
+handoff: when to escalate
+Every answer should be short, factual, and specific. No fluff. Add source URL/source type and mark important entries as canonical.
+
+3. Retrieval
+Current semantic retrieval is a good start, but “incredible” needs hybrid retrieval.
+
+Use:
+
+vector similarity across all entries
+keyword/BM25 fallback for exact terms like “price,” “Meta API,” “GDPR”
+intent/category boost: pricing questions boost pricing rows, service questions boost service rows
+canonical boost: identity/core offer always available
+recency/source boost: manual approved rows beat crawl rows
+retrieval threshold: if top score is weak, ask clarifying question or offer callback
+logs for selected rows and rejected near-misses
+Best improvement: always inject a small “company facts pack” into every prompt: identity, core offer, target customer, booking path. Then add top semantic chunks.
+
+4. Prompt And Response Policy
+The prompt should separate roles clearly:
+
+persona = tone and goal
+KB = truth
+system = safety and output format
+retrieved facts = only factual basis
+Add rules:
+
+answer directly first, then ask one next-step question
+if unsure, say what is known and offer handoff
+never say “I cannot provide details” when a relevant KB chunk exists
+for services/features, summarize all relevant service rows
+for pricing, use pricing row only
+for identity, always use identity/core-offer row
+5. Evaluation Harness
+This is the unlock. You need repeatable tests, not vibes.
+
+Create a test set per client:
+
+30 common questions
+expected answer facts
+expected action/intent
+expected retrieved category
+language variants
+typo variants
+adversarial questions
+Run it after every deploy and after every KB update. Track:
+
+correct tenant routed
+correct profile loaded
+relevant KB retrieved
+answer factuality
+no hallucinated claims
+correct language
+correct CTA/action
+6. Admin QA
+Build admin tools so non-engineers can keep it accurate:
+
+“Test as WhatsApp user” console
+show retrieved KB rows for each answer
+thumbs up/down on bot replies
+“add missing KB entry from failed answer”
+stale/missing metadata warnings
+duplicate/contradictory KB detector
+client readiness score
+Priority Roadmap
+
+Fix tenant session model and routing observability.
+Add canonical KB structure and readiness checklist.
+Add hybrid retrieval with intent/category/canonical boosts.
+Add answer evaluation tests for GrowthMonk.
+Add admin QA tools showing retrieved rows.
+Add contradiction and stale-content audits.
