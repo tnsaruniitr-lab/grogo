@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,6 +58,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
 import { INDUSTRY_OPTIONS } from "@/lib/industry-themes";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
+import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
 
 interface BrandingConfig {
   clientId?: number;
@@ -101,6 +102,7 @@ export default function HubPage() {
   const [previewClient, setPreviewClient] = useState<DemoClient | null>(null);
   const [previewMode, setPreviewMode] = useState<"demo" | "site">("demo");
   const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
+  const [reviewSlug, setReviewSlug] = useState<string | null>(null);
   const [installClient, setInstallClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
@@ -211,6 +213,7 @@ export default function HubPage() {
                       setPreviewMode(mode);
                     }}
                     onKnowledge={() => setKnowledgeSlug(client.slug)}
+                    onReview={() => setReviewSlug(client.slug)}
                     onInstall={() => setInstallClient(client)}
                   />
                 </motion.div>
@@ -246,6 +249,13 @@ export default function HubPage() {
           mode={previewMode}
           onModeChange={setPreviewMode}
           onClose={() => setPreviewClient(null)}
+        />
+      )}
+
+      {reviewSlug && (
+        <KnowledgeReviewPanel
+          slug={reviewSlug}
+          onClose={() => setReviewSlug(null)}
         />
       )}
 
@@ -419,7 +429,7 @@ function BrandLogo({ logoUrl, companyName, secondary }: { logoUrl?: string | nul
   );
 }
 
-function CrawlBadge({ slug }: { slug: string }) {
+function CrawlBadge({ slug, onCrawlComplete }: { slug: string; onCrawlComplete?: () => void }) {
   const { data: crawl, refetch } = useGetCrawlStatus(slug, {
     query: {
       queryKey: ["crawl-status", slug],
@@ -433,6 +443,16 @@ function CrawlBadge({ slug }: { slug: string }) {
   const { mutate: triggerCrawl, isPending } = useTriggerCrawl({
     mutation: { onSuccess: () => setTimeout(() => refetch(), 1000) },
   });
+
+  const prevStatusRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    const curr = crawl?.status;
+    if ((prev === "queued" || prev === "running") && curr === "completed") {
+      onCrawlComplete?.();
+    }
+    prevStatusRef.current = curr;
+  }, [crawl?.status, onCrawlComplete]);
 
   if (!crawl) {
     return (
@@ -500,6 +520,7 @@ function BrandCard({
   onDelete,
   onPreview,
   onKnowledge,
+  onReview,
   onInstall,
 }: {
   client: DemoClient;
@@ -509,6 +530,7 @@ function BrandCard({
   onDelete: () => void;
   onPreview: (mode: "demo" | "site") => void;
   onKnowledge: () => void;
+  onReview: () => void;
   onInstall: () => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
@@ -573,7 +595,7 @@ function BrandCard({
         <div className="flex items-center gap-2 bg-white/[0.03] rounded-lg px-2.5 py-1.5">
           <RefreshCw className="h-3 w-3 text-white/20 shrink-0" />
           <span className="text-white/20 text-[10px] shrink-0">KB:</span>
-          <CrawlBadge slug={client.slug} />
+          <CrawlBadge slug={client.slug} onCrawlComplete={onReview} />
         </div>
 
         <div className="flex flex-wrap gap-2 mt-auto pt-2 border-t border-white/5">
