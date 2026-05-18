@@ -84,7 +84,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     reviewQuote:
       '"The results are extraordinary. I\'ve never felt so confident in my skin."',
     reviewName: "Sophia M.",
-    trustItems: ["CQC Registered", "GMC Certified", "500+ 5★ Reviews", "Award Winner 2024"],
+    trustItems: ["Certified Practitioners", "500+ 5★ Reviews", "Discreet & Confidential", "Instant 24/7 Response"],
   },
   wellness: {
     video: `${import.meta.env.BASE_URL}videos/wellness-meditation.mp4`,
@@ -167,7 +167,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     ctaLabel: "Free Hair Assessment",
     reviewQuote: '"My confidence is completely restored. Incredible results."',
     reviewName: "David K.",
-    trustItems: ["8,000+ Procedures", "GMC Registered", "Lifetime Guarantee", "0% Finance"],
+    trustItems: ["8,000+ Procedures", "Certified Surgeons", "Lifetime Guarantee", "Free Consultation"],
   },
   "weight-management": {
     video: `${import.meta.env.BASE_URL}videos/weight-management.mp4`,
@@ -224,7 +224,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     ctaLabel: "Book a Consultation",
     reviewQuote: '"After years of trying, they made our dream possible."',
     reviewName: "Emma & Tom W.",
-    trustItems: ["HFEA Licensed", "75% Success Rate", "Compassionate Care", "Full Transparency"],
+    trustItems: ["Accredited Specialists", "75% Success Rate", "Compassionate Care", "Full Transparency"],
   },
   dental: {
     video: `${import.meta.env.BASE_URL}videos/dental-smile.mp4`,
@@ -243,7 +243,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     ctaLabel: "Book Smile Consultation",
     reviewQuote: '"Best decision I ever made. Incredible smile transformation."',
     reviewName: "Laura M.",
-    trustItems: ["GDC Registered", "Invisalign Diamond", "Sedation Available", "0% Finance"],
+    trustItems: ["Certified Dentists", "Invisalign Diamond", "Sedation Available", "Free First Consultation"],
   },
   physiotherapy: {
     video: `${import.meta.env.BASE_URL}videos/physio-rehab.mp4`,
@@ -262,7 +262,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     ctaLabel: "Book Assessment",
     reviewQuote: '"Recovered from injury 3× faster than expected. Outstanding."',
     reviewName: "Michael J.",
-    trustItems: ["HCPC Registered", "Same-Day Bookings", "Sports Specialists", "All Insurers"],
+    trustItems: ["Certified Therapists", "Same-Day Bookings", "Sports Specialists", "All Insurers"],
   },
   "laser-eye": {
     video: `${import.meta.env.BASE_URL}videos/laser-eye.mp4`,
@@ -281,7 +281,7 @@ const CONFIGS: Record<string, HeroConfig> = {
     ctaLabel: "Check My Suitability",
     reviewQuote: '"Perfect vision from day one. Genuinely life-changing."',
     reviewName: "Christopher A.",
-    trustItems: ["CQC Registered", "10,000+ Procedures", "Lifetime Guarantee", "0% Finance"],
+    trustItems: ["Certified Specialists", "10,000+ Procedures", "Lifetime Guarantee", "Free Suitability Check"],
   },
   medical: {
     video: `${import.meta.env.BASE_URL}videos/care-compassion.mp4`,

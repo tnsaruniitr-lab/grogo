@@ -951,13 +951,14 @@ export function getFAQFallbacks(industry?: string | null): FAQItem[] {
 }
 
 const CITY_POOLS: Record<ThemeLang, string[]> = {
-  en: ["Dubai", "Abu Dhabi", "London", "Manchester", "Sydney", "Singapore", "Toronto", "New York", "Los Angeles", "Miami"],
+  en: ["Berlin", "München", "Hamburg", "Frankfurt", "Köln", "Stuttgart", "Düsseldorf", "Leipzig", "Wien", "Zürich"],
   de: ["Berlin", "München", "Hamburg", "Frankfurt", "Köln", "Stuttgart", "Düsseldorf", "Leipzig", "Nürnberg", "Hannover"],
   tr: ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Gaziantep", "Konya", "Kayseri", "Mersin"],
 };
 
 function pickCities(primaryCity: string | null | undefined, lang: ThemeLang, count: number): string[] {
-  const pool = CITY_POOLS[lang] ?? CITY_POOLS.de;
+  // Use de pool for en too — city location reflects DACH geography, not demo language
+  const pool = lang === "tr" ? CITY_POOLS.tr : CITY_POOLS.de;
   const cities: string[] = [];
   if (primaryCity) cities.push(primaryCity);
   for (const c of pool) {
