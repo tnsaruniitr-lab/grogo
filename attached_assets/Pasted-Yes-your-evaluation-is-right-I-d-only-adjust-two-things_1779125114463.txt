@@ -1,0 +1,39 @@
+Yes, your evaluation is right. I’d only adjust two things.
+
+First, #3 and #4 should probably be designed together. The extractor should produce evidence-backed candidate facts, then the synthesis pass should turn those into canonical business facts. If you add evidenceQuote now but later change the canonical profile shape, you may redo some work. Better flow: crawl pages → extract evidence-backed facts → synthesize canonical profile → customer reviews/edits → approved profile powers bot.
+
+Second, the priority system is currently confused. The crawler assigns higher numbers as more important, like contact: 10, pricing: 9, service: 8, but the review code treats priority === 1 as special. So before expanding critical facts, define one convention: higher number wins. Use 10 for identity/core facts, 5 for useful facts, 0 for normal facts.
+
+My recommended sequence would be:
+
+Approval filter now
+Only approved KB rows should reach live chat. This is the urgent bug.
+
+Draft crawl versions
+New crawls should create a pending version. Old approved knowledge stays live until the new version is approved.
+
+Canonical profile model
+Create a structured business profile: what it does, target customers, services, pricing, booking path, geography, languages, trust signals, limitations, escalation rules.
+
+Evidence-backed extraction
+Each extracted fact should carry source URL, evidence quote, confidence, and review key. The reviewer should see “why the AI believes this.”
+
+Review-before-activation UX
+Show critical facts first, detailed KB second. Customer edits the canonical facts before the bot goes live.
+
+Better crawl inputs
+Add JSON-LD/schema parsing and JS-render fallback. This improves raw material quality.
+
+Evaluation harness
+Once the new extraction/profile shape is stable, snapshot 5-10 known sites and test regressions.
+
+For web research: yes, but use it as corroboration, not as another uncontrolled crawler. It should only enrich high-risk fields like pricing, geography, trust signals, competitor-like claims, and business identity. Every web-researched fact should store source URL + confidence + “needs review” unless it came from the client’s own site.
+
+The north star should be: the bot never runs directly on fresh AI guesses. It runs on approved, evidence-backed, canonical business facts. That is what will make it feel dramatically more accurate.
+
+
+
+
+
+0:23
+
