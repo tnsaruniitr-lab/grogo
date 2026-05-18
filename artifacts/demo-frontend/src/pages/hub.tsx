@@ -506,7 +506,7 @@ function PreviewModal({
   onModeChange: (mode: "demo" | "site") => void;
   onClose: () => void;
 }) {
-  const demoUrl = `/demo/${client.slug}`;
+  const demoUrl = `${import.meta.env.BASE_URL}demo/${client.slug}`;
   const siteUrl = client.branding.websiteUrl ?? null;
   const activeUrl = mode === "demo" ? demoUrl : siteUrl;
   const tabUrl = activeUrl;
