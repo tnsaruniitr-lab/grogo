@@ -371,6 +371,7 @@ export const ListKnowledgeEntriesResponse = zod.object({
       priority: zod.number(),
       source: zod.string(),
       sourceUrl: zod.string().nullish(),
+      approvalStatus: zod.enum(["approved", "pending", "rejected"]),
       createdAt: zod.string(),
     }),
   ),
@@ -474,6 +475,7 @@ export const UpdateKnowledgeEntryBody = zod.object({
       "ja",
     ])
     .optional(),
+  approvalStatus: zod.enum(["approved", "pending", "rejected"]).optional(),
 });
 
 export const UpdateKnowledgeEntryResponse = zod.object({
@@ -515,6 +517,7 @@ export const UpdateKnowledgeEntryResponse = zod.object({
   priority: zod.number(),
   source: zod.string(),
   sourceUrl: zod.string().nullish(),
+  approvalStatus: zod.enum(["approved", "pending", "rejected"]),
   createdAt: zod.string(),
 });
 
@@ -524,6 +527,94 @@ export const UpdateKnowledgeEntryResponse = zod.object({
 export const DeleteKnowledgeEntryParams = zod.object({
   slug: zod.coerce.string(),
   id: zod.coerce.number(),
+});
+
+/**
+ * Returns critical facts (projected from KB entries) and all entries grouped by category, with approval status and pending counts.
+ * @summary Get knowledge review data for a client
+ */
+export const GetKnowledgeReviewParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetKnowledgeReviewResponse = zod.object({
+  criticalFacts: zod.array(
+    zod.object({
+      key: zod.string(),
+      label: zod.string(),
+      value: zod.string(),
+      entryId: zod.number().nullish(),
+    }),
+  ),
+  groups: zod.array(
+    zod.object({
+      category: zod.string(),
+      entries: zod.array(
+        zod.object({
+          id: zod.number(),
+          category: zod.enum([
+            "about",
+            "services",
+            "service",
+            "pricing",
+            "faq",
+            "process",
+            "identity",
+            "team",
+            "location",
+            "contact",
+            "other",
+          ]),
+          question: zod.string(),
+          answer: zod.string(),
+          language: zod.enum([
+            "en",
+            "de",
+            "tr",
+            "fr",
+            "ar",
+            "nl",
+            "es",
+            "pl",
+            "pt",
+            "it",
+            "ru",
+            "zh",
+            "hi",
+            "ur",
+            "fa",
+            "ko",
+            "ja",
+          ]),
+          priority: zod.number(),
+          source: zod.string(),
+          sourceUrl: zod.string().nullish(),
+          approvalStatus: zod.enum(["approved", "pending", "rejected"]),
+          createdAt: zod.string(),
+        }),
+      ),
+    }),
+  ),
+  pendingCount: zod.number(),
+  approvedCount: zod.number(),
+});
+
+/**
+ * Sets approvalStatus on one or more entries. Pass ids array for selective approval, or approveAll=true to approve all pending entries at once.
+ * @summary Bulk-approve (or reject) knowledge entries
+ */
+export const ApproveKnowledgeEntriesParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const ApproveKnowledgeEntriesBody = zod.object({
+  ids: zod.array(zod.number()).optional(),
+  approveAll: zod.boolean().optional(),
+  status: zod.enum(["approved", "pending", "rejected"]).optional(),
+});
+
+export const ApproveKnowledgeEntriesResponse = zod.object({
+  updated: zod.number(),
 });
 
 /**

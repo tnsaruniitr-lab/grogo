@@ -228,6 +228,7 @@ export async function runCrawlPipeline(
               sourceUrl: url,
               confidence: item.confidence,
               embeddingJson,
+              approvalStatus: "pending",
             });
           }
 

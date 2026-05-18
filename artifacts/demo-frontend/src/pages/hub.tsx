@@ -75,6 +75,7 @@ interface BrandingConfig {
   demoLanguages?: string[] | null;
   industry?: string | null;
   twilioSender?: string | null;
+  defaultMessage?: string | null;
 }
 
 interface DemoClient {

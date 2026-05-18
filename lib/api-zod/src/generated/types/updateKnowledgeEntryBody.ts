@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ApprovalStatus } from "./approvalStatus";
 import type { KnowledgeCategory } from "./knowledgeCategory";
 import type { KnowledgeLanguage } from "./knowledgeLanguage";
 
@@ -13,4 +14,5 @@ export interface UpdateKnowledgeEntryBody {
   question?: string;
   answer?: string;
   language?: KnowledgeLanguage;
+  approvalStatus?: ApprovalStatus;
 }

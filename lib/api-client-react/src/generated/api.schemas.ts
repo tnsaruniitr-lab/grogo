@@ -156,6 +156,15 @@ export interface ExtractBrandingInput {
   url: string;
 }
 
+export type ApprovalStatus =
+  (typeof ApprovalStatus)[keyof typeof ApprovalStatus];
+
+export const ApprovalStatus = {
+  approved: "approved",
+  pending: "pending",
+  rejected: "rejected",
+} as const;
+
 export type KnowledgeLanguage =
   (typeof KnowledgeLanguage)[keyof typeof KnowledgeLanguage];
 
@@ -206,6 +215,7 @@ export interface KnowledgeEntry {
   source: string;
   /** @nullable */
   sourceUrl?: string | null;
+  approvalStatus: ApprovalStatus;
   createdAt: string;
 }
 
@@ -222,11 +232,38 @@ export interface UpdateKnowledgeEntryBody {
   question?: string;
   answer?: string;
   language?: KnowledgeLanguage;
+  approvalStatus?: ApprovalStatus;
 }
 
 export interface KnowledgeListResponse {
   entries: KnowledgeEntry[];
   categories: string[];
+}
+
+export interface CriticalFact {
+  key: string;
+  label: string;
+  value: string;
+  /** @nullable */
+  entryId?: number | null;
+}
+
+export interface KnowledgeGroup {
+  category: string;
+  entries: KnowledgeEntry[];
+}
+
+export interface KnowledgeReviewResponse {
+  criticalFacts: CriticalFact[];
+  groups: KnowledgeGroup[];
+  pendingCount: number;
+  approvedCount: number;
+}
+
+export interface ApproveKnowledgeBody {
+  ids?: number[];
+  approveAll?: boolean;
+  status?: ApprovalStatus;
 }
 
 export interface KnowledgeChunk {
@@ -307,4 +344,8 @@ export type GetLeadParams = {
 
 export type UpdateLeadParams = {
   clientId: number;
+};
+
+export type ApproveKnowledgeEntries200 = {
+  updated: number;
 };

@@ -19,6 +19,7 @@ export const companyKnowledgeTable = pgTable(
     sourceUrl: text("source_url"),
     confidence: real("confidence"),
     embeddingJson: text("embedding_json"),
+    approvalStatus: text("approval_status").notNull().default("approved"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },

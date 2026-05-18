@@ -17,6 +17,8 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ApproveKnowledgeBody,
+  ApproveKnowledgeEntries200,
   BrandingConfig,
   ClientContent,
   CrawlJobStatus,
@@ -32,6 +34,7 @@ import type {
   HealthStatus,
   KnowledgeEntry,
   KnowledgeListResponse,
+  KnowledgeReviewResponse,
   Lead,
   LeadDetail,
   LeadUpdate,
@@ -1395,6 +1398,187 @@ export const useDeleteKnowledgeEntry = <
   TContext
 > => {
   return useMutation(getDeleteKnowledgeEntryMutationOptions(options));
+};
+
+/**
+ * Returns critical facts (projected from KB entries) and all entries grouped by category, with approval status and pending counts.
+ * @summary Get knowledge review data for a client
+ */
+export const getGetKnowledgeReviewUrl = (slug: string) => {
+  return `/api/admin/clients/${slug}/knowledge/review`;
+};
+
+export const getKnowledgeReview = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<KnowledgeReviewResponse> => {
+  return customFetch<KnowledgeReviewResponse>(getGetKnowledgeReviewUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetKnowledgeReviewQueryKey = (slug: string) => {
+  return [`/api/admin/clients/${slug}/knowledge/review`] as const;
+};
+
+export const getGetKnowledgeReviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getKnowledgeReview>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getKnowledgeReview>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetKnowledgeReviewQueryKey(slug);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getKnowledgeReview>>
+  > = ({ signal }) => getKnowledgeReview(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getKnowledgeReview>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetKnowledgeReviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getKnowledgeReview>>
+>;
+export type GetKnowledgeReviewQueryError = ErrorType<void>;
+
+/**
+ * @summary Get knowledge review data for a client
+ */
+
+export function useGetKnowledgeReview<
+  TData = Awaited<ReturnType<typeof getKnowledgeReview>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getKnowledgeReview>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetKnowledgeReviewQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Sets approvalStatus on one or more entries. Pass ids array for selective approval, or approveAll=true to approve all pending entries at once.
+ * @summary Bulk-approve (or reject) knowledge entries
+ */
+export const getApproveKnowledgeEntriesUrl = (slug: string) => {
+  return `/api/admin/clients/${slug}/knowledge/approve`;
+};
+
+export const approveKnowledgeEntries = async (
+  slug: string,
+  approveKnowledgeBody: ApproveKnowledgeBody,
+  options?: RequestInit,
+): Promise<ApproveKnowledgeEntries200> => {
+  return customFetch<ApproveKnowledgeEntries200>(
+    getApproveKnowledgeEntriesUrl(slug),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(approveKnowledgeBody),
+    },
+  );
+};
+
+export const getApproveKnowledgeEntriesMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveKnowledgeEntries>>,
+    TError,
+    { slug: string; data: BodyType<ApproveKnowledgeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof approveKnowledgeEntries>>,
+  TError,
+  { slug: string; data: BodyType<ApproveKnowledgeBody> },
+  TContext
+> => {
+  const mutationKey = ["approveKnowledgeEntries"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof approveKnowledgeEntries>>,
+    { slug: string; data: BodyType<ApproveKnowledgeBody> }
+  > = (props) => {
+    const { slug, data } = props ?? {};
+
+    return approveKnowledgeEntries(slug, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApproveKnowledgeEntriesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof approveKnowledgeEntries>>
+>;
+export type ApproveKnowledgeEntriesMutationBody =
+  BodyType<ApproveKnowledgeBody>;
+export type ApproveKnowledgeEntriesMutationError = ErrorType<void>;
+
+/**
+ * @summary Bulk-approve (or reject) knowledge entries
+ */
+export const useApproveKnowledgeEntries = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveKnowledgeEntries>>,
+    TError,
+    { slug: string; data: BodyType<ApproveKnowledgeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof approveKnowledgeEntries>>,
+  TError,
+  { slug: string; data: BodyType<ApproveKnowledgeBody> },
+  TContext
+> => {
+  return useMutation(getApproveKnowledgeEntriesMutationOptions(options));
 };
 
 /**

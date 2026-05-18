@@ -6,7 +6,7 @@ import {
   useUpdateKnowledgeEntry,
   useDeleteKnowledgeEntry,
 } from "@workspace/api-client-react";
-import type { KnowledgeEntry } from "@workspace/api-client-react";
+import type { KnowledgeEntry, KnowledgeCategory, KnowledgeLanguage } from "@workspace/api-client-react";
 import {
   Dialog,
   DialogContent,
@@ -114,7 +114,7 @@ export function KnowledgeDialog({ slug, onClose }: { slug: string; onClose: () =
     }
     createMutation.mutate({
       slug,
-      data: { category: cat, question: form.question.trim(), answer: form.answer.trim(), language: form.language, priority: 0 },
+      data: { category: cat as KnowledgeCategory, question: form.question.trim(), answer: form.answer.trim(), language: form.language as KnowledgeLanguage, priority: 0 },
     });
   };
 
@@ -130,7 +130,7 @@ export function KnowledgeDialog({ slug, onClose }: { slug: string; onClose: () =
       toast({ title: "Question and answer are required", variant: "destructive" });
       return;
     }
-    updateMutation.mutate({ slug, id: editingId, data: editForm });
+    updateMutation.mutate({ slug, id: editingId, data: { ...editForm, category: editForm.category as KnowledgeCategory, language: editForm.language as KnowledgeLanguage } });
   };
 
   const toggleExpand = (id: number) => {

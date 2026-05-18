@@ -394,6 +394,62 @@ paths:
         "404":
           description: Entry not found
 
+  /admin/clients/{slug}/knowledge/review:
+    get:
+      operationId: getKnowledgeReview
+      tags: [admin]
+      summary: Get knowledge review data for a client
+      description: Returns critical facts (projected from KB entries) and all entries grouped by category, with approval status and pending counts.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Review data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeReviewResponse"
+        "404":
+          description: Client not found
+
+  /admin/clients/{slug}/knowledge/approve:
+    post:
+      operationId: approveKnowledgeEntries
+      tags: [admin]
+      summary: Bulk-approve (or reject) knowledge entries
+      description: Sets approvalStatus on one or more entries. Pass ids array for selective approval, or approveAll=true to approve all pending entries at once.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveKnowledgeBody"
+      responses:
+        "200":
+          description: Number of entries updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated:
+                    type: integer
+        "400":
+          description: Validation error
+        "404":
+          description: Client not found
+
   /clients/{slug}/content:
     get:
       operationId: getClientContent
@@ -783,6 +839,10 @@ components:
         url:
           type: string
 
+    ApprovalStatus:
+      type: string
+      enum: [approved, pending, rejected]
+
     KnowledgeLanguage:
       type: string
       enum: [en, de, tr, fr, ar, nl, es, pl, pt, it, ru, zh, hi, ur, fa, ko, ja]
@@ -793,7 +853,7 @@ components:
 
     KnowledgeEntry:
       type: object
-      required: [id, category, question, answer, language, priority, source, createdAt]
+      required: [id, category, question, answer, language, priority, source, approvalStatus, createdAt]
       properties:
         id:
           type: integer
@@ -811,6 +871,8 @@ components:
           type: string
         sourceUrl:
           type: ["string", "null"]
+        approvalStatus:
+          $ref: "#/components/schemas/ApprovalStatus"
         createdAt:
           type: string
 
@@ -841,6 +903,8 @@ components:
           type: string
         language:
           $ref: "#/components/schemas/KnowledgeLanguage"
+        approvalStatus:
+          $ref: "#/components/schemas/ApprovalStatus"
 
     KnowledgeListResponse:
       type: object
@@ -854,6 +918,59 @@ components:
           type: array
           items:
             type: string
+
+    CriticalFact:
+      type: object
+      required: [key, label, value]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        value:
+          type: string
+        entryId:
+          type: ["integer", "null"]
+
+    KnowledgeGroup:
+      type: object
+      required: [category, entries]
+      properties:
+        category:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeEntry"
+
+    KnowledgeReviewResponse:
+      type: object
+      required: [criticalFacts, groups, pendingCount, approvedCount]
+      properties:
+        criticalFacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CriticalFact"
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeGroup"
+        pendingCount:
+          type: integer
+        approvedCount:
+          type: integer
+
+    ApproveKnowledgeBody:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+        approveAll:
+          type: boolean
+        status:
+          $ref: "#/components/schemas/ApprovalStatus"
 
     KnowledgeChunk:
       type: object

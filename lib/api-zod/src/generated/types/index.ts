@@ -7,12 +7,16 @@
  */
 
 export * from "./appointment";
+export * from "./approvalStatus";
+export * from "./approveKnowledgeBody";
+export * from "./approveKnowledgeEntries200";
 export * from "./brandingConfig";
 export * from "./clientContent";
 export * from "./conversationMessage";
 export * from "./crawlJobStatus";
 export * from "./crawlPageDetail";
 export * from "./createKnowledgeEntryBody";
+export * from "./criticalFact";
 export * from "./dashboardStats";
 export * from "./demoClient";
 export * from "./demoClientInput";
@@ -24,8 +28,10 @@ export * from "./healthStatus";
 export * from "./knowledgeCategory";
 export * from "./knowledgeChunk";
 export * from "./knowledgeEntry";
+export * from "./knowledgeGroup";
 export * from "./knowledgeLanguage";
 export * from "./knowledgeListResponse";
+export * from "./knowledgeReviewResponse";
 export * from "./lead";
 export * from "./leadDetail";
 export * from "./leadsPage";

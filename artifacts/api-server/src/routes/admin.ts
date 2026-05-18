@@ -314,6 +314,7 @@ router.get("/admin/clients/:slug/knowledge", async (req: Request, res: Response)
       priority: companyKnowledgeTable.priority,
       source: companyKnowledgeTable.source,
       sourceUrl: companyKnowledgeTable.sourceUrl,
+      approvalStatus: companyKnowledgeTable.approvalStatus,
       createdAt: companyKnowledgeTable.createdAt,
     })
     .from(companyKnowledgeTable)
@@ -360,6 +361,113 @@ router.post("/admin/clients/:slug/knowledge", async (req: Request, res: Response
   res.status(201).json({ ...created, createdAt: created.createdAt.toISOString() });
 });
 
+// ── Review & approve routes must come BEFORE /:id to avoid param capture ─────
+
+const CRITICAL_FACT_RULES = [
+  { key: "what_it_does", label: "What this business does", categories: ["identity", "about"], keywords: null as string[] | null },
+  { key: "target_customers", label: "Target customers", categories: ["faq"], keywords: ["who", "target", "customer", "client", "ideal"] },
+  { key: "main_services", label: "Main services", categories: ["service", "services"], keywords: null },
+  { key: "booking_path", label: "How to book / get started", categories: ["process"], keywords: ["book", "demo", "appoint", "schedule", "call", "start"] },
+  { key: "pricing_policy", label: "Pricing policy", categories: ["pricing"], keywords: null },
+  { key: "contact_escalation", label: "Contact / escalation", categories: ["contact"], keywords: null },
+] as const;
+
+router.get("/admin/clients/:slug/knowledge/review", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const [client] = await db
+    .select({ id: clientsTable.id, name: clientsTable.name, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const entries = await db
+    .select({
+      id: companyKnowledgeTable.id,
+      category: companyKnowledgeTable.category,
+      question: companyKnowledgeTable.question,
+      answer: companyKnowledgeTable.answer,
+      language: companyKnowledgeTable.language,
+      priority: companyKnowledgeTable.priority,
+      source: companyKnowledgeTable.source,
+      sourceUrl: companyKnowledgeTable.sourceUrl,
+      approvalStatus: companyKnowledgeTable.approvalStatus,
+      createdAt: companyKnowledgeTable.createdAt,
+    })
+    .from(companyKnowledgeTable)
+    .where(eq(companyKnowledgeTable.clientId, client.id))
+    .orderBy(asc(companyKnowledgeTable.priority), asc(companyKnowledgeTable.id));
+
+  const serialised = entries.map((e) => ({ ...e, createdAt: e.createdAt.toISOString() }));
+
+  const criticalFacts = [
+    { key: "business_name", label: "Business name", value: client.name, entryId: null as number | null },
+    ...CRITICAL_FACT_RULES.map((rule) => {
+      const candidates = serialised.filter((e) => (rule.categories as readonly string[]).includes(e.category));
+      const match = rule.keywords
+        ? (candidates.find((e) => rule.keywords!.some((kw) => e.question.toLowerCase().includes(kw))) ?? candidates[0] ?? null)
+        : (candidates[0] ?? null);
+      return {
+        key: rule.key,
+        label: rule.label,
+        value: match ? match.answer.slice(0, 400) : "",
+        entryId: match ? match.id : null,
+      };
+    }),
+  ];
+
+  const categoryOrder = ["identity", "about", "services", "service", "pricing", "faq", "process", "contact", "team", "location", "other"];
+  const allCats = [...new Set(serialised.map((e) => e.category))].sort(
+    (a, b) => (categoryOrder.indexOf(a) === -1 ? 99 : categoryOrder.indexOf(a)) - (categoryOrder.indexOf(b) === -1 ? 99 : categoryOrder.indexOf(b)),
+  );
+  const groups = allCats.map((cat) => ({ category: cat, entries: serialised.filter((e) => e.category === cat) }));
+
+  const pendingCount = serialised.filter((e) => e.approvalStatus === "pending").length;
+  const approvedCount = serialised.filter((e) => e.approvalStatus === "approved").length;
+
+  res.json({ criticalFacts, groups, pendingCount, approvedCount });
+});
+
+const ApproveKnowledgeBody = z.object({
+  ids: z.array(z.number().int()).optional(),
+  approveAll: z.boolean().optional(),
+  status: z.enum(["approved", "pending", "rejected"]).optional().default("approved"),
+});
+
+router.post("/admin/clients/:slug/knowledge/approve", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const parsed = ApproveKnowledgeBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
+
+  const { ids, approveAll, status } = parsed.data;
+
+  if (approveAll) {
+    await db
+      .update(companyKnowledgeTable)
+      .set({ approvalStatus: status })
+      .where(and(eq(companyKnowledgeTable.clientId, client.id), eq(companyKnowledgeTable.approvalStatus, "pending")));
+    const total = await db.$count(companyKnowledgeTable, eq(companyKnowledgeTable.clientId, client.id));
+    res.json({ updated: total });
+    return;
+  }
+
+  if (!ids || ids.length === 0) { res.status(400).json({ error: "Provide ids or approveAll=true" }); return; }
+
+  await db
+    .update(companyKnowledgeTable)
+    .set({ approvalStatus: status })
+    .where(and(eq(companyKnowledgeTable.clientId, client.id), inArray(companyKnowledgeTable.id, ids)));
+
+  res.json({ updated: ids.length });
+});
+
 router.patch("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Response) => {
   const params = KnowledgeEntryParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: "Invalid params" }); return; }
@@ -383,6 +491,7 @@ router.patch("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Res
     question: z.string().min(1).max(1000).optional(),
     answer: z.string().min(1).max(4000).optional(),
     language: z.enum(KNOWLEDGE_LANGUAGES).optional(),
+    approvalStatus: z.enum(["approved", "pending", "rejected"]).optional(),
   }).safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.flatten() }); return; }
 
@@ -391,6 +500,7 @@ router.patch("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Res
   if (body.data.question !== undefined) updates.question = body.data.question;
   if (body.data.answer !== undefined) updates.answer = body.data.answer;
   if (body.data.language) updates.language = body.data.language;
+  if (body.data.approvalStatus) updates.approvalStatus = body.data.approvalStatus;
 
   const newQuestion = body.data.question ?? existing.question;
   const newAnswer = body.data.answer ?? existing.answer;

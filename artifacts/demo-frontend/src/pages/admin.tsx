@@ -51,6 +51,7 @@ import {
   ExternalLink,
   Copy,
   CheckCheck,
+  ClipboardCheck,
   Sparkles,
   Upload,
   LayoutDashboard,
@@ -62,6 +63,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
+import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS } from "@/lib/demo-i18n";
 
@@ -105,6 +107,7 @@ export default function AdminPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
+  const [reviewSlug, setReviewSlug] = useState<string | null>(null);
   const [whatsappClient, setWhatsappClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
@@ -271,6 +274,14 @@ export default function AdminPage() {
                             size="sm"
                             variant="outline"
                             className="gap-1.5 text-xs"
+                            onClick={() => setReviewSlug(client.slug)}
+                          >
+                            <ClipboardCheck className="h-3 w-3" /> Review
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs"
                             onClick={() => setKnowledgeSlug(client.slug)}
                           >
                             <BookOpen className="h-3 w-3" /> Knowledge
@@ -314,6 +325,13 @@ export default function AdminPage() {
           setShowCreate(false);
         }}
       />
+
+      {reviewSlug && (
+        <KnowledgeReviewPanel
+          slug={reviewSlug}
+          onClose={() => setReviewSlug(null)}
+        />
+      )}
 
       {knowledgeSlug && (
         <KnowledgeDialog
