@@ -1,0 +1,44 @@
+This is a strong plan. I’d ship it, with a few important corrections.
+
+First correction: Phase 1 file path is probably artifacts/api-server/src/lib/knowledge.ts, not lib/knowledge/src/knowledge.ts.
+
+Second: make Phase 2 and Phase 3 versioned together. The new client_profiles row should also be tied to crawlJobId and have status = pending | active | archived | rejected. Otherwise you can safely version KB rows but accidentally let a newly synthesized profile become the live critical facts before activation.
+
+Third: activation should only archive old crawl-derived rows, not manual entries. Manual/admin KB should stay approved unless explicitly changed.
+
+I’d adjust the data model like this:
+
+company_knowledge
+- approval_status: pending | approved | rejected | archived
+- crawl_job_id nullable
+- review_key nullable
+- evidence_quote nullable
+- risk_flags jsonb nullable
+- source_url already exists
+
+client_profiles
+- id
+- client_id
+- crawl_job_id nullable
+- status: pending | active | archived | rejected
+- profile jsonb
+- evidence jsonb
+- created_at
+- activated_at
+One more important product nuance: “freshly crawled client has no bot knowledge until activation” is safe, but maybe too harsh. Better wording: the bot can run only on manual/previously approved knowledge; new crawl knowledge and new profile stay invisible until activation. For a brand-new client with zero approved facts, the UI should show “Needs activation before bot can answer company-specific questions.”
+
+I’d also add one tiny bugfix to the plan: getLatestCrawlJob currently orders by createdAt ascending in crawl-pipeline.ts, so despite the name it may return the oldest job. It should order descending.
+
+The final sequencing I’d use:
+
+Approval filter.
+Fix latest crawl ordering.
+Add crawlJobId + statuses + non-destructive draft crawls.
+Add pending/active client_profiles.
+Activation transaction flips KB + profile together.
+Evidence-backed extraction.
+Strong-model profile synthesis.
+Structured data + JS fallback.
+Web corroboration.
+Eval harness.
+Your north star is exactly right: approved, evidence-backed canonical facts, not fresh AI guesses. That is the difference between a demo chatbot and something customers can trust.
