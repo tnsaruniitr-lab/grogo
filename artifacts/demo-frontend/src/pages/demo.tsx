@@ -219,8 +219,8 @@ export default function DemoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#050505" }}>
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-600" />
       </div>
     );
   }
@@ -229,9 +229,9 @@ export default function DemoPage() {
 
   if (error || !branding) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4 bg-background">
-        <p className="text-2xl font-bold text-foreground">{t.notFound.title}</p>
-        <p className="text-muted-foreground">{t.notFound.desc}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4" style={{ background: "#050505" }}>
+        <p className="text-2xl font-bold text-zinc-100">{t.notFound.title}</p>
+        <p className="text-zinc-400">{t.notFound.desc}</p>
         <Button variant="outline" onClick={() => window.history.back()}>{t.notFound.back}</Button>
       </div>
     );
