@@ -64,6 +64,13 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: BASE_URL,
+    languages: {
+      en: BASE_URL,
+      de: `${BASE_URL}/de`,
+      tr: `${BASE_URL}/tr`,
+      ar: `${BASE_URL}/ar`,
+      "x-default": BASE_URL,
+    },
   },
   category: "technology",
 };
