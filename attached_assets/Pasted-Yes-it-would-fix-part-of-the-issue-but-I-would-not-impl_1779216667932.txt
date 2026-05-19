@@ -1,0 +1,60 @@
+Yes, it would fix part of the issue, but I would not implement it exactly as written. The auth direction is right; the DEMO_KEY design is the part I’d change.
+
+What’s Right
+
+Protecting /api/admin/*, /api/crawl/*, and /api/storage/* server-side is absolutely needed.
+Moving sensitive routers behind requireDashboardAuth is the correct first fix.
+/api/leads and /api/dashboard/* should never be public if they expose phone numbers, conversations, notes, appointments, or lead state.
+Frontend route blocking alone is not enough; API protection is the real fix.
+What I’d Change
+The proposed global DEMO_KEY is risky.
+
+If you use one shared DEMO_KEY, then anyone with one demo URL could potentially call:
+
+/api/leads?clientId=1
+/api/leads?clientId=2
+/api/dashboard/stats?clientId=...
+unless every endpoint also hard-scopes the token to one client. A global key in a URL is also easy to leak through browser history, logs, screenshots, analytics, referrers, and forwarded links.
+
+Better design:
+
+demoAccessToken = per-client, random, revocable, read-only
+Then server validates:
+
+token belongs to this exact clientId / slug
+token is active
+token only permits safe demo-dashboard reads
+token cannot call admin/crawl/storage/write endpoints
+Even better: if prospects do not need to see real leads, don’t expose /demo/:slug/dashboard publicly at all. Keep dashboards internal only.
+
+Corrected Plan
+
+Put these behind internal Basic Auth immediately:
+
+/api/admin/*
+/api/admin/crawl/* or /api/crawl/*, depending actual mount
+/api/storage/uploads/request-url
+/api/storage/objects/*
+/api/leads
+/api/dashboard/*
+Keep these public only if they validate internally:
+
+/api/healthz
+WhatsApp/Twilio webhook with signature validation
+ManyChat/Respond webhooks with API key validation
+public branding/content endpoints that expose no PII
+For demo dashboard access, choose one:
+
+Recommended: remove public demo dashboards; internal login only.
+Acceptable: per-client demoAccessToken, read-only, scoped to that client, no writes, revocable.
+Do not use a single global DEMO_KEY.
+
+Add robots.txt protection:
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /mockups
+Disallow: /demo/*/dashboard
+maybe Disallow: /demo/ if demos are private/prospect-specific
+Verdict
+The plan’s Part 1 is good and should be done. Part 2 needs redesign: use per-client scoped demo tokens or make dashboards internal-only. A global DEMO_KEY would reduce friction but creates a new data exposure risk.
