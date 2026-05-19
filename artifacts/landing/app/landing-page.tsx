@@ -274,8 +274,8 @@ function HowItWorks({ t }: { t: Translations }) {
 
 function Testimonials({ t }: { t: Translations }) {
   const testimonials = [
-    { quote: "We were tired of trying to adapt generic tools to the realities of outpatient care. GrowthMonk helped us launch a healthcare-focused WhatsApp CRM with AI documentation, workforce measurement, and efficiency tracking built around how our team actually works. Even at the pilot stage, it shows strong potential to reduce admin effort, improve operational visibility, and support our broader AI transformation. We're excited to expand this further with their AI Growth Engine.", company: "Dosteli", country: "Germany", flag: "🇩🇪", logo: "/images/logo-dosteli.png", logoBg: "#ffffff" },
-    { quote: "As a healthcare brand, we needed a clearer way to understand why we were not being surfaced or cited consistently in AI search. GrowthMonk's healthcare-focused Growth Engine gave us a practical roadmap across website structure, schema, and discoverability, with recommendations grounded in Google and Schema.org guidance. It helped us move from guesswork to clear, actionable fixes our team could implement.", company: "Valeo Health", country: "UAE", flag: "🇦🇪", logo: "/images/logo-valeo-health.png", logoBg: "#F5A623" },
+    { quote: "We were tired of trying to adapt generic tools to the realities of outpatient care. GrowthMonk helped us launch a healthcare-focused WhatsApp CRM with AI documentation, workforce measurement, and efficiency tracking built around how our team actually works. Even at the pilot stage, it shows strong potential to reduce admin effort, improve operational visibility, and support our broader AI transformation. We're excited to expand this further with their AI Growth Engine.", company: "Dosteli", logo: "/images/logo-dosteli.png", logoBg: "#ffffff" },
+    { quote: "As a healthcare brand, we needed a clearer way to understand why we were not being surfaced or cited consistently in AI search. GrowthMonk's healthcare-focused Growth Engine gave us a practical roadmap across website structure, schema, and discoverability, with recommendations grounded in Google and Schema.org guidance. It helped us move from guesswork to clear, actionable fixes our team could implement.", company: "Valeo Health", logo: "/images/logo-valeo-health.png", logoBg: "#F5A623" },
   ];
   return (
     <section style={{ backgroundColor: "#030712", position: "relative", overflow: "hidden" }} className="px-6 py-20" aria-labelledby="testimonials-heading">
@@ -297,7 +297,6 @@ function Testimonials({ t }: { t: Translations }) {
                 </div>
                 <div>
                   <div style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{te.company}</div>
-                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}><span>{te.flag}</span><span>{te.country}</span></div>
                 </div>
               </div>
               <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, lineHeight: 1.75, fontWeight: 500, margin: 0, position: "relative", zIndex: 1 }}>&ldquo;{te.quote}&rdquo;</p>
