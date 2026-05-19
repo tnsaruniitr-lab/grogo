@@ -97,7 +97,7 @@ const jsonLd = {
       ],
       contactPoint: {
         "@type": "ContactPoint",
-        email: "hello@answermonk.ai",
+        email: "hello@growthmonk.ai",
         contactType: "customer support",
       },
       knowsAbout: [

@@ -363,7 +363,7 @@ function CTASection({ t }: { t: Translations }) {
             <h2 id="cta-heading" className="mb-4 text-4xl font-extrabold text-white md:text-5xl">{t.cta.heading}</h2>
             <p className="mx-auto mb-8 max-w-xl text-lg text-green-100/70">{t.cta.sub}</p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <a href="mailto:hello@answermonk.ai?subject=GrowthMonk Demo Request" className="inline-flex items-center gap-2 rounded-full bg-green-500 px-8 py-3.5 font-semibold text-white shadow-lg shadow-green-900/50 transition-all hover:bg-green-400">
+              <a href="mailto:hello@growthmonk.ai?subject=GrowthMonk Demo Request" className="inline-flex items-center gap-2 rounded-full bg-green-500 px-8 py-3.5 font-semibold text-white shadow-lg shadow-green-900/50 transition-all hover:bg-green-400">
                 {t.cta.button}<ArrowRight className="h-4 w-4" />
               </a>
             </div>
@@ -399,10 +399,16 @@ function Footer({ t }: { t: Translations }) {
               <li><a href="#how-it-works" className="transition-colors hover:text-gray-300">{t.footer.howItWorks}</a></li>
               <li><a href="#industries" className="transition-colors hover:text-gray-300">{t.footer.industries}</a></li>
               <li><a href="#faq" className="transition-colors hover:text-gray-300">{t.footer.faq}</a></li>
-              <li><a href="mailto:hello@answermonk.ai" className="transition-colors hover:text-gray-300">{t.footer.contact}</a></li>
+              <li><a href="mailto:hello@growthmonk.ai" className="transition-colors hover:text-gray-300">{t.footer.contact}</a></li>
+              <li><a href="/privacy-policy" className="transition-colors hover:text-gray-300">Privacy</a></li>
+              <li><a href="/terms" className="transition-colors hover:text-gray-300">Terms</a></li>
+              <li><a href="/data-deletion" className="transition-colors hover:text-gray-300">Data Deletion</a></li>
             </ul>
           </nav>
-          <p className="text-sm text-gray-600">© {new Date().getFullYear()} GrowthMonk by AnswerMonk.ai</p>
+          <div className="text-right text-sm text-gray-600">
+            <p>© {new Date().getFullYear()} GrowthMonk</p>
+            <p className="text-xs mt-0.5">Operated by Dreamport Pvt Ltd</p>
+          </div>
         </div>
       </div>
     </footer>

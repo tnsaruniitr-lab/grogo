@@ -1,0 +1,83 @@
+Phase 1 — Prepare legal and brand basics
+
+Before creating or verifying anything on Meta, prepare these.
+
+Legal/business documents
+
+Collect:
+
+Dreamport Pvt Ltd registration certificate
+PAN
+GST details, if applicable
+Business address proof
+Business phone number
+Business email, ideally: hello@growthmonk.ai
+Website: https://growthmonk.ai
+Website pages required
+
+Create these pages on GrowthMonk:
+
+1. Privacy Policy page
+
+URL suggestion:
+
+https://growthmonk.ai/privacy-policy
+
+Must mention:
+
+What data GrowthMonk collects
+WhatsApp / Instagram / Facebook message data handling
+Lead data handling
+How users can request deletion
+Contact email
+Dreamport Pvt Ltd as operator
+
+Suggested footer/entity line:
+
+GrowthMonk is operated by Dreamport Pvt Ltd.
+
+2. Terms of Service page
+
+URL suggestion:
+
+https://growthmonk.ai/terms
+
+Must mention:
+
+GrowthMonk provides AI search visibility, lead capture, CRM, WhatsApp/Instagram automation, and support automation services
+Clients are responsible for having permission to message their users
+GrowthMonk does not own client customer data
+Usage must comply with Meta, WhatsApp, Instagram, and applicable data/privacy rules
+Dreamport Pvt Ltd as legal operator
+3. Data Deletion Instructions page
+
+URL suggestion:
+
+https://growthmonk.ai/data-deletion
+
+Must mention:
+
+Users/clients can request deletion by emailing hello@growthmonk.ai
+Data deletion request should include business name, connected account, and email/phone
+GrowthMonk will delete stored account tokens, lead records, message logs, and related connected account data where applicable
+Give a reasonable deletion timeline, for example 7–30 days
+4. Contact page
+
+URL suggestion:
+
+https://growthmonk.ai/contact
+
+Must include:
+
+Business name: Dreamport Pvt Ltd
+Brand: GrowthMonk
+Email: hello@growthmonk.ai
+Business address, if comfortable/public
+Support contact
+Footer text to add across website
+
+Use this:
+
+GrowthMonk is operated by Dreamport Pvt Ltd.
+
+This reduces mismatch risk because Meta will see Dreamport as the business owner and GrowthMonk as the brand/app.
