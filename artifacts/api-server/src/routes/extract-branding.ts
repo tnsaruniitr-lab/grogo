@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ExtractBrandingBody } from "@workspace/api-zod";
+import { isPrivateHost } from "../lib/ssrf-guard";
 
 const router: IRouter = Router();
 
@@ -12,7 +13,12 @@ router.post("/admin/extract-branding", async (req: Request, res: Response) => {
 
   const { url } = parsed.data;
 
-  const baseUrl = new URL(url);
+  let baseUrl: URL;
+  try { baseUrl = new URL(url); } catch { res.status(400).json({ error: "Invalid URL" }); return; }
+  if (!["http:", "https:"].includes(baseUrl.protocol)) { res.status(400).json({ error: "Only http/https URLs allowed" }); return; }
+  if (isPrivateHost(baseUrl.hostname)) { res.status(400).json({ error: "Private/internal URLs are not allowed" }); return; }
+
+  // (baseUrl already parsed above — reuse below)
   const hostname = baseUrl.hostname.replace(/^www\./, "");
 
   const slugFromHost = hostname

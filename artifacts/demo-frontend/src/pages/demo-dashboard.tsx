@@ -62,6 +62,15 @@ export default function DemoDashboardPage() {
   });
   useEffect(() => () => { setDemoToken(null); }, []);
 
+  // Keep demo dashboards out of search indexes (belt-and-suspenders — robots.txt also disallows)
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
+  }, []);
+
   useEffect(() => {
     if (!slug) return;
     fetch(`/api/clients/${slug}/branding`)

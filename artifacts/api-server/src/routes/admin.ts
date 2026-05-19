@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomBytes } from "crypto";
 import { requireDashboardAuth } from "../lib/dashboard-auth";
+import { isPrivateHost } from "../lib/ssrf-guard";
 import { db } from "@workspace/db";
 import { clientsTable, companyKnowledgeTable, clientProfilesTable } from "@workspace/db";
 import { eq, isNull, and, inArray, asc, desc, ne } from "drizzle-orm";
@@ -850,6 +851,7 @@ router.get("/admin/site-proxy", async (req: Request, res: Response) => {
   let target: URL;
   try { target = new URL(raw); } catch { res.status(400).send("Invalid url"); return; }
   if (!["http:", "https:"].includes(target.protocol)) { res.status(400).send("Only http/https"); return; }
+  if (isPrivateHost(target.hostname)) { res.status(400).send("Private/internal URLs are not allowed"); return; }
 
   try {
     const upstream = await fetch(target.href, {

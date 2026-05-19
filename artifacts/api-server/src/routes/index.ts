@@ -20,7 +20,6 @@ router.use(webhookRouter);           // Twilio: signature-validated internally
 router.use(respondRouter);           // Respond.io: API-key-validated internally
 router.use(respondEventsRouter);     // Respond.io events: API-key-validated internally
 router.use(manychatRouter);          // ManyChat: x-api-key-validated internally
-router.use(extractBrandingRouter);   // Public URL fetcher — no DB access, no auth needed
 router.use(adminRouter);             // /clients/* public; /admin/* protected internally
 
 // Protected — Basic Auth OR per-client demo token (GET-only for demo access)
@@ -32,5 +31,6 @@ router.use(dashboardRouter);
 router.use(requireDashboardAuth);
 router.use(crawlRouter);
 router.use(storageRouter);
+router.use(extractBrandingRouter);   // Admin: SSRF-guarded URL fetcher — behind Basic Auth
 
 export default router;

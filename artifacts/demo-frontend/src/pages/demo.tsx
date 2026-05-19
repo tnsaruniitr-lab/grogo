@@ -211,6 +211,7 @@ export default function DemoPage() {
       if (!el) { el = document.createElement("meta"); el.setAttribute("property", prop); document.head.appendChild(el); }
       el.content = content;
     };
+    setMeta("robots", "noindex, nofollow");
     setMeta("description", `${branding.companyName} — AI WhatsApp bot. ${branding.tagline ?? ""}`);
     setOg("og:title", `${branding.companyName} — AI WhatsApp Bot`);
     setOg("og:description", branding.tagline ?? `AI-powered WhatsApp bot for ${schemaType}`);
