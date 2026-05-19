@@ -334,7 +334,7 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
 
   const raw = client.branding.twilioSender ?? "";
   const digits = raw.replace("whatsapp:", "").replace(/^\+/, "");
-  const waNumber = digits || "15677496169";
+  const waNumber = digits || "15558085030";
   const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(welcomeText)}`;
   const origin = window.location.origin;
   const manychatWebhook = `${origin}/api/webhook/manychat/${client.slug}`;
@@ -573,7 +573,7 @@ function BrandCard({
 
   const waDigits = (client.branding.twilioSender ?? "")
     .replace(/^whatsapp:/i, "")
-    .replace(/[^0-9]/g, "") || "15677496169";
+    .replace(/[^0-9]/g, "") || "15558085030";
   const waMessage =
     client.branding.defaultMessage ??
     `[${client.slug}] Hi! I'm interested in your services 👋`;
