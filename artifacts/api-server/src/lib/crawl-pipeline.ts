@@ -1,5 +1,5 @@
 import { db } from "@workspace/db";
-import { crawlJobsTable, crawlPagesTable, companyKnowledgeTable } from "@workspace/db";
+import { crawlJobsTable, crawlPagesTable, companyKnowledgeTable, clientsTable } from "@workspace/db";
 import { eq, and, inArray, desc } from "drizzle-orm";
 import { fetchPage, fetchRobotsTxt, fetchSitemapUrls, isAllowed, withLiveQueue } from "./crawler";
 import { extractKnowledge, deduplicateItems } from "./extractor";
@@ -68,6 +68,17 @@ export async function runCrawlPipeline(
   const MAX_PAGES = settings.maxPagesPerCrawl;
   const CONCURRENCY = settings.crawlConcurrency;
   const isV2 = (jobRow?.extractorVersion ?? settings.extractorVersion) === "v2";
+
+  // Resolve which languages this client wants — only extract facts in those languages
+  const [clientRow] = await db
+    .select({ languagePrimary: clientsTable.languagePrimary, languageSecondary: clientsTable.languageSecondary })
+    .from(clientsTable)
+    .where(eq(clientsTable.id, clientId))
+    .limit(1);
+
+  const allowedLanguages = new Set<string>(
+    [clientRow?.languagePrimary, clientRow?.languageSecondary].filter(Boolean) as string[],
+  );
 
   const log = logger.child({ clientId, jobId, extractorVersion: isV2 ? "v2" : "v1" });
   log.info({ websiteUrl }, "Crawl pipeline starting");
@@ -231,7 +242,10 @@ export async function runCrawlPipeline(
         let uniqueLength = 0;
         if (isV2) {
           const v2Items = await extractKnowledgeV2(result.text, url);
-          const unique = deduplicateV2Items(v2Items);
+          const deduped = deduplicateV2Items(v2Items);
+          const unique = deduped.filter((item) => allowedLanguages.has(item.language));
+          const filtered = deduped.length - unique.length;
+          if (filtered > 0) log.info({ url, filtered, allowedLanguages: [...allowedLanguages] }, "Language filter dropped items");
           uniqueLength = unique.length;
 
           if (unique.length > 0) {
@@ -264,7 +278,10 @@ export async function runCrawlPipeline(
           }
         } else {
           const items = await extractKnowledge(result.text, url);
-          const unique = deduplicateItems(items);
+          const deduped = deduplicateItems(items);
+          const unique = deduped.filter((item) => allowedLanguages.has(item.language));
+          const filtered = deduped.length - unique.length;
+          if (filtered > 0) log.info({ url, filtered, allowedLanguages: [...allowedLanguages] }, "Language filter dropped items");
           uniqueLength = unique.length;
 
           if (unique.length > 0) {
