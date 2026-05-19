@@ -46,6 +46,7 @@ externalPort = 3000
 [userenv]
 
 [userenv.development]
+TWILIO_SANDBOX = "true"
 
 [userenv.shared]
 TWILIO_DEFAULT_SENDER = "whatsapp:+15558085030"
