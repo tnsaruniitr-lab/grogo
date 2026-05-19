@@ -58,6 +58,8 @@ export interface GptCallParams {
   conversationHistory: ConversationMessage[];
   userMessage: string;
   profile: BotProfile;
+  model?: string;
+  mustNotClaim?: string[];
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {
@@ -100,6 +102,7 @@ function buildSystemPrompt(
   callbackHours: string,
   knowledgeChunks: { question: string; answer: string }[],
   profile: BotProfile,
+  mustNotClaim: string[],
 ): string {
   const knowledgeSection =
     knowledgeChunks.length > 0
@@ -179,7 +182,11 @@ ${dataFieldLines},
   "intent": "<qualify|info_request|book_callback|request_call_now|escalate_human|out_of_scope>"
 }
 
-Callback hours: ${callbackHours}`;
+Callback hours: ${callbackHours}${
+    mustNotClaim.length > 0
+      ? `\n\n## Must Not Claim\nNEVER state or imply any of the following — they are unverified or incorrect for this business:\n${mustNotClaim.map((c, i) => `${i + 1}. ${c}`).join("\n")}`
+      : ""
+  }`;
 }
 
 const FALLBACK_REPLIES: Record<string, string> = {
@@ -189,10 +196,10 @@ const FALLBACK_REPLIES: Record<string, string> = {
 };
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
-  const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile } =
+  const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile, model, mustNotClaim } =
     params;
 
-  const systemPrompt = buildSystemPrompt(language, clientName, callbackHours, knowledgeChunks, profile);
+  const systemPrompt = buildSystemPrompt(language, clientName, callbackHours, knowledgeChunks, profile, mustNotClaim ?? []);
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
@@ -202,7 +209,7 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: model ?? "gpt-4o-mini",
       max_completion_tokens: 1024,
       messages,
       response_format: { type: "json_object" },

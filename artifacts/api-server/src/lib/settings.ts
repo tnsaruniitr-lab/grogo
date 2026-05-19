@@ -62,6 +62,21 @@ const ALLOWED_MODELS = [
   "o3-mini",
   "o3",
   "o4-mini",
+  "gpt-4.1-nano",
+  "gpt-4.1-mini",
+  "gpt-4.1",
+  "gpt-4.5",
+  "gpt-5.4-nano",
+  "gpt-5.4-mini",
+  "gpt-5.4",
+  "gpt-5.4-pro",
+  "gpt-5.5",
+  "gpt-5.5-pro",
+  "gpt-5.3-codex",
+  "chat-latest",
+  "o4-mini-deep-research",
+  "o3-deep-research",
+  "computer-use-preview",
 ] as const;
 
 export const ALLOWED_MODEL_VALUES = ALLOWED_MODELS as unknown as string[];

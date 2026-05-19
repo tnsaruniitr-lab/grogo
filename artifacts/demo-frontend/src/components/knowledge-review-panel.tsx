@@ -260,7 +260,7 @@ function EntryRow({
       </div>
 
       {expanded && (
-        <div className="px-8 pb-3 pt-0">
+        <div className="px-8 pb-3 pt-0 space-y-2">
           {editing ? (
             <div className="space-y-2">
               <Textarea
@@ -286,6 +286,29 @@ function EntryRow({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{entry.answer}</p>
+          )}
+          {/* V2 evidence & risk fields */}
+          {(entry as KnowledgeEntry & { evidenceQuote?: string | null; sourceSection?: string | null; reviewKey?: string | null; riskFlags?: string | null }).evidenceQuote && (
+            <div className="rounded bg-amber-50 border border-amber-200 px-2.5 py-1.5">
+              <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-0.5">Evidence quote</p>
+              <p className="text-xs text-amber-900 italic leading-relaxed">"{(entry as KnowledgeEntry & { evidenceQuote?: string | null }).evidenceQuote}"</p>
+            </div>
+          )}
+          {(entry as KnowledgeEntry & { riskFlags?: string | null }).riskFlags && (
+            <div className="rounded bg-red-50 border border-red-200 px-2.5 py-1.5 flex flex-wrap gap-1">
+              <p className="text-[10px] font-semibold text-red-700 uppercase tracking-wide w-full mb-0.5">Risk flags</p>
+              {((entry as KnowledgeEntry & { riskFlags?: string | null }).riskFlags ?? "").split(",").filter(Boolean).map((f) => (
+                <span key={f} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-700">{f.trim()}</span>
+              ))}
+            </div>
+          )}
+          {(entry as KnowledgeEntry & { reviewKey?: string | null; sourceSection?: string | null }).reviewKey && (
+            <div className="flex gap-3 text-[10px] text-muted-foreground">
+              <span>Review key: <span className="font-mono">{(entry as KnowledgeEntry & { reviewKey?: string | null }).reviewKey}</span></span>
+              {(entry as KnowledgeEntry & { sourceSection?: string | null }).sourceSection && (
+                <span>Section: {(entry as KnowledgeEntry & { sourceSection?: string | null }).sourceSection}</span>
+              )}
+            </div>
           )}
         </div>
       )}

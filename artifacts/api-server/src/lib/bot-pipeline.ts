@@ -6,6 +6,7 @@ import {
   appointmentsTable,
   jobQueueTable,
   botProfilesTable,
+  clientProfilesTable,
   type Client,
   type Lead,
   type BotProfile,
@@ -13,6 +14,7 @@ import {
 import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { logger } from "./logger";
 import { retrieveKnowledge } from "./knowledge";
+import { getSettings } from "./settings";
 import {
   callGpt,
   type BotResponse,
@@ -432,6 +434,30 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   // 5. Knowledge retrieval
   const knowledgeChunks = await retrieveKnowledge(clientRecord.id, language, userMessage);
 
+  // 5a. Load system settings (live chat model) and active client profile (mustNotClaim)
+  const [settings, activeProfiles] = await Promise.all([
+    getSettings(),
+    db
+      .select({ profile: clientProfilesTable.profile })
+      .from(clientProfilesTable)
+      .where(and(eq(clientProfilesTable.clientId, clientRecord.id), eq(clientProfilesTable.status, "active")))
+      .orderBy(desc(clientProfilesTable.activatedAt))
+      .limit(1),
+  ]);
+
+  let mustNotClaim: string[] = [];
+  if (activeProfiles.length > 0) {
+    try {
+      const parsed = JSON.parse(activeProfiles[0]!.profile) as Record<string, unknown>;
+      const mnc = parsed["mustNotClaim"];
+      if (mnc && typeof mnc === "object" && Array.isArray((mnc as Record<string, unknown>)["value"])) {
+        mustNotClaim = ((mnc as Record<string, unknown>)["value"] as unknown[]).filter((v): v is string => typeof v === "string");
+      }
+    } catch {
+      // ignore malformed profile JSON
+    }
+  }
+
   // 6. GPT call
   const botResponse = await callGpt({
     language,
@@ -441,6 +467,8 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     conversationHistory,
     userMessage,
     profile,
+    model: settings.liveChatModel,
+    mustNotClaim,
   });
 
   // 6a. Backend post-validation: if knowledge base is empty and GPT did not

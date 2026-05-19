@@ -394,6 +394,11 @@ router.get("/admin/clients/:slug/knowledge/review", async (req: Request, res: Re
       sourceUrl: companyKnowledgeTable.sourceUrl,
       approvalStatus: companyKnowledgeTable.approvalStatus,
       createdAt: companyKnowledgeTable.createdAt,
+      crawlJobId: companyKnowledgeTable.crawlJobId,
+      reviewKey: companyKnowledgeTable.reviewKey,
+      evidenceQuote: companyKnowledgeTable.evidenceQuote,
+      sourceSection: companyKnowledgeTable.sourceSection,
+      riskFlags: companyKnowledgeTable.riskFlags,
     })
     .from(companyKnowledgeTable)
     .where(eq(companyKnowledgeTable.clientId, client.id))
@@ -724,24 +729,54 @@ router.post("/admin/clients/:slug/knowledge/activate", async (req: Request, res:
     .set({ approvalStatus: "approved" })
     .where(inArray(companyKnowledgeTable.id, pendingIds));
 
-  if (profileId) {
+  // Activate profile: use explicit profileId if given, otherwise auto-find the
+  // most recent pending profile for this crawl job.
+  let resolvedProfileId = profileId ?? null;
+  if (!resolvedProfileId) {
+    const [latestProfile] = await db
+      .select({ id: clientProfilesTable.id })
+      .from(clientProfilesTable)
+      .where(
+        and(
+          eq(clientProfilesTable.clientId, client.id),
+          eq(clientProfilesTable.crawlJobId, crawlJobId),
+          eq(clientProfilesTable.status, "pending"),
+        ),
+      )
+      .orderBy(desc(clientProfilesTable.createdAt))
+      .limit(1);
+    resolvedProfileId = latestProfile?.id ?? null;
+  }
+
+  if (resolvedProfileId) {
+    // Archive any currently active profiles for this client first
+    await db
+      .update(clientProfilesTable)
+      .set({ status: "archived" })
+      .where(
+        and(
+          eq(clientProfilesTable.clientId, client.id),
+          eq(clientProfilesTable.status, "active"),
+        ),
+      );
+    // Activate the new profile
     await db
       .update(clientProfilesTable)
       .set({ status: "active", activatedAt: new Date() })
       .where(
         and(
-          eq(clientProfilesTable.id, profileId),
+          eq(clientProfilesTable.id, resolvedProfileId),
           eq(clientProfilesTable.clientId, client.id),
         ),
       );
   }
 
   req.log.info(
-    { clientId: client.id, crawlJobId, approvedCount: pendingIds.length, profileId },
+    { clientId: client.id, crawlJobId, approvedCount: pendingIds.length, profileId: resolvedProfileId },
     "Knowledge activation complete",
   );
 
-  res.json({ approvedCount: pendingIds.length, profileId: profileId ?? null });
+  res.json({ approvedCount: pendingIds.length, profileId: resolvedProfileId ?? null });
 });
 
 function buildBranding(client: typeof clientsTable.$inferSelect) {
