@@ -100,7 +100,7 @@ const jsonLd = {
         contactType: "customer support",
       },
       knowsAbout: [
-        "AI marketing automation",
+        "WhatsApp Business API integration",
         "Healthcare lead generation",
         "WhatsApp chatbots",
         "Answer Engine Optimization",

@@ -88,26 +88,36 @@ export default function PrivacyPolicyPage() {
         Platform Terms and applicable data use policies.
       </p>
 
-      <h2>5. AI Sub-Processors</h2>
+      <h2>5. Sub-Processors</h2>
       <p>
-        To generate AI responses to WhatsApp, Instagram, and Facebook messages, GrowthMonk
-        transmits message content to the following third-party AI service provider acting as
-        a sub-processor:
+        To deliver the GrowthMonk service, message content is transmitted to the following
+        third-party sub-processors. Each sub-processor is bound by contractual data protection
+        obligations and may only process data for the purposes listed below:
       </p>
       <ul>
         <li>
-          <strong>OpenAI, L.L.C.</strong> — message text is sent to OpenAI's API (GPT-4o-mini
-          model) solely to generate a conversational response. OpenAI does not retain this
-          data for model training under its API data usage policy. For details, see{" "}
+          <strong>Twilio Inc.</strong> (San Francisco, CA, USA) — GrowthMonk uses Twilio as
+          its WhatsApp Business API carrier. Inbound and outbound WhatsApp messages are routed
+          through Twilio's infrastructure. Twilio processes phone numbers and message content
+          solely to deliver messages between end users and the GrowthMonk platform. For details,
+          see{" "}
+          <a href="https://www.twilio.com/en-us/legal/privacy" target="_blank" rel="noopener noreferrer">
+            Twilio Privacy Policy
+          </a>.
+        </li>
+        <li>
+          <strong>OpenAI, L.L.C.</strong> (San Francisco, CA, USA) — message text is sent to
+          OpenAI's API (GPT-4o-mini model) solely to generate a conversational response. OpenAI
+          does not retain this data for model training under its API data usage policy. For
+          details, see{" "}
           <a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer">
             OpenAI API Data Usage Policies
           </a>.
         </li>
       </ul>
       <p>
-        No other third parties receive the content of user messages. Message content is never
-        sold, shared for advertising, or used for any purpose other than generating a response
-        to the user.
+        Message content is never sold, shared for advertising, or used for any purpose other
+        than delivering and generating a response to the user.
       </p>
 
       <h2>6. Lead Data Handling</h2>
