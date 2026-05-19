@@ -233,3 +233,9 @@ id = "8nz8bhkD-FsQnANbWndo2"
 uri = "file://attached_assets/generated_images/hero-replacement-frame.png"
 type = "image"
 title = "Replacement video concept — medspa facial treatment"
+
+[[outputs]]
+id = "8om-2A5IX8GGK_JK8Ar63"
+uri = "file://exports/carecompass-knowledge-brief.md"
+type = "text"
+title = "CareCompass Knowledge Base Brief"
