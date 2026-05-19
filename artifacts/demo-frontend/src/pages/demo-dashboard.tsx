@@ -14,7 +14,7 @@ import {
 import type { LeadDetail } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { de, tr, enUS } from "date-fns/locale";
+import { de, tr, enUS, arSA } from "date-fns/locale";
 import {
   Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall, Loader2,
 } from "lucide-react";
@@ -42,6 +42,7 @@ interface BrandingConfig {
 function getDateLocale(lang?: string | null) {
   if (lang === "tr") return tr;
   if (lang === "en") return enUS;
+  if (lang === "ar") return arSA;
   return de;
 }
 

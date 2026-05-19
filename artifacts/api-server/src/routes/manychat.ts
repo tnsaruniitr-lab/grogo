@@ -27,22 +27,25 @@ const GENERIC_PROFILE: BotProfile = {
     de: '"Wann kann ich einen Rückruf für Sie einrichten? Heute oder morgen, vormittags oder nachmittags?"',
     tr: '"Sizi ne zaman geri arayalım? Bugün mü yarın mı — sabah mı öğleden sonra mı?"',
     en: '"When would be a good time for a callback? Today or tomorrow — morning or afternoon?"',
+    ar: '"متى يمكنني ترتيب معاودة الاتصال لك؟ اليوم أم غداً — صباحاً أم مساءً؟"',
   },
   gdprAllowedFields: {
     de: "Name, Stadt, allgemeines Anliegen, bevorzugte Rückrufzeit",
     tr: "İsim, şehir, genel kaygı, tercih edilen geri arama zamanı",
     en: "Name, city, general enquiry, preferred callback time",
+    ar: "الاسم، المدينة، الاستفسار العام، وقت المعاودة المفضل",
   },
   gdprRedirect: {
     de: "Sensitive Details besprechen wir gerne persönlich",
     tr: "Hassas detayları şahsen konuşabiliriz",
     en: "We'd be happy to discuss sensitive details in person",
+    ar: "يسعدنا مناقشة التفاصيل الحساسة شخصياً",
   },
   dataFields: [
-    { key: "name", label: { de: "Name", tr: "İsim", en: "Name" } },
-    { key: "careType", label: { de: "Art des Anliegens", tr: "Kaygı türü", en: "Nature of enquiry" } },
-    { key: "city", label: { de: "Stadt oder Region", tr: "Şehir veya bölge", en: "City or region" } },
-    { key: "preferredTime", label: { de: "Bevorzugte Rückrufzeit", tr: "Tercih edilen geri arama zamanı", en: "Preferred callback time" } },
+    { key: "name", label: { de: "Name", tr: "İsim", en: "Name", ar: "الاسم" } },
+    { key: "careType", label: { de: "Art des Anliegens", tr: "Kaygı türü", en: "Nature of enquiry", ar: "طبيعة الاستفسار" } },
+    { key: "city", label: { de: "Stadt oder Region", tr: "Şehir veya bölge", en: "City or region", ar: "المدينة أو المنطقة" } },
+    { key: "preferredTime", label: { de: "Bevorzugte Rückrufzeit", tr: "Tercih edilen geri arama zamanı", en: "Preferred callback time", ar: "وقت المعاودة المفضل" } },
   ],
   outOfScopeTopics: "medical diagnoses, legal advice, financial advice, emergency situations",
   createdAt: new Date(),
@@ -69,6 +72,11 @@ function detectExplicitSwitch(text: string, currentLanguage: string): string | n
       /\b(türkçe|türkce|speak\s+turkish|in\s+turkish|türkçe\s+lütfen|can\s+(you|u)\s+(speak|write|use)\s+turkish)\b/.test(t);
     if (wantsTr) return "tr";
   }
+  if (currentLanguage !== "ar") {
+    const wantsAr =
+      /\b(بالعربي|بالعربية|speak\s+arabic|in\s+arabic|arabic\s+please|can\s+(you|u)\s+(speak|write|use)\s+arabic|switch\s+to\s+arabic|change\s+to\s+arabic)\b/.test(t);
+    if (wantsAr) return "ar";
+  }
   return null;
 }
 
@@ -84,6 +92,11 @@ function detectLanguage(text: string, clientPrimary: string, clientSecondary?: s
   const germanChars = /[äöüÄÖÜß]/;
   const hasGerman = germanPatterns.test(text) || germanChars.test(text);
   if (hasGerman && (clientPrimary === "de" || clientSecondary === "de")) return "de";
+
+  const arabicScript = /[\u0600-\u06FF]/;
+  if (arabicScript.test(text) && (clientPrimary === "ar" || clientSecondary === "ar")) {
+    return "ar";
+  }
 
   const englishPatterns =
     /\b(hello|hi there|hey|what|which|how|when|where|services|provide|cost|price|available|appointment|book|treatment|help|please|thanks|thank you|yes|no|okay|can you|do you|are you|i am|i'm|i have|i want|i need|i would|we are|we have|would like|could you|is there|do you have|tell me|more info|information|website|contact|number|email)\b/i;

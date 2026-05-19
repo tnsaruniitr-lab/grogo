@@ -89,6 +89,7 @@ function langLabel(language: string): string {
 function noKnowledgePlaceholder(language: string): string {
   if (language === "de") return "Keine spezifischen Informationen verfügbar. Biete einen Rückruf an.";
   if (language === "tr") return "Belirli bilgi mevcut değil. Geri arama teklif et.";
+  if (language === "ar") return "لا تتوفر معلومات محددة. اعرض معاودة الاتصال بدفء.";
   return "No specific information available. Warmly offer a callback.";
 }
 

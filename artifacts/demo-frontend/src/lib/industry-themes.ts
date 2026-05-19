@@ -985,5 +985,6 @@ export type ThemeLang = "de" | "en" | "tr";
 
 export function getLang(demoLanguage?: string | null): ThemeLang {
   const l = demoLanguage ?? "de";
+  if (l === "ar") return "en";
   return (["de", "en", "tr"].includes(l) ? l : "de") as ThemeLang;
 }

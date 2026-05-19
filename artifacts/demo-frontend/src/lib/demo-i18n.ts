@@ -1,4 +1,4 @@
-export type DemoLang = "de" | "tr" | "en";
+export type DemoLang = "de" | "tr" | "en" | "ar";
 
 export interface DemoT {
   nav: { overview: string; dashboard: string; back: string };
@@ -232,7 +232,66 @@ const en: DemoT = {
   selectStatus: { new: "New", qualified: "Qualified", callback_booked: "Callback booked", escalated: "Escalated", needs_human: "Needs agent", converted: "Won", archived: "Archived" },
 };
 
-const translations: Record<DemoLang, DemoT> = { de, tr, en };
+const ar: DemoT = {
+  nav: { overview: "نظرة عامة", dashboard: "لوحة البيانات", back: "الإدارة" },
+  notFound: { title: "العرض التجريبي غير موجود", desc: "هذا الرابط التجريبي غير صالح أو تم حذفه.", back: "رجوع" },
+  badge: "التواصل في الرعاية بالذكاء الاصطناعي",
+  botStatus: "المساعد الذكي · متصل",
+  defaultTagline: "متاحون على مدار الساعة، نجيب على أسئلتكم ونحجز المواعيد.",
+  defaultSubtitle: "متاحون على مدار الساعة، نجيب على أسئلتكم ونحجز المواعيد.",
+  ctaPrimary: "طلب استشارة",
+  ctaSecondary: "معرفة المزيد",
+  features: ["متاح 24/7", "ردود فورية", "حجز مواعيد سهل"],
+  teamLabel: "فريقنا",
+  teamSub: "مؤهلون وعطوفون",
+  servicesTitle: "خدماتنا",
+  servicesSubtitle: "خدمات رعاية احترافية وعطوفة تدعم الاستقلالية والكرامة في المنزل.",
+  services: [
+    { title: "الرعاية المنزلية", desc: "رعاية طبية وتمريضية في منزلك. مألوفة وآمنة ومحترمة." },
+    { title: "رعاية 24 ساعة", desc: "رعاية على مدار الساعة لضمان أقصى درجات الأمان والراحة في المنزل." },
+    { title: "بيت رعاية الخرف", desc: "بيئة منزلية دافئة لمرضى الخرف مع طاقم عمل ناطق بالعربية على مدار الساعة." },
+  ],
+  infoTitle: "الأمان من خلال القرب الثقافي",
+  infoBody: "للأشخاص المصابين بالخرف، اللغة الأم والبيئة الثقافية المألوفة أمران ضروريان. نحن نخلق منزلاً يوفر ذلك بالضبط.",
+  infoPoints: ["مقدمو رعاية مؤهلون وموثوقون", "جداول رعاية مرنة", "تحديثات منتظمة للأسرة", "ساعات زيارة مناسبة للأسرة"],
+  infoButton: "الاستفسار عن التوفر",
+  aboutTitle: (n) => `عن ${n}`,
+  aboutBody: "فريقنا من المحترفين ذوي الخبرة ملتزم بتقديم نتائج استثنائية ورعاية مخصصة وأحدث التقنيات لراحتكم ورضاكم التام.",
+  aboutStats: [["500+", "عميل سعيد"], ["10+", "سنوات خبرة"], ["4.9 ★", "تقييم"]],
+  navServices: "الخدمات",
+  navWebsite: "زيارة الموقع",
+  howTitle: (n) => `${n}: متاح على مدار الساعة`,
+  howSubtitle: "راسلنا في أي وقت على واتساب واحصل على رد في ثوانٍ. أسئلة تُجاب، مواعيد تُحجز.",
+  steps: [
+    { title: "استلام الرسالة", desc: "يرسل شخص ما رسالة إلى خط الرعاية الخاص بك على واتساب." },
+    { title: "الذكاء الاصطناعي يؤهل", desc: "تم اكتشاف اللغة، وتحديد الاحتياجات، وإنشاء رد من قاعدة معرفتك." },
+    { title: "حجز الموعد", desc: "تم جدولة المعاودة تلقائياً، ويجد فريقك العميل المحتمل مؤهلاً بالكامل في لوحة البيانات." },
+  ],
+  ctaTitle: (n) => `احجز استشارتك في ${n}`,
+  ctaSubtitle: "يستجيب فريقنا في ثوانٍ، نهاراً أو ليلاً. فقط راسلنا على واتساب للبدء.",
+  ctaButton: "احجز استشارة",
+  botMessages: [
+    { from: "bot", text: "مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟" },
+    { from: "user", text: "أبحث عن رعاية لوالدي، يحتاج مساعدة في أنشطته اليومية." },
+    { from: "bot", text: "يسعدني مساعدتك. كم عمر والدك وفي أي مدينة يقيم؟" },
+    { from: "user", text: "عمره 78 عاماً ويقيم في دبي." },
+    { from: "bot", text: "رائع! يمكنني ترتيب استشارة مجانية لك. متى يناسبك الوقت؟" },
+  ],
+  liveUpdate: "تحديثات مباشرة كل 10 ثوانٍ",
+  stats: { totalLeads: "إجمالي العملاء", newLeads: "جديد", callbacks: "معاودة الاتصال", bookedToday: "محجوز اليوم" },
+  table: { contact: "جهة الاتصال", language: "اللغة", status: "الحالة", source: "المصدر", lastActivity: "آخر نشاط", details: "التفاصيل", never: "أبداً" },
+  noLeads: { title: "لا يوجد عملاء بعد", desc: "بمجرد تفعيل الروبوت وبدء وصول رسائل واتساب، ستظهر العملاء هنا." },
+  leads: "العملاء الأخيرون",
+  detail: {
+    phone: "الهاتف", status: "الحالة", callbackPlanned: "المعاودة مجدولة", flexible: "الوقت مرن",
+    outcome: "النتيجة", aiSummary: "ملخص الذكاء الاصطناعي", noMessages: "لا توجد رسائل بعد",
+    unknownLead: "عميل مجهول", unknownContact: "مجهول",
+  },
+  statusLabels: { new: "جديد", qualified: "مؤهل", callback_booked: "معاودة اتصال", escalated: "تصعيد", needs_human: "يحتاج وكيل", converted: "فاز", archived: "مؤرشف" },
+  selectStatus: { new: "جديد", qualified: "مؤهل", callback_booked: "معاودة اتصال محجوزة", escalated: "تصعيد", needs_human: "يحتاج وكيل", converted: "فاز", archived: "مؤرشف" },
+};
+
+const translations: Record<DemoLang, DemoT> = { de, tr, en, ar };
 
 export function getDemoT(lang?: string | null): DemoT {
   const key = (lang ?? "de") as DemoLang;
@@ -243,4 +302,5 @@ export const LANG_OPTIONS: Array<{ value: DemoLang; label: string; flag: string 
   { value: "de", label: "German", flag: "🇩🇪" },
   { value: "tr", label: "Turkish", flag: "🇹🇷" },
   { value: "en", label: "English", flag: "🇬🇧" },
+  { value: "ar", label: "Arabic", flag: "🇸🇦" },
 ];
