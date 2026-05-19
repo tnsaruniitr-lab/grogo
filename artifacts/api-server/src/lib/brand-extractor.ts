@@ -110,37 +110,69 @@ function extractOgImage(html: string): string | null {
   );
 }
 
-function extractLogoUrl(html: string, baseUrl: string): string | null {
+function candidateLogoUrls(html: string, baseUrl: string): string[] {
   const base = new URL(baseUrl);
+  const origin = base.origin;
 
   const makeAbsolute = (href: string): string => {
-    try {
-      return new URL(href, base.origin).href;
-    } catch {
-      return href;
-    }
+    try { return new URL(href, origin).href; } catch { return href; }
   };
+
+  const urls: string[] = [];
 
   // 1. apple-touch-icon — high-res, brand-approved icon (180×180+)
   const appleTouch =
-    html.match(/<link[^>]+rel=["']apple-touch-icon["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
-    html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']apple-touch-icon["']/i)?.[1];
-  if (appleTouch) return makeAbsolute(appleTouch);
+    html.match(/<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*apple-touch-icon[^"']*["']/i)?.[1];
+  if (appleTouch) urls.push(makeAbsolute(appleTouch));
 
   // 2. SVG favicon — vector, scales perfectly
   const svgIcon =
     html.match(/<link[^>]+type=["']image\/svg\+xml["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
     html.match(/<link[^>]+href=["']([^"']+\.svg)["'][^>]+rel=["'][^"']*icon[^"']*["']/i)?.[1];
-  if (svgIcon) return makeAbsolute(svgIcon);
+  if (svgIcon) urls.push(makeAbsolute(svgIcon));
 
   // 3. Large PNG favicon (≥32px implied by sizes attribute)
   const pngIcon =
     html.match(/<link[^>]+sizes=["'](?:192|180|128|96|64|48|32)[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
     html.match(/<link[^>]+href=["']([^"']+)["'][^>]+sizes=["'](?:192|180|128|96|64|48|32)[^"']*["']/i)?.[1];
-  if (pngIcon) return makeAbsolute(pngIcon);
+  if (pngIcon) urls.push(makeAbsolute(pngIcon));
 
-  // 4. Clearbit logo API — reliable fallback given domain
-  return `https://logo.clearbit.com/${base.hostname}`;
+  // 4. Any icon link as last HTML candidate
+  const anyIcon =
+    html.match(/<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*icon[^"']*["']/i)?.[1];
+  if (anyIcon) urls.push(makeAbsolute(anyIcon));
+
+  // 5. Standard favicon.ico — nearly every site has this even without HTML declaration
+  urls.push(`${origin}/favicon.ico`);
+
+  // 6. Clearbit logo API — last resort
+  urls.push(`https://logo.clearbit.com/${base.hostname}`);
+
+  return [...new Set(urls)]; // deduplicate
+}
+
+async function findReachableLogoUrl(html: string, baseUrl: string, log: { info: (obj: Record<string, unknown>, msg?: string) => void; warn: (obj: Record<string, unknown> | string, msg?: string) => void }): Promise<string | null> {
+  const candidates = candidateLogoUrls(html, baseUrl);
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        method: "HEAD",
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; DosteliBrandBot/1.0)" },
+        signal: AbortSignal.timeout(5_000),
+      });
+      const ct = res.headers.get("content-type") ?? "";
+      if (res.ok && ct.startsWith("image/")) {
+        log.info({ url }, "Logo URL verified");
+        return url;
+      }
+    } catch {
+      // unreachable — try next
+    }
+  }
+  log.warn({ candidates }, "No reachable logo URL found");
+  return null;
 }
 
 export async function extractBrand(
@@ -166,7 +198,7 @@ export async function extractBrand(
         html = await res.text();
         metaColor = extractMetaColor(html) ?? extractCssVar(html);
         ogImage = extractOgImage(html);
-        logoUrl = extractLogoUrl(html, websiteUrl);
+        logoUrl = await findReachableLogoUrl(html, websiteUrl, log);
         log.info({ metaColor, hasOgImage: !!ogImage, logoUrl }, "HTML meta extraction done");
       }
     } catch (err) {
