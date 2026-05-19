@@ -1,0 +1,73 @@
+Findings
+
+Five-action taxonomy is still missing.
+artifacts/api-server/src/lib/gpt-service.ts still only supports book_callback, book_appointment, request_call_now, escalate_human, etc. There is no book_service, book_online_consultation, or book_walkin_consultation.
+
+Prompt is still a flat mapping, not a priority ladder.
+The current prompt says “general info → none”, “callback → book_callback”, “appointment → book_appointment”. It does not teach the bot: direct service booking first, consultation second, callback fallback, human transfer on explicit request. So GPT will still behave inconsistently.
+
+Appointments schema is too coarse.
+lib/db/src/schema/appointments.ts still has only callback and visit. There is no service_booking, online_consultation, walkin_consultation, and no serviceRequested column. So even if GPT chose better actions, the backend cannot store them cleanly yet.
+
+Pipeline execution still only handles two booking paths.
+artifacts/api-server/src/lib/bot-pipeline.ts inserts:
+
+book_callback → appointment type callback
+book_appointment → appointment type visit
+No direct service booking, no online consultation, no walk-in consultation.
+
+Asset sending exists, but it is prompt-dependent.
+Good news: assets are stored as company_knowledge rows with category = "asset", injected into RAG, and image/PDF assets can be sent again as WhatsApp media if the bot includes the URL in its reply.
+Weakness: the backend does not deterministically decide “user asked for price list → send best price PDF/image.” It relies on GPT including the exact asset URL. That is okay for v1, not “incredible powerful and strong.”
+
+Plan Evaluation
+The plan you pasted is directionally right, but I’d tighten it:
+
+Use exactly these five business actions:
+
+book_service
+book_online_consultation
+book_walkin_consultation
+book_callback
+escalate_human
+I would not keep request_call_now as a separate top-level commercial action unless you really need it. Better model it as:
+
+escalate_human + handoffReason: "urgent_call_now"
+or
+
+book_callback + urgency: "immediate"
+Otherwise the action system becomes seven actions again and loses clarity.
+
+What I Would Change
+
+Expand gpt-service.ts action/intent enums to the five-action ladder.
+Add structured data fields:
+serviceRequested
+appointmentDate
+appointmentTime
+consultationMode
+handoffReason
+requestedAssetType
+Rewrite the prompt around a priority ladder:
+If service + timing are clear → book_service
+If user wants advice/exploration → online or walk-in consultation
+If unclear after 2-3 turns → book_callback
+If user asks for a person → escalate_human
+Expand appointment types:
+callback
+service_booking
+online_consultation
+walkin_consultation
+Add serviceRequested to appointments.
+Add a backend asset resolver, not just prompt instructions:
+price query → price PDF/image
+demo query → Loom
+book query → Calendly/GMeet
+service-specific query → exact serviceContext asset first, generic asset second
+The current asset system is a good foundation. The missing piece is deterministic routing: GPT should explain and decide intent, but the backend should choose and send the right asset/action reliably. That’s the difference between “works in demos” and “strong in production.”
+
+
+
+
+
+19:15
