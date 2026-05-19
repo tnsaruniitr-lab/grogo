@@ -437,15 +437,15 @@ const wellnessTheme: IndustryTheme = {
 
 const careTheme: IndustryTheme = {
   heroHeadlineI18n: {
-    de: "Kultursensible Pflege zu Hause",
-    en: "Culturally Sensitive Home Care",
-    tr: "Kültüre Özgü Ev Bakımı",
+    de: "Einfühlsame Pflege, direkt bei Ihnen",
+    en: "Compassionate Care, Right at Home",
+    tr: "Şefkatli Bakım, Evinizde",
   },
   serviceIconNames: ["Home", "Heart", "Users"],
-  trustBadges: ["Qualified Carers", "24/7 Support", "Culturally Sensitive", "Fully Insured"],
+  trustBadges: ["Qualified Carers", "24/7 Support", "Personalised Care", "Fully Insured"],
   trustBadgesI18n: {
-    de: ["Zugelassener Pflegedienst", "24/7 Erreichbarkeit", "Kultursensible Pflege", "Geprüfte Pflegekräfte"],
-    tr: ["Onaylı Bakım Hizmeti", "7/24 Destek", "Kültürel Duyarlılık", "Denetlenmiş Personel"],
+    de: ["Zugelassener Pflegedienst", "24/7 Erreichbarkeit", "Individuelle Pflege", "Geprüfte Pflegekräfte"],
+    tr: ["Onaylı Bakım Hizmeti", "7/24 Destek", "Kişiselleştirilmiş Bakım", "Denetlenmiş Personel"],
   },
   cardStyle: "standard",
   botMessages: {
@@ -488,24 +488,24 @@ const careTheme: IndustryTheme = {
     tr: [["150+", "Bakım Alan"], ["30+", "Uzman"], ["10+", "Yıl"]],
   },
   servicesSubtitle: {
-    de: "Umfassende, kultursensible Pflegedienstleistungen für ein würdevolles Leben im Alter.",
-    en: "Comprehensive, culturally sensitive care services for a dignified life in old age.",
-    tr: "Yaşlı bireylerin onurlu bir yaşam sürmesi için kapsamlı, kültüre duyarlı bakım hizmetleri.",
+    de: "Professionelle, einfühlsame Pflegeleistungen für ein selbstbestimmtes und würdevolles Leben zu Hause.",
+    en: "Professional, compassionate care services that support independence and dignity at home.",
+    tr: "Evde bağımsızlığı ve onurlu bir yaşamı destekleyen profesyonel, şefkatli bakım hizmetleri.",
   },
   infoTitle: {
-    de: "Geborgenheit durch kulturelle Nähe",
-    en: "Security Through Cultural Closeness",
-    tr: "Kültürel Yakınlıkla Güven",
+    de: "Pflege, die sich wie Zuhause anfühlt",
+    en: "Care That Feels Like Home",
+    tr: "Ev Gibi Hissettiren Bakım",
   },
   infoBody: {
-    de: "Für Menschen mit Demenz ist die Muttersprache und eine vertraute kulturelle Umgebung essenziell. Wir schaffen ein Zuhause, das genau das bietet.",
-    en: "For people with dementia, their native language and a familiar cultural environment are essential. We create a home that offers exactly that.",
-    tr: "Demans hastaları için anadil ve tanıdık kültürel ortam çok önemlidir. Tam da bunu sunan bir yuva yaratıyoruz.",
+    de: "Jeder Mensch hat individuelle Bedürfnisse und Gewohnheiten. Unsere Pflegekräfte nehmen sich die Zeit, zu verstehen, was Ihnen wichtig ist – für eine Pflege, die persönlich, respektvoll und wirklich unterstützend ist.",
+    en: "Every person has unique needs and routines. Our carers take the time to understand what matters most to you, delivering care that feels personal, respectful and truly supportive.",
+    tr: "Her bireyin kendine özgü ihtiyaçları ve alışkanlıkları vardır. Bakıcılarımız sizin için neyin önemli olduğunu anlamak için zaman ayırır; kişisel, saygılı ve gerçekten destekleyici bir bakım sunar.",
   },
   infoPoints: {
-    de: ["Muttersprachliches Pflegepersonal", "Kulturspezifische Mahlzeiten", "Berücksichtigung religiöser Feiertage", "Familienfreundliche Besuchszeiten"],
-    en: ["Native-speaking care staff", "Culturally appropriate meals", "Religious holidays respected", "Family-friendly visiting hours"],
-    tr: ["Anadil konuşan bakım personeli", "Kültüre özgü yemekler", "Dini bayramların dikkate alınması", "Aile dostu ziyaret saatleri"],
+    de: ["Qualifizierte, geprüfte Pflegekräfte", "Flexible Pflegepläne", "Regelmäßige Updates für Angehörige", "Familienfreundliche Besuchszeiten"],
+    en: ["Qualified, vetted carers", "Flexible care schedules", "Regular family progress updates", "Family-friendly visiting hours"],
+    tr: ["Nitelikli, denetlenmiş bakıcılar", "Esnek bakım programları", "Ailelere düzenli güncelleme", "Aile dostu ziyaret saatleri"],
   },
   infoButton: {
     de: "Plätze anfragen",
