@@ -386,12 +386,14 @@ function Footer({ t }: { t: Translations }) {
     <footer className="border-t border-gray-800/60 px-6 py-12">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="flex items-center gap-2.5" style={{ direction: "ltr" }}>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-500">
-              <TrendingUp className="h-3.5 w-3.5 text-white" />
+          <div className="flex flex-col gap-1" style={{ direction: "ltr" }}>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-500">
+                <TrendingUp className="h-3.5 w-3.5 text-white" />
+              </div>
+              <span className="font-bold text-white">GrowthMonk</span>
             </div>
-            <span className="font-bold text-white">GrowthMonk</span>
-            <span className="text-gray-600">by AnswerMonk.ai</span>
+            <span className="text-xs text-gray-500">Operated by Dreamport Pvt Ltd</span>
           </div>
           <nav aria-label="Footer navigation">
             <ul className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
@@ -405,10 +407,7 @@ function Footer({ t }: { t: Translations }) {
               <li><a href="/data-deletion" className="transition-colors hover:text-gray-300">Data Deletion</a></li>
             </ul>
           </nav>
-          <div className="text-right text-sm text-gray-600">
-            <p>© {new Date().getFullYear()} GrowthMonk</p>
-            <p className="text-xs mt-0.5">Operated by Dreamport Pvt Ltd</p>
-          </div>
+          <p className="text-sm text-gray-600">© {new Date().getFullYear()} Dreamport Pvt Ltd</p>
         </div>
       </div>
     </footer>
