@@ -654,11 +654,23 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       typeof d["serviceRequested"] === "string" && d["serviceRequested"]
         ? (d["serviceRequested"] as string)
         : null;
-    const prefTime =
+    // Resolve timing the same way the appointment insert does:
+    // structured appointmentDate/Time takes priority over free-text preferredTime.
+    const _apptDate =
+      typeof d["appointmentDate"] === "string" && d["appointmentDate"]
+        ? (d["appointmentDate"] as string)
+        : null;
+    const _apptTime =
+      typeof d["appointmentTime"] === "string" && d["appointmentTime"]
+        ? (d["appointmentTime"] as string)
+        : null;
+    const _prefTime =
       typeof d["preferredTime"] === "string" && d["preferredTime"]
         ? (d["preferredTime"] as string)
         : null;
-    const confirmTail = buildActionConfirmation(resolvedAction, language, svcReq, prefTime);
+    const resolvedTiming =
+      [_apptDate, _apptTime].filter(Boolean).join(" ") || _prefTime;
+    const confirmTail = buildActionConfirmation(resolvedAction, language, svcReq, resolvedTiming);
     if (confirmTail) {
       botResponse.reply = `${botResponse.reply}\n\n${confirmTail}`;
     }
