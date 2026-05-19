@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "wouter";
+import { setDemoToken } from "@workspace/api-client-react";
 import { DemoNav } from "@/components/layout/demo-nav";
 import { getDemoT } from "@/lib/demo-i18n";
 import {
@@ -52,6 +53,14 @@ export default function DemoDashboardPage() {
   const [branding, setBranding] = useState<BrandingConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Read demo token from URL (?t=<token>) and inject into all API calls for this page.
+  // useState initializer runs synchronously so the token is set before the first fetch.
+  useState(() => {
+    const t = new URLSearchParams(window.location.search).get("t");
+    if (t) setDemoToken(t);
+  });
+  useEffect(() => () => { setDemoToken(null); }, []);
 
   useEffect(() => {
     if (!slug) return;

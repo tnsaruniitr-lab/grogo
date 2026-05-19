@@ -1,4 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { randomBytes } from "crypto";
+import { requireDashboardAuth } from "../lib/dashboard-auth";
 import { db } from "@workspace/db";
 import { clientsTable, companyKnowledgeTable, clientProfilesTable } from "@workspace/db";
 import { eq, isNull, and, inArray, asc, desc, ne } from "drizzle-orm";
@@ -98,6 +100,10 @@ async function seedManualKnowledge(
 
 const router: IRouter = Router();
 
+// All /admin/* routes require Basic Auth — public /clients/* routes below are unaffected
+router.use("/admin", requireDashboardAuth);
+
+
 
 router.get("/admin/clients", async (req: Request, res: Response) => {
   const clients = await db
@@ -149,6 +155,7 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
       languageSecondary: demoLangs[1] ?? null,
       // Store raw branding (including mode) so the frontend can read it back
       config: rawBranding,
+      demoToken: randomBytes(32).toString("hex"),
     })
     .returning();
 
@@ -1083,6 +1090,21 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
   };
 }
 
+router.post("/admin/clients/:id/regen-demo-token", async (req: Request, res: Response) => {
+  const id = parseInt(req.params["id"] as string, 10);
+  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const newToken = randomBytes(32).toString("hex");
+  const [updated] = await db
+    .update(clientsTable)
+    .set({ demoToken: newToken })
+    .where(and(eq(clientsTable.id, id), isNull(clientsTable.deletedAt)))
+    .returning({ id: clientsTable.id, demoToken: clientsTable.demoToken });
+
+  if (!updated) { res.status(404).json({ error: "Client not found" }); return; }
+  res.json({ id: updated.id, demoToken: updated.demoToken });
+});
+
 function toClientResponse(client: typeof clientsTable.$inferSelect) {
   return {
     id: client.id,
@@ -1091,6 +1113,7 @@ function toClientResponse(client: typeof clientsTable.$inferSelect) {
     isActive: client.isActive,
     createdAt: client.createdAt.toISOString(),
     twilioSender: client.twilioSender ?? "",
+    demoToken: client.demoToken ?? null,
     branding: buildBranding(client),
   };
 }

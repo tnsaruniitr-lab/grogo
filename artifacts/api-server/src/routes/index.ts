@@ -10,7 +10,7 @@ import adminRouter from "./admin";
 import storageRouter from "./storage";
 import crawlRouter from "./crawl";
 import extractBrandingRouter from "./extract-branding";
-import { requireDashboardAuth } from "../lib/dashboard-auth";
+import { requireDashboardAuth, requireDemoOrDashboardAuth } from "../lib/dashboard-auth";
 
 const router: IRouter = Router();
 
@@ -21,13 +21,16 @@ router.use(respondRouter);           // Respond.io: API-key-validated internally
 router.use(respondEventsRouter);     // Respond.io events: API-key-validated internally
 router.use(manychatRouter);          // ManyChat: x-api-key-validated internally
 router.use(extractBrandingRouter);   // Public URL fetcher — no DB access, no auth needed
-router.use(adminRouter);             // Demo client management — no auth needed
-router.use(crawlRouter);             // Website crawl/branding — no auth needed
-router.use(storageRouter);           // Object storage (logo uploads) — no auth needed
+router.use(adminRouter);             // /clients/* public; /admin/* protected internally
 
-// Protected — Basic Auth required for leads / dashboard
-router.use(requireDashboardAuth);
+// Protected — Basic Auth OR per-client demo token (GET-only for demo access)
+router.use(requireDemoOrDashboardAuth);
 router.use(leadsRouter);
 router.use(dashboardRouter);
+
+// Admin-only — Basic Auth required; demo tokens rejected by second middleware
+router.use(requireDashboardAuth);
+router.use(crawlRouter);
+router.use(storageRouter);
 
 export default router;

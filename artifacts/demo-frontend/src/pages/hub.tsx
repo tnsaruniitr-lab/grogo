@@ -94,6 +94,7 @@ interface DemoClient {
   isActive: boolean;
   createdAt: string;
   twilioSender?: string;
+  demoToken?: string | null;
   branding: BrandingConfig;
 }
 
@@ -130,8 +131,9 @@ export default function HubPage() {
     },
   });
 
-  const copyLink = async (slug: string) => {
-    await navigator.clipboard.writeText(`${window.location.origin}/demo/${slug}`);
+  const copyLink = async (slug: string, demoToken?: string | null) => {
+    const tokenSuffix = demoToken ? `?t=${demoToken}` : "";
+    await navigator.clipboard.writeText(`${window.location.origin}/demo/${slug}${tokenSuffix}`);
     setCopiedSlug(slug);
     setTimeout(() => setCopiedSlug(null), 2000);
   };
@@ -210,7 +212,7 @@ export default function HubPage() {
                   <BrandCard
                     client={client}
                     copied={copiedSlug === client.slug}
-                    onCopy={() => copyLink(client.slug)}
+                    onCopy={() => copyLink(client.slug, client.demoToken)}
                     onEdit={() => setEditingClient(client)}
                     onDelete={() => {
                       if (confirm(`Delete demo "${client.branding.companyName}"?`)) {
@@ -699,7 +701,7 @@ function BrandCard({
           </div>
 
           <Link
-            href={`/demo/${client.slug}/dashboard`}
+            href={`/demo/${client.slug}/dashboard${client.demoToken ? `?t=${client.demoToken}` : ""}`}
             className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-white transition-colors"
           >
             <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard

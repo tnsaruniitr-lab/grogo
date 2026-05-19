@@ -19,6 +19,23 @@ let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
 let _basicAuthHeader: string | null = null;
 let _basicAuthFallback: (() => string | null) | null = null;
+let _demoToken: string | null = null;
+
+/**
+ * Set a per-client demo token appended as ?demoToken=... on requests that
+ * carry no Basic Auth header.  Used by public demo dashboard pages.
+ * Pass null to clear.
+ */
+export function setDemoToken(token: string | null): void {
+  _demoToken = token;
+}
+
+/**
+ * Returns the current demo token, or null if not set.
+ */
+export function getDemoToken(): string | null {
+  return _demoToken;
+}
 
 /**
  * Set HTTP Basic Auth credentials used for every request.
@@ -392,6 +409,16 @@ export async function customFetch<T = unknown>(
         headers.set("authorization", `Bearer ${token}`);
       }
     }
+  }
+
+  // Append demo token as query param when no auth header is present.
+  if (!headers.has("authorization") && _demoToken) {
+    const rawUrl = resolveUrl(input);
+    const sep = rawUrl.includes("?") ? "&" : "?";
+    const tokenUrl = `${rawUrl}${sep}demoToken=${encodeURIComponent(_demoToken)}`;
+    input = typeof input === "string" ? tokenUrl
+      : isUrl(input) ? new URL(tokenUrl)
+      : new Request(tokenUrl, input as Request);
   }
 
   const requestInfo = { method, url: resolveUrl(input) };
