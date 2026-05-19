@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import {
   Loader2,
   Package,
   ExternalLink,
+  UploadCloud,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,6 +38,8 @@ interface Asset {
   createdAt: string;
 }
 
+const FILE_UPLOAD_TYPES = new Set<AssetType>(["image", "pdf"]);
+
 const ASSET_TYPE_CONFIG: Record<AssetType, {
   label: string;
   icon: React.ReactNode;
@@ -44,6 +48,8 @@ const ASSET_TYPE_CONFIG: Record<AssetType, {
   showContext: boolean;
   contextLabel?: string;
   contextPlaceholder?: string;
+  accept?: string;
+  fileHint?: string;
 }> = {
   calendly: {
     label: "Calendly",
@@ -74,6 +80,8 @@ const ASSET_TYPE_CONFIG: Record<AssetType, {
     showContext: true,
     contextLabel: "Service (optional)",
     contextPlaceholder: "e.g. physiotherapy, live-in care",
+    accept: "application/pdf",
+    fileHint: "PDF files only",
   },
   image: {
     label: "Price Chart",
@@ -83,6 +91,8 @@ const ASSET_TYPE_CONFIG: Record<AssetType, {
     showContext: true,
     contextLabel: "Service (optional)",
     contextPlaceholder: "e.g. hourly rates, package pricing",
+    accept: "image/*",
+    fileHint: "JPG, PNG, WebP",
   },
   custom: {
     label: "Custom Link",
@@ -113,6 +123,11 @@ const TYPE_COLOR_MAP: Record<string, string> = {
   custom: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
+interface UploadedFile {
+  name: string;
+  previewUrl?: string; // for images only
+}
+
 export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => void }) {
   const { toast } = useToast();
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -122,6 +137,15 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
   const [form, setForm] = useState({ label: "", url: "", serviceContext: "" });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // File upload state (image / pdf types)
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [uploading, setUploading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isFileUploadType = selectedType !== null && FILE_UPLOAD_TYPES.has(selectedType);
 
   const fetchAssets = useCallback(async () => {
     setLoading(true);
@@ -139,13 +163,101 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
 
   useEffect(() => { void fetchAssets(); }, [fetchAssets]);
 
+  const resetForm = () => {
+    setForm({ label: "", url: "", serviceContext: "" });
+    setUploadedFile(null);
+    setUploadMode("file");
+    setDragOver(false);
+  };
+
+  const handleTypeSelect = (type: AssetType) => {
+    setSelectedType(type);
+    resetForm();
+  };
+
+  // Upload a file: get presigned URL → PUT to GCS → return serving URL
+  const uploadFile = async (file: File): Promise<string> => {
+    // Step 1: request presigned URL
+    const urlRes = await fetch("/api/storage/uploads/request-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+    });
+    if (!urlRes.ok) throw new Error("Failed to get upload URL");
+    const { uploadURL, objectPath } = await urlRes.json() as { uploadURL: string; objectPath: string };
+
+    // Step 2: PUT directly to GCS
+    const uploadRes = await fetch(uploadURL, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+    if (!uploadRes.ok) throw new Error("File upload failed");
+
+    // Step 3: return absolute serving URL (Twilio needs a public URL)
+    return `${window.location.origin}/api/storage${objectPath}`;
+  };
+
+  const handleFileSelected = async (file: File) => {
+    if (!selectedType) return;
+    const config = ASSET_TYPE_CONFIG[selectedType];
+
+    // Validate type
+    if (selectedType === "pdf" && file.type !== "application/pdf") {
+      toast({ title: "Please select a PDF file", variant: "destructive" });
+      return;
+    }
+    if (selectedType === "image" && !file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file (JPG, PNG, WebP…)", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const servingUrl = await uploadFile(file);
+      const preview = selectedType === "image" ? URL.createObjectURL(file) : undefined;
+      setUploadedFile({ name: file.name, previewUrl: preview });
+      setForm((p) => ({
+        ...p,
+        url: servingUrl,
+        // Auto-fill label from filename if empty (strip extension)
+        label: p.label || file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+      }));
+      toast({ title: "File uploaded", description: config.label + " is ready to save" });
+    } catch (e) {
+      toast({ title: e instanceof Error ? e.message : "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void handleFileSelected(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) void handleFileSelected(file);
+  };
+
   const handleAdd = async () => {
     if (!selectedType) return;
     if (!form.label.trim()) { toast({ title: "Label is required", variant: "destructive" }); return; }
-    if (!form.url.trim()) { toast({ title: "URL is required", variant: "destructive" }); return; }
-    try { new URL(form.url.trim()); } catch {
-      toast({ title: "Please enter a valid URL (include https://)", variant: "destructive" });
+    if (!form.url.trim()) {
+      toast({
+        title: isFileUploadType && uploadMode === "file" ? "Please upload a file first" : "URL is required",
+        variant: "destructive",
+      });
       return;
+    }
+    if (uploadMode === "url" || !isFileUploadType) {
+      try { new URL(form.url.trim()); } catch {
+        toast({ title: "Please enter a valid URL (include https://)", variant: "destructive" });
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -166,7 +278,7 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
       toast({ title: "Asset saved", description: "The bot will now be able to send this on request" });
       setAdding(false);
       setSelectedType(null);
-      setForm({ label: "", url: "", serviceContext: "" });
+      resetForm();
       await fetchAssets();
     } catch (e: unknown) {
       toast({ title: (e instanceof Error ? e.message : "Save failed"), variant: "destructive" });
@@ -266,7 +378,7 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
                     return (
                       <button
                         key={type}
-                        onClick={() => { setSelectedType(type); setForm({ label: "", url: "", serviceContext: "" }); }}
+                        onClick={() => handleTypeSelect(type)}
                         className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all ${
                           isSelected
                             ? "border-primary bg-primary/10 text-foreground"
@@ -285,17 +397,117 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
 
                 {selectedType && config && (
                   <div className="space-y-3 pt-1">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Label</Label>
-                        <Input
-                          className="h-8 text-sm"
-                          placeholder={`e.g. Free 30-min call, Product demo…`}
-                          value={form.label}
-                          onChange={(e) => setForm((p) => ({ ...p, label: e.target.value }))}
-                          autoFocus
-                        />
+                    {/* Label */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Label</Label>
+                      <Input
+                        className="h-8 text-sm"
+                        placeholder="e.g. Free 30-min call, Physiotherapy pricing…"
+                        value={form.label}
+                        onChange={(e) => setForm((p) => ({ ...p, label: e.target.value }))}
+                        autoFocus
+                      />
+                    </div>
+
+                    {/* File upload vs URL */}
+                    {isFileUploadType ? (
+                      <div className="space-y-2">
+                        {/* Mode toggle */}
+                        <div className="flex items-center gap-3">
+                          <Label className="text-xs">
+                            {uploadMode === "file" ? "File" : "URL"}
+                          </Label>
+                          <button
+                            type="button"
+                            className="text-[11px] text-muted-foreground hover:text-primary underline underline-offset-2"
+                            onClick={() => {
+                              setUploadMode((m) => m === "file" ? "url" : "file");
+                              resetForm();
+                            }}
+                          >
+                            {uploadMode === "file" ? "or paste a URL instead" : "or upload a file instead"}
+                          </button>
+                        </div>
+
+                        {uploadMode === "file" ? (
+                          <>
+                            {/* Drop zone / preview */}
+                            {uploadedFile ? (
+                              <div className="relative rounded-lg border bg-card p-3 flex items-center gap-3">
+                                {uploadedFile.previewUrl ? (
+                                  <img
+                                    src={uploadedFile.previewUrl}
+                                    alt="preview"
+                                    className="h-14 w-14 rounded object-cover border shrink-0"
+                                  />
+                                ) : (
+                                  <div className="h-14 w-14 rounded border bg-muted flex items-center justify-center shrink-0">
+                                    <FileText className="h-6 w-6 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium truncate">{uploadedFile.name}</p>
+                                  <p className="text-[11px] text-green-400 mt-0.5">Uploaded successfully</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="h-6 w-6 rounded flex items-center justify-center hover:bg-muted text-muted-foreground shrink-0"
+                                  onClick={() => {
+                                    setUploadedFile(null);
+                                    setForm((p) => ({ ...p, url: "" }));
+                                    if (fileInputRef.current) fileInputRef.current.value = "";
+                                  }}
+                                  title="Remove file"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                className={`rounded-lg border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 py-6 ${
+                                  dragOver
+                                    ? "border-primary bg-primary/10"
+                                    : "border-border hover:border-primary/50 hover:bg-muted/30"
+                                } ${uploading ? "opacity-50 pointer-events-none" : ""}`}
+                                onClick={() => fileInputRef.current?.click()}
+                                onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                                onDragLeave={() => setDragOver(false)}
+                                onDrop={handleDrop}
+                              >
+                                {uploading ? (
+                                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                ) : (
+                                  <UploadCloud className="h-6 w-6 text-muted-foreground" />
+                                )}
+                                <div className="text-center">
+                                  <p className="text-xs font-medium">
+                                    {uploading ? "Uploading…" : "Click or drag & drop"}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">{config.fileHint}</p>
+                                </div>
+                              </div>
+                            )}
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept={config.accept}
+                              className="hidden"
+                              onChange={handleInputChange}
+                            />
+                          </>
+                        ) : (
+                          <Input
+                            className="h-8 text-sm"
+                            placeholder={config.urlPlaceholder}
+                            value={form.url}
+                            onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
+                          />
+                        )}
                       </div>
+                    ) : (
                       <div className="space-y-1.5">
                         <Label className="text-xs">URL</Label>
                         <Input
@@ -305,7 +517,9 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
                           onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
                         />
                       </div>
-                    </div>
+                    )}
+
+                    {/* Service context */}
                     {config.showContext && (
                       <div className="space-y-1.5">
                         <Label className="text-xs">{config.contextLabel}</Label>
@@ -321,10 +535,19 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
                 )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => { setAdding(false); setSelectedType(null); setForm({ label: "", url: "", serviceContext: "" }); }}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setAdding(false); setSelectedType(null); resetForm(); }}
+                  >
                     Cancel
                   </Button>
-                  <Button size="sm" onClick={handleAdd} disabled={saving || !selectedType} className="gap-1.5">
+                  <Button
+                    size="sm"
+                    onClick={handleAdd}
+                    disabled={saving || uploading || !selectedType}
+                    className="gap-1.5"
+                  >
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                     Save Asset
                   </Button>
