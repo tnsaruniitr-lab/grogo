@@ -116,7 +116,10 @@ export default function SettingsPage() {
   const { data: serverSettings, isLoading } = useGetSettings();
   const updateMutation = useUpdateSettings({
     mutation: {
-      onSuccess: () => toast({ title: "Settings saved" }),
+      onSuccess: () => {
+        setDirty(false);
+        toast({ title: "Settings saved" });
+      },
       onError: () => toast({ title: "Save failed", variant: "destructive" }),
     },
   });
@@ -137,7 +140,6 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     updateMutation.mutate({ data: draft });
-    setDirty(false);
   };
 
   const handleReset = () => {
