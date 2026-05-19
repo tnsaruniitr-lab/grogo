@@ -406,6 +406,25 @@ export async function runCrawlPipeline(
       "Crawl pipeline complete",
     );
 
+    // Auto-approve all pending chunks from this job so the bot can use them
+    // immediately — covers both completed and partial (fallback: don't lose data
+    // that was already extracted if the crawl was interrupted mid-way)
+    if (isV2 && finalStatus !== "failed" && totalChunks > 0) {
+      const { rowCount } = await db
+        .update(companyKnowledgeTable)
+        .set({ approvalStatus: "approved" })
+        .where(
+          and(
+            eq(companyKnowledgeTable.crawlJobId, jobId),
+            eq(companyKnowledgeTable.approvalStatus, "pending"),
+          ),
+        );
+      log.info(
+        { finalStatus, approvedChunks: rowCount ?? totalChunks },
+        "Chunks auto-approved — knowledge base live",
+      );
+    }
+
     // Auto-extract brand colors + headline after successful crawl
     if (finalStatus !== "failed") {
       await extractBrand(clientId, websiteUrl);
