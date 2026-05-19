@@ -75,14 +75,14 @@ const en: Translations = {
         tag: "AI Search Discovery",
         title: "Get found before your competitors - in AI search",
         bullets: [
-          "Generate a fully AEO, SEO & GEO-optimised website in hours - or audit yours to close the gap",
+          "Audit your web presence for AEO, SEO & GEO gaps - then build a roadmap to close them fast",
           "Analyse what top competitors are doing to rank in ChatGPT, Perplexity and Google AI Overviews",
-          "Identify authority sources and let our agent earn you citations automatically",
+          "Identify authority sources and build your citation profile to rank in AI search results",
           "Humanised blog content that AI engines can cite, quote and extract - built on official frameworks from Google, Perplexity and Schema.org",
         ],
       },
       {
-        tag: "WhatsApp & Social Capture",
+        tag: "WhatsApp Capture",
         title: "Capture every lead the moment they message",
         bullets: [
           "AI responds to every WhatsApp message in under 90 seconds - 24/7",
@@ -242,14 +242,14 @@ const tr: Translations = {
         tag: "Yapay Zeka Arama Keşfi",
         title: "Rakiplerinizden önce bulunun – yapay zeka aramalarında",
         bullets: [
-          "Saatler içinde tam AEO, SEO ve GEO optimize edilmiş bir web sitesi oluşturun veya mevcutunuzu denetleyin",
+          "Web varlığınızı AEO, SEO ve GEO açıklarına karşı denetleyin – ardından açığı kapatmak için bir yol haritası oluşturun",
           "ChatGPT, Perplexity ve Google AI Overviews'ta üst sıralarda yer almak için rakiplerinizin ne yaptığını analiz edin",
-          "Otorite kaynaklarını tespit edin ve temsilcimizin sizin için atıflar kazanmasına izin verin",
+          "Otorite kaynaklarını tespit edin ve yapay zeka arama sonuçlarında yer almak için atıf profilinizi güçlendirin",
           "KI arama motorlarının alıntılayabileceği, insan dokunuşlu blog içerikleri – Google, Perplexity ve Schema.org'un resmi çerçevelerine dayalı",
         ],
       },
       {
-        tag: "WhatsApp ve Sosyal Medya Yakalama",
+        tag: "WhatsApp Yakalama",
         title: "Her leadi mesaj attığı anda yakalayın",
         bullets: [
           "Yapay zeka her WhatsApp mesajına 90 saniye içinde yanıt verir – 7/24",
@@ -409,14 +409,14 @@ const ar: Translations = {
         tag: "اكتشاف البحث الذكي",
         title: "كن الأول في نتائج البحث الذكي قبل منافسيك",
         bullets: [
-          "أنشئ موقعًا محسّنًا بالكامل لـ AEO وSEO وGEO في ساعات، أو افحص موقعك الحالي",
+          "افحص حضورك على الويب لاكتشاف ثغرات AEO وSEO وGEO – ثم ضع خارطة طريق لسدّها بسرعة",
           "حلل ما يفعله المنافسون الأوائل للظهور في ChatGPT وPerplexity ونتائج Google الذكية",
-          "حدد مصادر الثقة ودع وكيلنا يكسب لك استشهادات تلقائيًا",
+          "حدد مصادر الثقة وعزّز ملفك الاستشهادي للظهور في نتائج البحث الذكي",
           "محتوى مدوّنة إنساني تستطيع محركات البحث الذكية الاستشهاد به – مبني على أطر Google وPerplexity وSchema.org",
         ],
       },
       {
-        tag: "الاستحواذ عبر واتساب والتواصل الاجتماعي",
+        tag: "الاستحواذ عبر واتساب",
         title: "التقط كل عميل لحظة تواصله",
         bullets: [
           "الذكاء الاصطناعي يرد على كل رسالة واتساب خلال 90 ثانية، 24/7",
