@@ -11,9 +11,10 @@ const openai = new OpenAI({
 export const intentEnum = [
   "qualify",
   "info_request",
+  "book_service",
+  "book_online_consultation",
+  "book_walkin_consultation",
   "book_callback",
-  "book_appointment",
-  "request_call_now",
   "escalate_human",
   "out_of_scope",
 ] as const;
@@ -21,9 +22,10 @@ export type Intent = (typeof intentEnum)[number];
 
 export const actionEnum = [
   "none",
+  "book_service",
+  "book_online_consultation",
+  "book_walkin_consultation",
   "book_callback",
-  "book_appointment",
-  "request_call_now",
   "escalate_human",
   "out_of_scope",
 ] as const;
@@ -34,14 +36,22 @@ export const BotResponseSchema = z.object({
   action: z.enum(actionEnum),
   data: z
     .object({
+      // Structured booking signals — used by the backend rule engine
+      serviceRequested: z.string().nullable().optional(),
       preferredTime: z.string().nullable().optional(),
+      appointmentDate: z.string().nullable().optional(),
+      appointmentTime: z.string().nullable().optional(),
+      consultationMode: z.enum(["online", "walkin"]).nullable().optional(),
+      bookingConfirmed: z.boolean().optional(),
+      requestedHuman: z.boolean().optional(),
+      handoffReason: z.enum(["urgent_call_now", "requested"]).nullable().optional(),
+      requestedAssetType: z.enum(["price", "demo", "booking", "brochure"]).nullable().optional(),
+      // Legacy qualification fields — kept for notes / summary
       careType: z.string().nullable().optional(),
       name: z.string().nullable().optional(),
       city: z.string().nullable().optional(),
       whoNeedsCare: z.string().nullable().optional(),
       serviceType: z.string().nullable().optional(),
-      appointmentDate: z.string().nullable().optional(),
-      appointmentTime: z.string().nullable().optional(),
       switchToLanguage: z.string().min(2).max(10).nullable().optional(),
     })
     .optional()
@@ -156,12 +166,7 @@ Follow these rules for every reply:
 
 6. **When genuinely unsure:** State what is known from the KB, then offer to connect the user with the team for the rest.
 
-7. **Asset links [ASSET:...] — mandatory URL inclusion:** Knowledge base entries that begin with [ASSET:...] contain a URL the user must receive. When your reply references such an entry, ALWAYS paste the exact URL verbatim into your reply — never omit it, never paraphrase it, never say "click here" without the URL. The URL must be a complete https:// link so the user can tap it directly in WhatsApp.
-   Examples of what the entries look like:
-   - [ASSET:calendly] 📅 Free 30-min call: https://calendly.com/...
-   - [ASSET:pdf] 📋 Pricing guide: https://...
-   - [ASSET:loom] 🎬 Demo video: https://loom.com/...
-   When you reference one, your reply must contain the https:// URL exactly as written.
+7. **Asset delivery — set the signal, never paste URLs.** When the prospect asks for a price list, pricing, rates, brochure, demo video, walkthrough, or booking link — set \`requestedAssetType\` in your data to one of: \`price\`, \`demo\`, \`booking\`, \`brochure\`. The system sends the correct file or link automatically. Do NOT include any asset URLs in your reply text — the backend resolver handles delivery reliably.
 
 ## GDPR & Safe Fields
 You may ONLY collect: ${gdprAllowed}
@@ -172,28 +177,56 @@ If the user volunteers such information, redirect warmly: "${gdprRedirectMsg}"
 ${profile.primaryGoal}. After gathering basic info, ALWAYS offer:
 ${callbackOffer}
 
-## Intent & Action Mapping
-"intent" describes what the user wants. "action" is what the system should DO — they are NOT the same field and must not mirror each other unless listed below.
-Use EXACTLY these values:
-- User asks general info → intent: "info_request", action: "none"
-- Qualifying/gathering info → intent: "qualify", action: "none"
-- User wants callback and gives time → intent: "book_callback", action: "book_callback"
-- User wants to book a service visit/appointment and gives a date or time → intent: "book_appointment", action: "book_appointment"
-- User requests immediate call / urgent / distress → intent: "request_call_now", action: "request_call_now"
-- User explicitly requests human agent → intent: "escalate_human", action: "escalate_human"
-- Topic outside scope / forbidden info → intent: "out_of_scope", action: "out_of_scope"
-IMPORTANT: action must NEVER be "info_request" or "qualify" — those are intent-only values. Use "none" for action in those cases.
+## Booking Priority Ladder
+Follow this order every turn. Fire the highest applicable action — never offer a lower one when a higher is achievable.
+
+**Before any booking action fires, you need:**
+- \`serviceRequested\` — which specific service the prospect wants (e.g. "physiotherapy", "live-in care")
+- \`preferredTime\` / \`appointmentDate\` / \`appointmentTime\` — when they want it
+- \`bookingConfirmed: true\` — prospect explicitly said "yes book it", "please schedule", "go ahead" — NOT just "I'm interested" or "sounds good"
+
+Collect missing fields one question at a time. Never ask more than one question per reply.
+
+**Priority 1 — Direct service booking** (\`book_service\`):
+serviceRequested is known + any timing mentioned + bookingConfirmed = true
+→ intent: "book_service", action: "book_service"
+
+**Priority 2 — Consultation** (prospect wants to explore first):
+- Signals online ("video call", "online", "virtual") → intent/action: "book_online_consultation"
+- Signals in-person ("come in", "visit", "in person") → intent/action: "book_walkin_consultation"
+- No preference yet → ask ONE question: "Would you prefer an in-person visit or an online consultation?"
+Set bookingConfirmed: true only when prospect explicitly confirms they want to proceed with the consultation.
+
+**Priority 3 — Callback** (\`book_callback\`):
+After 2–3 exchanges serviceRequested is still unknown, OR prospect is confused/unsure, OR says "call me later/back"
+→ intent: "book_callback", action: "book_callback". Ask for preferredTime. Create callback even without time (pending).
+
+**Priority 4 — Human escalation** (\`escalate_human\`) — fire IMMEDIATELY on the same turn, no delay:
+- Prospect says "speak to a person", "real agent", "human", "talk to someone" → handoffReason: "requested"
+- Prospect shows urgency, distress, emergency → handoffReason: "urgent_call_now"
+
+**For general info / qualifying:** intent: "info_request" or "qualify", action: "none"
+IMPORTANT: action must NEVER be "info_request" or "qualify" — those are intent-only values. Use "none" for action then.
 
 ## Response Format
-Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, book_appointment, request_call_now, escalate_human, out_of_scope.
+Return ONLY valid JSON — no markdown, no extra text.
 {
-  "reply": "<your response — in switchToLanguage if switching, otherwise in the locked language>",
-  "action": "<none|book_callback|book_appointment|request_call_now|escalate_human|out_of_scope>",
+  "reply": "<your response in the locked language>",
+  "action": "<book_service|book_online_consultation|book_walkin_consultation|book_callback|escalate_human|none|out_of_scope>",
   "data": {
+    "serviceRequested": "<service name e.g. physiotherapy, or null>",
+    "preferredTime": "<free-text timing, or null>",
+    "appointmentDate": "<structured date if mentioned, or null>",
+    "appointmentTime": "<structured time if mentioned, or null>",
+    "consultationMode": "<online|walkin|null>",
+    "bookingConfirmed": <true ONLY on explicit book/proceed/schedule confirmation — false otherwise>,
+    "requestedHuman": <true if prospect asks for a person/agent/human — false otherwise>,
+    "handoffReason": "<urgent_call_now|requested|null>",
+    "requestedAssetType": "<price|demo|booking|brochure|null>",
 ${dataFieldLines},
-    "switchToLanguage": "<ISO 639-1 code e.g. en/de/tr/ar/fr/es if switching, otherwise null>"
+    "switchToLanguage": "<ISO 639-1 code if switching, otherwise null>"
   },
-  "intent": "<qualify|info_request|book_callback|request_call_now|escalate_human|out_of_scope>"
+  "intent": "<qualify|info_request|book_service|book_online_consultation|book_walkin_consultation|book_callback|escalate_human|out_of_scope>"
 }
 
 Callback hours: ${callbackHours}${

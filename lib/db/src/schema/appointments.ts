@@ -4,7 +4,13 @@ import { z } from "zod/v4";
 import { clientsTable } from "./clients";
 import { leadsTable } from "./leads";
 
-export const appointmentTypeEnum = ["callback", "visit"] as const;
+export const appointmentTypeEnum = [
+  "callback",
+  "visit",               // legacy — kept so existing dashboard rows remain valid
+  "service_booking",
+  "online_consultation",
+  "walkin_consultation",
+] as const;
 export type AppointmentType = typeof appointmentTypeEnum[number];
 
 export const appointmentOutcomeEnum = ["pending", "completed", "no_show", "cancelled"] as const;
@@ -21,6 +27,7 @@ export const appointmentsTable = pgTable(
       .notNull()
       .references(() => leadsTable.id),
     type: text("type").notNull().default("callback"),
+    serviceRequested: text("service_requested"),
     preferredTime: text("preferred_time"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     outcome: text("outcome").notNull().default("pending"),

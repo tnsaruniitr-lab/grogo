@@ -19,8 +19,8 @@ import {
   callGpt,
   type BotResponse,
   type ConversationMessage,
-  type Intent,
 } from "./gpt-service";
+import { resolveAsset, type AssetResolverResult } from "./asset-resolver";
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -232,31 +232,6 @@ async function sendWhatsAppMedia(from: string, to: string, mediaUrl: string): Pr
   }
 }
 
-// Extract media asset URLs (image / pdf only) referenced in the bot reply.
-// Asset entries are formatted: [ASSET:type] emoji label: https://...
-// We check whether the reply actually contains the URL before sending media,
-// so we never send an asset the bot didn't explicitly mention.
-function extractReferencedMediaAssets(
-  chunks: { question: string; answer: string }[],
-  reply: string,
-): string[] {
-  const MEDIA_TYPES = new Set(["image", "pdf"]);
-  const urls: string[] = [];
-
-  for (const chunk of chunks) {
-    const match = chunk.answer.match(/^\[ASSET:(\w+)\].*?(https?:\/\/[^\s()]+)/);
-    if (!match) continue;
-    const assetType = match[1]!;
-    const assetUrl = match[2]!.replace(/[.,)]+$/, ""); // strip trailing punctuation
-    if (!MEDIA_TYPES.has(assetType)) continue;
-    if (reply.includes(assetUrl)) {
-      urls.push(assetUrl);
-    }
-  }
-
-  return urls;
-}
-
 function buildSummary(
   lead: Lead,
   botResponse: BotResponse,
@@ -280,23 +255,53 @@ function buildSummary(
   return lead.conversationSummary ? `${lead.conversationSummary}\n${newLine}` : newLine;
 }
 
+type ResolvedAction =
+  | "book_service"
+  | "book_online_consultation"
+  | "book_walkin_consultation"
+  | "book_callback"
+  | "escalate_human"
+  | "qualify";
+
 /**
- * Backend-controlled intent → lead status mapping.
+ * Deterministic rule engine — decides the final action from GPT-extracted data
+ * fields. GPT's own action suggestion is advisory only; this function is the
+ * authority. Same inputs always produce the same output.
  */
-function intentToStatus(intent: Intent, currentStatus: string): string {
-  switch (intent) {
-    case "book_callback":
-      return "callback_booked";
-    case "book_appointment":
-      return "appointment_booked";
-    case "request_call_now":
-      return "escalated";
-    case "escalate_human":
-      return "needs_human";
+function resolveAction(data: BotResponse["data"], turnCount: number): ResolvedAction {
+  const d = data ?? {};
+  const urgency        = d["handoffReason"] === "urgent_call_now";
+  const requestedHuman = d["requestedHuman"] === true;
+  const confirmed      = d["bookingConfirmed"] === true;
+  const service        = typeof d["serviceRequested"] === "string" && d["serviceRequested"] ? d["serviceRequested"] : null;
+  const hasTiming      =
+    (typeof d["preferredTime"] === "string"    && !!d["preferredTime"]) ||
+    (typeof d["appointmentDate"] === "string"  && !!d["appointmentDate"]) ||
+    (typeof d["appointmentTime"] === "string"  && !!d["appointmentTime"]);
+  const mode = d["consultationMode"]; // "online" | "walkin" | null | undefined
+
+  if (urgency)                                return "escalate_human";
+  if (requestedHuman)                         return "escalate_human";
+  if (confirmed && service && hasTiming)      return "book_service";
+  if (confirmed && mode === "online")         return "book_online_consultation";
+  if (confirmed && mode === "walkin")         return "book_walkin_consultation";
+  if (turnCount >= 3 && !service)             return "book_callback";
+  return "qualify";
+}
+
+/**
+ * Maps resolved backend action → lead status string.
+ * Uses the backend rule engine result, not GPT's suggested action/intent.
+ */
+function actionToStatus(resolvedAction: ResolvedAction, currentStatus: string): string {
+  switch (resolvedAction) {
+    case "book_service":              return "appointment_booked";
+    case "book_online_consultation":  return "consultation_booked";
+    case "book_walkin_consultation":  return "consultation_booked";
+    case "book_callback":             return "callback_booked";
+    case "escalate_human":            return "needs_human";
     case "qualify":
       return currentStatus === "new" ? "qualified" : currentStatus;
-    case "out_of_scope":
-    case "info_request":
     default:
       return currentStatus;
   }
@@ -537,13 +542,36 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     mustNotClaim,
   });
 
-  // 6a. Backend post-validation: if knowledge base is empty and GPT did not
-  // escalate or book a callback, override with a controlled callback-offer template.
+  // 6a. Turn count — number of bot replies already in this conversation.
+  // Used by the rule engine as the hard fallback gate (turn >= 3 + no service → callback).
+  const turnCount = conversationHistory.filter((m) => m.role === "assistant").length;
+
+  // 6b. Deterministic rule engine — resolvedAction is the authority for all
+  // downstream DB writes and Twilio sends. GPT's action field is advisory only.
+  const resolvedAction = resolveAction(botResponse.data, turnCount);
+  logger.info({ leadId, resolvedAction, gptAction: botResponse.action, turnCount }, "Action resolved by rule engine");
+
+  // 6c. Asset resolver — DB-driven, independent of GPT reply text.
+  // If GPT signalled requestedAssetType, query approved assets directly and
+  // append URL to reply / collect media URLs for WhatsApp inline send.
+  let assetResult: AssetResolverResult = { mediaUrls: [], replyAppendText: "" };
+  const rawAssetType = botResponse.data?.["requestedAssetType"];
+  if (typeof rawAssetType === "string" && rawAssetType) {
+    const serviceReq =
+      typeof botResponse.data?.["serviceRequested"] === "string" && botResponse.data["serviceRequested"]
+        ? (botResponse.data["serviceRequested"] as string)
+        : null;
+    assetResult = await resolveAsset(clientRecord.id, rawAssetType, serviceReq);
+    if (assetResult.replyAppendText) {
+      botResponse.reply = `${botResponse.reply}\n\n${assetResult.replyAppendText}`;
+    }
+  }
+
+  // 6d. Empty-KB override — only fires when still in qualify mode (no resolved booking).
+  // Does NOT override any of the 5 resolved actions — a confirmed booking must not be clobbered.
   if (
     knowledgeChunks.length === 0 &&
-    botResponse.intent !== "book_callback" &&
-    botResponse.intent !== "request_call_now" &&
-    botResponse.intent !== "escalate_human"
+    resolvedAction === "qualify"
   ) {
     botResponse.reply = emptyKbCallbackOffer(language, callbackHours, profile);
     botResponse.intent = "out_of_scope";
@@ -554,8 +582,8 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   const now = new Date();
   const data = botResponse.data ?? {};
 
-  // 7. Intent-driven action execution
-  const newStatus = intentToStatus(botResponse.intent, lead.status);
+  // 7. Backend-resolved action → lead status
+  const newStatus = actionToStatus(resolvedAction, lead.status);
 
   const leadUpdates: Partial<{
     status: string;
@@ -574,18 +602,25 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   }
 
   const noteParts: string[] = [];
-  if (typeof data["careType"] === "string" && data["careType"])
-    noteParts.push(`Service: ${String(data["careType"])}`);
+  // Primary service signal: prefer serviceRequested (new), fall back to careType / serviceType (legacy)
+  const serviceRequestedNote =
+    (typeof data["serviceRequested"] === "string" && data["serviceRequested"]
+      ? String(data["serviceRequested"])
+      : null) ??
+    (typeof data["careType"] === "string" && data["careType"] ? String(data["careType"]) : null) ??
+    (typeof data["serviceType"] === "string" && data["serviceType"] ? String(data["serviceType"]) : null);
+  if (serviceRequestedNote) noteParts.push(`Service: ${serviceRequestedNote}`);
   if (typeof data["city"] === "string" && data["city"])
     noteParts.push(`City: ${String(data["city"])}`);
   if (typeof data["whoNeedsCare"] === "string" && data["whoNeedsCare"])
     noteParts.push(`For: ${String(data["whoNeedsCare"])}`);
-  if (typeof data["serviceType"] === "string" && data["serviceType"])
-    noteParts.push(`ApptService: ${String(data["serviceType"])}`);
+  if (typeof data["consultationMode"] === "string" && data["consultationMode"])
+    noteParts.push(`Mode: ${String(data["consultationMode"])}`);
   if (typeof data["appointmentDate"] === "string" && data["appointmentDate"])
     noteParts.push(`ApptDate: ${String(data["appointmentDate"])}`);
   if (typeof data["appointmentTime"] === "string" && data["appointmentTime"])
     noteParts.push(`ApptTime: ${String(data["appointmentTime"])}`);
+  noteParts.push(`Action: ${resolvedAction}`);
   if (noteParts.length > 0) {
     leadUpdates.notes = lead.notes
       ? `${lead.notes}\n${noteParts.join(", ")}`
@@ -597,6 +632,21 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       ? (data["preferredTime"] as string)
       : null;
 
+  const serviceRequested =
+    typeof data["serviceRequested"] === "string" && data["serviceRequested"]
+      ? (data["serviceRequested"] as string)
+      : null;
+
+  const appointmentDate =
+    typeof data["appointmentDate"] === "string" && data["appointmentDate"]
+      ? (data["appointmentDate"] as string)
+      : null;
+
+  const appointmentTime =
+    typeof data["appointmentTime"] === "string" && data["appointmentTime"]
+      ? (data["appointmentTime"] as string)
+      : null;
+
   const notificationInserts: {
     clientId: number;
     leadId: number;
@@ -605,14 +655,111 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     intentDetected?: string;
   }[] = [];
 
-  if (botResponse.intent === "book_callback") {
+  // ── Action handler blocks ──────────────────────────────────────────────────
+
+  if (resolvedAction === "book_service") {
+    const timeParts = [appointmentDate, appointmentTime].filter(Boolean);
+    const timing = timeParts.length > 0 ? timeParts.join(" ") : preferredTime;
+
+    await db.insert(appointmentsTable).values({
+      clientId: clientRecord.id,
+      leadId,
+      type: "service_booking",
+      serviceRequested: serviceRequested ?? undefined,
+      preferredTime: timing ?? undefined,
+      outcome: "pending",
+      notes: [
+        `Service booking via bot (${language})`,
+        serviceRequested ? `Service: ${serviceRequested}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    });
+
+    const notifBody =
+      language === "tr"
+        ? `[SİSTEM] Hizmet randevusu oluşturuldu. Hizmet: ${serviceRequested ?? "belirtilmedi"} — Zaman: ${timing ?? "belirtilmedi"}`
+        : language === "en"
+          ? `[SYSTEM] Service booking confirmed. Service: ${serviceRequested ?? "not specified"} — Time: ${timing ?? "not specified"}`
+          : `[SYSTEM] Leistungsbuchung bestätigt. Leistung: ${serviceRequested ?? "nicht angegeben"} — Zeit: ${timing ?? "nicht angegeben"}`;
+
+    notificationInserts.push({
+      clientId: clientRecord.id,
+      leadId,
+      direction: "system",
+      body: notifBody,
+      intentDetected: "book_service_confirmed",
+    });
+  }
+
+  if (resolvedAction === "book_online_consultation") {
+    const timeParts = [appointmentDate, appointmentTime].filter(Boolean);
+    const timing = timeParts.length > 0 ? timeParts.join(" ") : preferredTime;
+
+    await db.insert(appointmentsTable).values({
+      clientId: clientRecord.id,
+      leadId,
+      type: "online_consultation",
+      serviceRequested: serviceRequested ?? undefined,
+      preferredTime: timing ?? undefined,
+      outcome: "pending",
+      notes: `Online consultation via bot (${language})`,
+    });
+
+    const notifBody =
+      language === "tr"
+        ? `[SİSTEM] Online görüşme oluşturuldu. Zaman: ${timing ?? "belirtilmedi"}`
+        : language === "en"
+          ? `[SYSTEM] Online consultation booked. Time: ${timing ?? "not specified"}`
+          : `[SYSTEM] Online-Beratung gebucht. Zeit: ${timing ?? "nicht angegeben"}`;
+
+    notificationInserts.push({
+      clientId: clientRecord.id,
+      leadId,
+      direction: "system",
+      body: notifBody,
+      intentDetected: "book_online_consultation_confirmed",
+    });
+  }
+
+  if (resolvedAction === "book_walkin_consultation") {
+    const timeParts = [appointmentDate, appointmentTime].filter(Boolean);
+    const timing = timeParts.length > 0 ? timeParts.join(" ") : preferredTime;
+
+    await db.insert(appointmentsTable).values({
+      clientId: clientRecord.id,
+      leadId,
+      type: "walkin_consultation",
+      serviceRequested: serviceRequested ?? undefined,
+      preferredTime: timing ?? undefined,
+      outcome: "pending",
+      notes: `Walk-in consultation via bot (${language})`,
+    });
+
+    const notifBody =
+      language === "tr"
+        ? `[SİSTEM] Yüz yüze görüşme oluşturuldu. Zaman: ${timing ?? "belirtilmedi"}`
+        : language === "en"
+          ? `[SYSTEM] Walk-in consultation booked. Time: ${timing ?? "not specified"}`
+          : `[SYSTEM] Vor-Ort-Beratung gebucht. Zeit: ${timing ?? "nicht angegeben"}`;
+
+    notificationInserts.push({
+      clientId: clientRecord.id,
+      leadId,
+      direction: "system",
+      body: notifBody,
+      intentDetected: "book_walkin_consultation_confirmed",
+    });
+  }
+
+  if (resolvedAction === "book_callback") {
     await db.insert(appointmentsTable).values({
       clientId: clientRecord.id,
       leadId,
       type: "callback",
       preferredTime: preferredTime ?? undefined,
       outcome: "pending",
-      notes: `Booked via WhatsApp bot (${language}, ${industry ?? "generic"})`,
+      notes: `Callback via WhatsApp bot (${language}, ${industry ?? "generic"})`,
     });
 
     const notifBody =
@@ -631,59 +778,35 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     });
   }
 
-  if (botResponse.intent === "book_appointment") {
-    const serviceType =
-      typeof data["serviceType"] === "string" && data["serviceType"]
-        ? (data["serviceType"] as string)
-        : null;
-    const appointmentDate =
-      typeof data["appointmentDate"] === "string" && data["appointmentDate"]
-        ? (data["appointmentDate"] as string)
-        : null;
-    const appointmentTime =
-      typeof data["appointmentTime"] === "string" && data["appointmentTime"]
-        ? (data["appointmentTime"] as string)
-        : null;
-    const apptPreferredTime =
-      [appointmentDate, appointmentTime].filter(Boolean).join(" ") || preferredTime || null;
-
-    await db.insert(appointmentsTable).values({
-      clientId: clientRecord.id,
-      leadId,
-      type: "visit",
-      preferredTime: apptPreferredTime ?? undefined,
-      outcome: "pending",
-      notes: [`Visit booked via bot (${language})`, serviceType ? `Service: ${serviceType}` : null]
-        .filter(Boolean)
-        .join(" · "),
-    });
-
-    const apptNotifBody =
-      language === "ar"
-        ? `[النظام] تم حجز موعد زيارة. الخدمة: ${serviceType ?? "غير محدد"} — الوقت: ${apptPreferredTime ?? "غير محدد"}`
-        : language === "tr"
-          ? `[SİSTEM] Ziyaret randevusu oluşturuldu. Hizmet: ${serviceType ?? "belirtilmedi"} — Zaman: ${apptPreferredTime ?? "belirtilmedi"}`
+  if (resolvedAction === "escalate_human") {
+    const handoffReason = data["handoffReason"];
+    const urgentNote =
+      handoffReason === "urgent_call_now"
+        ? language === "tr"
+          ? "[ACİL] Anında geri arama talep edildi"
           : language === "en"
-            ? `[SYSTEM] Visit booked. Service: ${serviceType ?? "not specified"} — Time: ${apptPreferredTime ?? "not specified"}`
-            : `[SYSTEM] Termin gebucht. Leistung: ${serviceType ?? "nicht angegeben"} — Zeit: ${apptPreferredTime ?? "nicht angegeben"}`;
+            ? "[URGENT] Immediate callback requested"
+            : "[DRINGEND] Sofortiger Rückruf gewünscht"
+        : language === "tr"
+          ? "[İNSAN] Müşteri gerçek bir temsilci talep etti"
+          : language === "en"
+            ? "[HUMAN] Customer requested human agent"
+            : "[MENSCH] Kunde hat menschlichen Berater angefordert";
+
+    leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
 
     notificationInserts.push({
       clientId: clientRecord.id,
       leadId,
       direction: "system",
-      body: apptNotifBody,
-      intentDetected: "appointment_booked_confirmed",
+      body:
+        language === "tr"
+          ? `[SİSTEM] İnsan devreye alınması gerekiyor. Sebep: ${String(handoffReason ?? "requested")}`
+          : language === "en"
+            ? `[SYSTEM] Human escalation required. Reason: ${String(handoffReason ?? "requested")}`
+            : `[SYSTEM] Mensch erforderlich. Grund: ${String(handoffReason ?? "requested")}`,
+      intentDetected: "escalate_human",
     });
-  }
-
-  if (botResponse.intent === "request_call_now") {
-    const urgentNote =
-      language === "tr"
-        ? "[ACİL] Anında geri arama talep edildi"
-        : language === "en"
-          ? "[URGENT] Immediate callback requested"
-          : "[DRINGEND] Sofortiger Rückruf gewünscht";
-    leadUpdates.notes = lead.notes ? `${lead.notes}\n${urgentNote}` : urgentNote;
   }
 
   // 8. Language switch persistence — accept any valid ISO 639-1 code GPT returns.
@@ -724,11 +847,10 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   // 10. Twilio reply (text — always sent first)
   await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
 
-  // 10a. If the bot mentioned an image or PDF asset URL, send it again as a
-  // Twilio media message so WhatsApp renders it inline (image preview / PDF card).
-  // This is fire-and-forget — failure is logged but never crashes the pipeline.
-  const mediaUrls = extractReferencedMediaAssets(knowledgeChunks, botResponse.reply);
-  for (const mediaUrl of mediaUrls) {
+  // 10a. Send media assets resolved by the asset resolver (image / PDF).
+  // assetResult is populated in step 6c when GPT signals requestedAssetType.
+  // Fire-and-forget — failure is logged but never crashes the pipeline.
+  for (const mediaUrl of assetResult.mediaUrls) {
     await sendWhatsAppMedia(twilioSender, `whatsapp:${userPhone}`, mediaUrl);
   }
 
@@ -742,7 +864,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       industry: industry ?? "generic",
       persona: profile.personaRole,
       intent: botResponse.intent,
-      action: botResponse.action,
+      resolvedAction,
       newStatus,
       language,
     },
