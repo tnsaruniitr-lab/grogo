@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,8 @@ import {
   ClipboardCheck,
   Cable,
   Save,
+  User,
+  FileText,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
@@ -79,6 +82,7 @@ interface BrandingConfig {
   industry?: string | null;
   twilioSender?: string | null;
   defaultMessage?: string | null;
+  mode?: "website" | "manual" | "individual" | null;
 }
 
 interface DemoClient {
@@ -561,9 +565,12 @@ function BrandCard({
     client.branding.defaultMessage ??
     `[${client.slug}] Hi! I'm interested in your services 👋`;
   const waLink = `https://wa.me/${waDigits}?text=${encodeURIComponent(waMessage)}`;
+  const clientMode = client.branding.mode;
+  const isManualMode = clientMode === "manual" || clientMode === "individual";
   const crawlReady =
-    (crawlData?.status === "completed" || crawlData?.status === "partial") &&
-    (crawlData?.chunksExtracted ?? 0) > 0;
+    isManualMode ||
+    ((crawlData?.status === "completed" || crawlData?.status === "partial") &&
+      (crawlData?.chunksExtracted ?? 0) > 0);
 
   return (
     <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#1a1d26] flex flex-col hover:border-white/20 transition-colors">
@@ -610,9 +617,20 @@ function BrandCard({
 
         {/* Crawl status row */}
         <div className="flex items-center gap-2 bg-white/[0.03] rounded-lg px-2.5 py-1.5">
-          <RefreshCw className="h-3 w-3 text-white/20 shrink-0" />
+          {isManualMode ? (
+            <FileText className="h-3 w-3 text-white/20 shrink-0" />
+          ) : (
+            <RefreshCw className="h-3 w-3 text-white/20 shrink-0" />
+          )}
           <span className="text-white/20 text-[10px] shrink-0">KB:</span>
-          <CrawlBadge slug={client.slug} onCrawlComplete={onReview} />
+          {isManualMode ? (
+            <span className="text-[10px] font-semibold text-[#A8C334]/80 flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" />
+              Manual · ready
+            </span>
+          ) : (
+            <CrawlBadge slug={client.slug} onCrawlComplete={onReview} />
+          )}
         </div>
 
         {/* WhatsApp QR — only shown post-crawl once knowledge is approved */}
@@ -896,6 +914,22 @@ function CreateDemoDialog({
   const [creating, setCreating] = useState(false);
   const [extracted, setExtracted] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [mode, setMode] = useState<"website" | "manual" | "individual" | null>(null);
+  const [manualKnowledge, setManualKnowledge] = useState({
+    businessDescription: "",
+    servicesOffered: "",
+    pricingInfo: "",
+    locationAndTarget: "",
+  });
+  const [individualKnowledge, setIndividualKnowledge] = useState({
+    personalPitch: "",
+    servicesOffer: "",
+    idealClientProfile: "",
+    qualifyingQuestion1: "",
+    qualifyingQuestion2: "",
+    qualifyingQuestion3: "",
+    availability: "",
+  });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [demoLanguages, setDemoLanguages] = useState<string[]>(["en"]);
@@ -993,6 +1027,12 @@ function CreateDemoDialog({
     setCreating(true);
     try {
       const finalLogoUrl = await uploadLogo();
+      const modePayload =
+        mode === "manual"
+          ? manualKnowledge
+          : mode === "individual"
+            ? individualKnowledge
+            : {};
       const res = await fetch("/api/admin/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1004,6 +1044,8 @@ function CreateDemoDialog({
             logoUrl: finalLogoUrl,
             demoLanguage: demoLanguages[0] ?? "en",
             demoLanguages,
+            mode: mode ?? "website",
+            ...modePayload,
           },
         }),
       });
@@ -1020,6 +1062,7 @@ function CreateDemoDialog({
   };
 
   const reset = () => {
+    setMode(null);
     setWebsiteUrl("");
     setDemoLanguages(["en"]);
     setBranding({ companyName: "", slug: "", tagline: "", primaryColor: "", secondaryColor: "", logoUrl: "", city: "", phone: "", websiteUrl: "", heroHeadline: "", industry: "" });
@@ -1027,6 +1070,8 @@ function CreateDemoDialog({
     setLogoPreview(null);
     setExtracted(false);
     setShowAdvanced(false);
+    setManualKnowledge({ businessDescription: "", servicesOffered: "", pricingInfo: "", locationAndTarget: "" });
+    setIndividualKnowledge({ personalPitch: "", servicesOffer: "", idealClientProfile: "", qualifyingQuestion1: "", qualifyingQuestion2: "", qualifyingQuestion3: "", availability: "" });
   };
 
   return (
@@ -1035,107 +1080,308 @@ function CreateDemoDialog({
         <DialogHeader>
           <DialogTitle>New Demo</DialogTitle>
           <DialogDescription>
-            Paste a prospect's website — we scan it and build a branded landing page instantly.
+            {mode === null && "Choose how to set up the bot's knowledge base."}
+            {mode === "website" && "We scan the site and build a branded knowledge base instantly."}
+            {mode === "manual" && "Fill in a few key details — we'll build the bot's knowledge base from those."}
+            {mode === "individual" && "Set up your personal AI assistant that never misses a lead."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-1">
-          {/* URL input — always visible */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="care-service-munich.de"
-              value={websiteUrl}
-              onChange={(e) => { setWebsiteUrl(e.target.value); if (extracted) setExtracted(false); }}
-              onKeyDown={(e) => e.key === "Enter" && extract()}
-              className="flex-1"
-            />
-            <Button onClick={extract} disabled={extracting || !websiteUrl} className="shrink-0 gap-1.5">
-              {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {extracting ? "Scanning…" : "Scan"}
-            </Button>
-          </div>
 
-          {/* Phase 1: hint before extraction */}
-          {!extracted && !extracting && (
-            <div className="rounded-xl border border-dashed border-border p-6 flex flex-col items-center gap-2 text-center text-muted-foreground">
-              <Globe className="h-8 w-8 opacity-30" />
-              <p className="text-sm">Enter any website URL above and press <strong>Scan</strong>.<br />We'll pull the brand name, colors, and logo automatically.</p>
+          {/* ── STEP 0: Mode picker ── */}
+          {mode === null && (
+            <div className="space-y-2">
+              <div className="grid gap-2">
+                <button
+                  onClick={() => setMode("website")}
+                  className="flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-primary/60 hover:bg-primary/5 transition-all text-left group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10">
+                    <Globe className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">I have a website</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">We scan it and build the knowledge base automatically</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setMode("manual")}
+                  className="flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-primary/60 hover:bg-primary/5 transition-all text-left group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10">
+                    <FileText className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">I don't have a website</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Enter a few details manually — we build the knowledge base from those</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setMode("individual")}
+                  className="flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-primary/60 hover:bg-primary/5 transition-all text-left group"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10">
+                    <User className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">I'm an individual</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Sales, consulting, freelance — a personal AI that never misses a lead</p>
+                  </div>
+                </button>
+              </div>
+              <div className="flex justify-end pt-1">
+                <Button variant="ghost" size="sm" onClick={() => { onClose(); reset(); }}>Cancel</Button>
+              </div>
             </div>
           )}
 
-          {extracting && (
-            <div className="rounded-xl border border-dashed border-border p-6 flex flex-col items-center gap-3 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin opacity-40" />
-              <p className="text-sm">Scanning website…</p>
-            </div>
-          )}
-
-          {/* Phase 2: extracted preview + edit + create */}
-          {extracted && (
+          {/* ── MODE A: Website (existing scan flow) ── */}
+          {mode === "website" && (
             <div className="space-y-4">
-              {/* Brand preview card */}
-              <div className="rounded-xl overflow-hidden border border-border">
-                <div className="h-16 flex items-center px-4 gap-3" style={{ backgroundColor: primary }}>
-                  {logoPreview ? (
-                    <img src={logoPreview} alt="" className="h-9 w-9 rounded object-contain bg-white/10 p-0.5"
-                      onError={() => setLogoPreview(null)} />
-                  ) : (
-                    <div className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-extrabold text-sm"
-                      style={{ backgroundColor: secondary }}>
-                      {branding.companyName.slice(0, 2).toUpperCase() || "?"}
+              <button
+                onClick={() => { setMode(null); setExtracted(false); }}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Back
+              </button>
+
+              {/* URL input */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="care-service-munich.de"
+                  value={websiteUrl}
+                  onChange={(e) => { setWebsiteUrl(e.target.value); if (extracted) setExtracted(false); }}
+                  onKeyDown={(e) => e.key === "Enter" && extract()}
+                  className="flex-1"
+                />
+                <Button onClick={extract} disabled={extracting || !websiteUrl} className="shrink-0 gap-1.5">
+                  {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {extracting ? "Scanning…" : "Scan"}
+                </Button>
+              </div>
+
+              {!extracted && !extracting && (
+                <div className="rounded-xl border border-dashed border-border p-6 flex flex-col items-center gap-2 text-center text-muted-foreground">
+                  <Globe className="h-8 w-8 opacity-30" />
+                  <p className="text-sm">Enter any website URL above and press <strong>Scan</strong>.<br />We'll pull the brand name, colors, and logo automatically.</p>
+                </div>
+              )}
+
+              {extracting && (
+                <div className="rounded-xl border border-dashed border-border p-6 flex flex-col items-center gap-3 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin opacity-40" />
+                  <p className="text-sm">Scanning website…</p>
+                </div>
+              )}
+
+              {extracted && (
+                <div className="space-y-4">
+                  {/* Brand preview card */}
+                  <div className="rounded-xl overflow-hidden border border-border">
+                    <div className="h-16 flex items-center px-4 gap-3" style={{ backgroundColor: primary }}>
+                      {logoPreview ? (
+                        <img src={logoPreview} alt="" className="h-9 w-9 rounded object-contain bg-white/10 p-0.5" onError={() => setLogoPreview(null)} />
+                      ) : (
+                        <div className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-extrabold text-sm" style={{ backgroundColor: secondary }}>
+                          {branding.companyName.slice(0, 2).toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-extrabold text-base leading-tight truncate">{branding.companyName}</p>
+                        {branding.tagline && <p className="text-white/70 text-xs truncate">{branding.tagline}</p>}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-sm">{LANG_OPTIONS.find((l) => l.value === (branding.demoLanguage || "de"))?.flag}</span>
+                        <span className="text-xs bg-black/20 text-white px-2 py-0.5 rounded-full font-mono">/demo/{branding.slug || "…"}</span>
+                      </div>
+                    </div>
+                    <div className="bg-muted/30 px-4 py-2 flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full border border-border" style={{ backgroundColor: primary }} />
+                      <span className="text-xs text-muted-foreground">{primary}</span>
+                      {branding.secondaryColor && <>
+                        <div className="h-3 w-3 rounded-full border border-border ml-2" style={{ backgroundColor: secondary }} />
+                        <span className="text-xs text-muted-foreground">{secondary}</span>
+                      </>}
+                      <button className="ml-auto text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground" onClick={() => setExtracted(false)}>
+                        ← Change URL
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Industry type selector */}
+                  <div className="space-y-2">
+                    <Label className="text-xs">Business Type</Label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {INDUSTRY_OPTIONS.map((opt) => (
+                        <button key={opt.value} type="button" onClick={() => setBranding((prev) => ({ ...prev, industry: opt.value }))}
+                          className={`flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg border text-center transition-colors text-xs leading-tight ${branding.industry === opt.value ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border text-muted-foreground hover:border-foreground/30"}`}
+                        >
+                          <span className="text-base leading-none">{opt.emoji}</span>
+                          <span>{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {branding.industry && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Video theme: <span className="font-medium text-foreground">{INDUSTRY_OPTIONS.find(o => o.value === branding.industry)?.label}</span>
+                        {" "}· Colors from their brand applied automatically
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Editable name + slug */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Company Name *</Label>
+                      <Input value={branding.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Company Name" className="h-9" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">URL slug *</Label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground shrink-0">/demo/</span>
+                        <Input value={branding.slug} onChange={(e) => update("slug", slugify(e.target.value))} className="font-mono text-xs h-9" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Language multi-pick */}
+                  <div className="flex gap-2 flex-wrap">
+                    {LANG_OPTIONS.map((l) => {
+                      const active = demoLanguages.includes(l.value);
+                      return (
+                        <button key={l.value} type="button" onClick={() => toggleLanguage(l.value)}
+                          className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-colors ${active ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border text-muted-foreground hover:border-foreground/30"}`}
+                        >
+                          {l.flag} {l.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Collapsible advanced */}
+                  <button onClick={() => setShowAdvanced((v) => !v)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <Settings className="h-3.5 w-3.5" />
+                    {showAdvanced ? "Hide advanced options" : "Customize colors, logo & more…"}
+                  </button>
+
+                  {showAdvanced && (
+                    <div className="space-y-3 rounded-xl border border-border p-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Primary Color</Label>
+                          <div className="flex gap-2 items-center">
+                            <input type="color" value={primary} onChange={(e) => update("primaryColor", e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer shrink-0" />
+                            <Input value={branding.primaryColor ?? ""} onChange={(e) => update("primaryColor", e.target.value)} className="font-mono text-xs h-9" placeholder="#A8C334" />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Secondary Color</Label>
+                          <div className="flex gap-2 items-center">
+                            <input type="color" value={secondary} onChange={(e) => update("secondaryColor", e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer shrink-0" />
+                            <Input value={branding.secondaryColor ?? ""} onChange={(e) => update("secondaryColor", e.target.value)} className="font-mono text-xs h-9" placeholder="#1a3a1a" />
+                          </div>
+                        </div>
+                        <div className="col-span-2 space-y-1.5">
+                          <Label className="text-xs">Tagline</Label>
+                          <Input value={branding.tagline ?? ""} onChange={(e) => update("tagline", e.target.value)} placeholder="Professional Care with Heart" className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">City</Label>
+                          <Input value={branding.city ?? ""} onChange={(e) => update("city", e.target.value)} placeholder="Munich" className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Phone</Label>
+                          <Input value={branding.phone ?? ""} onChange={(e) => update("phone", e.target.value)} placeholder="+49 89 123" className="h-9" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Logo override</Label>
+                        <div className="flex items-center gap-3">
+                          {logoPreview && (
+                            <div className="relative shrink-0">
+                              <img src={logoPreview} alt="" className="h-10 w-10 rounded object-contain bg-muted p-0.5 border" onError={() => setLogoPreview(null)} />
+                              <button className="absolute -top-1 -right-1 bg-destructive text-white rounded-full w-4 h-4 text-xs flex items-center justify-center" onClick={() => { setLogoFile(null); setLogoPreview(null); update("logoUrl", ""); }}>×</button>
+                            </div>
+                          )}
+                          <Input type="file" accept="image/*" className="cursor-pointer h-9 text-xs" onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }
+                          }} />
+                        </div>
+                      </div>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-extrabold text-base leading-tight truncate">{branding.companyName}</p>
-                    {branding.tagline && <p className="text-white/70 text-xs truncate">{branding.tagline}</p>}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-sm">{LANG_OPTIONS.find((l) => l.value === (branding.demoLanguage || "de"))?.flag}</span>
-                    <span className="text-xs bg-black/20 text-white px-2 py-0.5 rounded-full font-mono">/demo/{branding.slug || "…"}</span>
-                  </div>
+
+                  <Button onClick={create} disabled={creating || uploading || !branding.companyName} className="w-full h-11 gap-2 text-base">
+                    {(creating || uploading) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    {creating ? "Creating…" : uploading ? "Uploading logo…" : `Create demo for ${branding.companyName || "…"}`}
+                  </Button>
                 </div>
-                <div className="bg-muted/30 px-4 py-2 flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full border border-border" style={{ backgroundColor: primary }} />
-                  <span className="text-xs text-muted-foreground">{primary}</span>
-                  {branding.secondaryColor && <>
-                    <div className="h-3 w-3 rounded-full border border-border ml-2" style={{ backgroundColor: secondary }} />
-                    <span className="text-xs text-muted-foreground">{secondary}</span>
-                  </>}
-                  <button className="ml-auto text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground" onClick={() => setExtracted(false)}>
-                    ← Change URL
-                  </button>
+              )}
+
+              {!extracted && (
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => { onClose(); reset(); }}>Cancel</Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── MODE B: No website — manual fields ── */}
+          {mode === "manual" && (
+            <div className="space-y-4">
+              <button
+                onClick={() => setMode(null)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Back
+              </button>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">About your business *</Label>
+                  <Textarea
+                    placeholder="We are a home healthcare company serving families in Munich, offering nursing and physiotherapy at home."
+                    value={manualKnowledge.businessDescription}
+                    onChange={(e) => setManualKnowledge(p => ({ ...p, businessDescription: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={2}
+                  />
+                  <p className="text-[10px] text-muted-foreground">2–3 sentences — answers "who are you?"</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Services you offer *</Label>
+                  <Textarea
+                    placeholder="Home nursing, physiotherapy, dementia care, 24h live-in care…"
+                    value={manualKnowledge.servicesOffered}
+                    onChange={(e) => setManualKnowledge(p => ({ ...p, servicesOffered: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Pricing</Label>
+                  <Textarea
+                    placeholder="From €45/hour for basic care. Custom quotes available — contact us."
+                    value={manualKnowledge.pricingInfo}
+                    onChange={(e) => setManualKnowledge(p => ({ ...p, pricingInfo: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={1}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Location & who you serve</Label>
+                  <Textarea
+                    placeholder="Based in Munich, serving families across Bavaria. We specialise in Turkish and German-speaking clients."
+                    value={manualKnowledge.locationAndTarget}
+                    onChange={(e) => setManualKnowledge(p => ({ ...p, locationAndTarget: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={1}
+                  />
                 </div>
               </div>
 
-              {/* Industry type selector */}
-              <div className="space-y-2">
-                <Label className="text-xs">Business Type</Label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {INDUSTRY_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setBranding((prev) => ({ ...prev, industry: opt.value }))}
-                      className={`flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg border text-center transition-colors text-xs leading-tight ${
-                        branding.industry === opt.value
-                          ? "border-primary bg-primary/10 text-primary font-semibold"
-                          : "border-border text-muted-foreground hover:border-foreground/30"
-                      }`}
-                    >
-                      <span className="text-base leading-none">{opt.emoji}</span>
-                      <span>{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-                {branding.industry && (
-                  <p className="text-[11px] text-muted-foreground">
-                    Video theme: <span className="font-medium text-foreground">{INDUSTRY_OPTIONS.find(o => o.value === branding.industry)?.label}</span>
-                    {" "}· Colors from their brand applied automatically
-                  </p>
-                )}
-              </div>
-
-              {/* Editable name + slug */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Company Name *</Label>
@@ -1150,20 +1396,12 @@ function CreateDemoDialog({
                 </div>
               </div>
 
-              {/* Language multi-pick */}
               <div className="flex gap-2 flex-wrap">
                 {LANG_OPTIONS.map((l) => {
                   const active = demoLanguages.includes(l.value);
                   return (
-                    <button
-                      key={l.value}
-                      type="button"
-                      onClick={() => toggleLanguage(l.value)}
-                      className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                        active
-                          ? "border-primary bg-primary/10 text-primary font-semibold"
-                          : "border-border text-muted-foreground hover:border-foreground/30"
-                      }`}
+                    <button key={l.value} type="button" onClick={() => toggleLanguage(l.value)}
+                      className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-colors ${active ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border text-muted-foreground hover:border-foreground/30"}`}
                     >
                       {l.flag} {l.label}
                     </button>
@@ -1171,77 +1409,120 @@ function CreateDemoDialog({
                 })}
               </div>
 
-              {/* Collapsible advanced */}
-              <button
-                onClick={() => setShowAdvanced((v) => !v)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              <Button
+                onClick={create}
+                disabled={creating || !branding.companyName || !manualKnowledge.businessDescription || !manualKnowledge.servicesOffered}
+                className="w-full h-11 gap-2 text-base"
               >
-                <Settings className="h-3.5 w-3.5" />
-                {showAdvanced ? "Hide advanced options" : "Customize colors, logo & more…"}
-              </button>
-
-              {showAdvanced && (
-                <div className="space-y-3 rounded-xl border border-border p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Primary Color</Label>
-                      <div className="flex gap-2 items-center">
-                        <input type="color" value={primary} onChange={(e) => update("primaryColor", e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer shrink-0" />
-                        <Input value={branding.primaryColor ?? ""} onChange={(e) => update("primaryColor", e.target.value)} className="font-mono text-xs h-9" placeholder="#A8C334" />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Secondary Color</Label>
-                      <div className="flex gap-2 items-center">
-                        <input type="color" value={secondary} onChange={(e) => update("secondaryColor", e.target.value)} className="h-9 w-10 rounded border border-input cursor-pointer shrink-0" />
-                        <Input value={branding.secondaryColor ?? ""} onChange={(e) => update("secondaryColor", e.target.value)} className="font-mono text-xs h-9" placeholder="#1a3a1a" />
-                      </div>
-                    </div>
-                    <div className="col-span-2 space-y-1.5">
-                      <Label className="text-xs">Tagline</Label>
-                      <Input value={branding.tagline ?? ""} onChange={(e) => update("tagline", e.target.value)} placeholder="Professional Care with Heart" className="h-9" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">City</Label>
-                      <Input value={branding.city ?? ""} onChange={(e) => update("city", e.target.value)} placeholder="Munich" className="h-9" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Phone</Label>
-                      <Input value={branding.phone ?? ""} onChange={(e) => update("phone", e.target.value)} placeholder="+49 89 123" className="h-9" />
-                    </div>
-                  </div>
-                  {/* Logo override */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Logo override</Label>
-                    <div className="flex items-center gap-3">
-                      {logoPreview && (
-                        <div className="relative shrink-0">
-                          <img src={logoPreview} alt="" className="h-10 w-10 rounded object-contain bg-muted p-0.5 border" onError={() => setLogoPreview(null)} />
-                          <button className="absolute -top-1 -right-1 bg-destructive text-white rounded-full w-4 h-4 text-xs flex items-center justify-center" onClick={() => { setLogoFile(null); setLogoPreview(null); update("logoUrl", ""); }}>×</button>
-                        </div>
-                      )}
-                      <Input type="file" accept="image/*" className="cursor-pointer h-9 text-xs" onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }
-                      }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Create button */}
-              <Button onClick={create} disabled={creating || uploading || !branding.companyName} className="w-full h-11 gap-2 text-base">
-                {(creating || uploading) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {creating ? "Creating…" : uploading ? "Uploading logo…" : `Create demo for ${branding.companyName || "…"}`}
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {creating ? "Creating…" : `Create bot for ${branding.companyName || "…"}`}
               </Button>
             </div>
           )}
 
-          {!extracted && (
-            <div className="flex justify-end">
-              <Button variant="ghost" size="sm" onClick={() => { onClose(); reset(); }}>Cancel</Button>
+          {/* ── MODE C: Individual / EA ── */}
+          {mode === "individual" && (
+            <div className="space-y-4">
+              <button
+                onClick={() => setMode(null)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Back
+              </button>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Your name & role *</Label>
+                  <Input
+                    placeholder="Alex Chen — Enterprise SaaS Sales"
+                    value={branding.companyName}
+                    onChange={(e) => update("companyName", e.target.value)}
+                    className="h-9"
+                  />
+                  <p className="text-[10px] text-muted-foreground">This is how the bot introduces you</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Your personal pitch *</Label>
+                  <Textarea
+                    placeholder="I help B2B SaaS companies build outbound pipelines and close enterprise deals faster…"
+                    value={individualKnowledge.personalPitch}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, personalPitch: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">What you offer</Label>
+                  <Textarea
+                    placeholder="Sales strategy consulting, SDR coaching, pipeline reviews, outreach playbooks…"
+                    value={individualKnowledge.servicesOffer}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, servicesOffer: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Ideal client profile</Label>
+                  <Textarea
+                    placeholder="B2B SaaS, 50–500 employees, Series A+, UK/EU, with a sales team of 5+."
+                    value={individualKnowledge.idealClientProfile}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, idealClientProfile: e.target.value }))}
+                    className="resize-none text-sm"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Qualifying questions (up to 3)</Label>
+                  <Input placeholder="e.g. What's your current monthly lead volume?" className="h-8 text-xs mb-1.5"
+                    value={individualKnowledge.qualifyingQuestion1}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, qualifyingQuestion1: e.target.value }))} />
+                  <Input placeholder="e.g. Do you have a dedicated SDR team?" className="h-8 text-xs mb-1.5"
+                    value={individualKnowledge.qualifyingQuestion2}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, qualifyingQuestion2: e.target.value }))} />
+                  <Input placeholder="e.g. What's your budget for sales tools?" className="h-8 text-xs"
+                    value={individualKnowledge.qualifyingQuestion3}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, qualifyingQuestion3: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Your availability for calls</Label>
+                  <Input placeholder="Mon–Fri, 9am–6pm GMT" className="h-8 text-xs"
+                    value={individualKnowledge.availability}
+                    onChange={(e) => setIndividualKnowledge(p => ({ ...p, availability: e.target.value }))} />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">URL slug *</Label>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground shrink-0">/demo/</span>
+                  <Input value={branding.slug} onChange={(e) => update("slug", slugify(e.target.value))} className="font-mono text-xs h-9" />
+                </div>
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                {LANG_OPTIONS.map((l) => {
+                  const active = demoLanguages.includes(l.value);
+                  return (
+                    <button key={l.value} type="button" onClick={() => toggleLanguage(l.value)}
+                      className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-colors ${active ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border text-muted-foreground hover:border-foreground/30"}`}
+                    >
+                      {l.flag} {l.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button
+                onClick={create}
+                disabled={creating || !branding.companyName || !individualKnowledge.personalPitch}
+                className="w-full h-11 gap-2 text-base"
+              >
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {creating ? "Creating…" : `Create bot for ${branding.companyName || "…"}`}
+              </Button>
             </div>
           )}
+
         </div>
       </DialogContent>
     </Dialog>

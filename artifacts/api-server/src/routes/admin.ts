@@ -12,7 +12,7 @@ import {
   GetClientBrandingParams,
 } from "@workspace/api-zod";
 import { startCrawlJob, runCrawlPipeline } from "../lib/crawl-pipeline";
-import { embedText } from "../lib/embedder";
+import { embedText, embeddingToJson } from "../lib/embedder";
 import { getSettings, updateSettings } from "../lib/settings";
 
 const KNOWLEDGE_LANGUAGES = [
@@ -37,6 +37,64 @@ const KnowledgeEntryParams = z.object({
   slug: z.string(),
   id: z.coerce.number().int().positive(),
 });
+
+async function seedManualKnowledge(
+  clientId: number,
+  mode: string,
+  cfg: Record<string, unknown>,
+): Promise<void> {
+  const companyName = (cfg.companyName as string | undefined) ?? "the company";
+  const language = (cfg.demoLanguage as string | undefined) ?? "en";
+
+  const entries: Array<{ category: string; question: string; answer: string }> = [];
+
+  if (mode === "manual") {
+    const desc = cfg.businessDescription as string | undefined;
+    const services = cfg.servicesOffered as string | undefined;
+    const pricing = cfg.pricingInfo as string | undefined;
+    const location = cfg.locationAndTarget as string | undefined;
+    if (desc) entries.push({ category: "about", question: `What is ${companyName}?`, answer: desc });
+    if (services) entries.push({ category: "services", question: `What services does ${companyName} offer?`, answer: services });
+    if (pricing) entries.push({ category: "pricing", question: `How much does ${companyName} charge?`, answer: pricing });
+    if (location) entries.push({ category: "location", question: `Where is ${companyName} based and who do they serve?`, answer: location });
+  } else if (mode === "individual") {
+    const name = companyName;
+    const pitch = cfg.personalPitch as string | undefined;
+    const offer = cfg.servicesOffer as string | undefined;
+    const icp = cfg.idealClientProfile as string | undefined;
+    const q1 = cfg.qualifyingQuestion1 as string | undefined;
+    const q2 = cfg.qualifyingQuestion2 as string | undefined;
+    const q3 = cfg.qualifyingQuestion3 as string | undefined;
+    const avail = cfg.availability as string | undefined;
+    if (pitch) entries.push({ category: "about", question: `Who is ${name} and what do they do?`, answer: pitch });
+    if (offer) entries.push({ category: "services", question: `What does ${name} offer?`, answer: offer });
+    if (icp) entries.push({ category: "process", question: `Who is the ideal client for ${name}?`, answer: icp });
+    const qs = [q1, q2, q3].filter(Boolean);
+    if (qs.length > 0) {
+      entries.push({
+        category: "faq",
+        question: `What questions does ${name} ask before taking a call?`,
+        answer: qs.map((q) => `- ${q}`).join("\n"),
+      });
+    }
+    if (avail) entries.push({ category: "process", question: `When is ${name} available for calls?`, answer: avail });
+  }
+
+  for (const entry of entries) {
+    const embeddingVec = await embedText(`${entry.question} ${entry.answer}`);
+    await db.insert(companyKnowledgeTable).values({
+      clientId,
+      category: entry.category,
+      question: entry.question,
+      answer: entry.answer,
+      language,
+      priority: 10,
+      source: "manual",
+      approvalStatus: "approved",
+      embeddingJson: embeddingVec ? embeddingToJson(embeddingVec) : null,
+    });
+  }
+}
 
 const router: IRouter = Router();
 
@@ -71,11 +129,13 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
     return;
   }
 
-  const brandingCfg = branding as Record<string, unknown> | undefined;
-  const demoLangs: string[] = Array.isArray(brandingCfg?.demoLanguages)
-    ? (brandingCfg.demoLanguages as string[])
-    : brandingCfg?.demoLanguage
-      ? [brandingCfg.demoLanguage as string]
+  // Raw body branding preserves fields Zod strips (mode, businessDescription, etc.)
+  const rawBranding = (req.body?.branding ?? {}) as Record<string, unknown>;
+
+  const demoLangs: string[] = Array.isArray(rawBranding.demoLanguages)
+    ? (rawBranding.demoLanguages as string[])
+    : rawBranding.demoLanguage
+      ? [rawBranding.demoLanguage as string]
       : ["en"];
 
   const [created] = await db
@@ -87,18 +147,27 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
       twilioSender: process.env.TWILIO_DEFAULT_SENDER ?? "",
       languagePrimary: demoLangs[0] ?? "en",
       languageSecondary: demoLangs[1] ?? null,
-      config: branding ?? null,
+      // Store raw branding (including mode) so the frontend can read it back
+      config: rawBranding,
     })
     .returning();
 
   res.status(201).json(toClientResponse(created));
 
-  // Auto-trigger crawl if a websiteUrl was provided
-  const websiteUrl = (branding as Record<string, unknown> | undefined)?.websiteUrl as string | undefined;
-  if (websiteUrl) {
-    startCrawlJob(created.id, websiteUrl)
-      .then((jobId) => runCrawlPipeline(created.id, websiteUrl, jobId))
-      .catch((err) => req.log.error({ err, clientId: created.id }, "Auto-crawl failed to start"));
+  const clientMode = rawBranding.mode as string | undefined;
+
+  if (clientMode === "manual" || clientMode === "individual") {
+    // Seed knowledge entries from manual fields — no crawl needed
+    seedManualKnowledge(created.id, clientMode, rawBranding)
+      .catch((err) => req.log.error({ err, clientId: created.id }, "Manual knowledge seeding failed"));
+  } else {
+    // Auto-trigger crawl if a websiteUrl was provided
+    const websiteUrl = rawBranding.websiteUrl as string | undefined;
+    if (websiteUrl) {
+      startCrawlJob(created.id, websiteUrl)
+        .then((jobId) => runCrawlPipeline(created.id, websiteUrl, jobId))
+        .catch((err) => req.log.error({ err, clientId: created.id }, "Auto-crawl failed to start"));
+    }
   }
 });
 
