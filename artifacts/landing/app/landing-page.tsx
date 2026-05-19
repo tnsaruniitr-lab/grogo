@@ -33,7 +33,7 @@ export function LandingPage({ lang }: { lang: string }) {
 
       {/* Floating WhatsApp bubble */}
       <a
-        href="https://wa.me/15558085030?text=%5Bgrowthmonk%5D%20"
+        href="https://wa.me/919461049307?text=%5Bgrowthmonk%5D%20"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with GrowthMonk on WhatsApp"
