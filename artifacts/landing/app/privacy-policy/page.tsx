@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <h2>2. Data We Collect</h2>
-      <h3>From end users (patients / leads)</h3>
+      <h3>From end users (customers / leads)</h3>
       <ul>
         <li>WhatsApp, Instagram, or Facebook phone number or user ID provided by Meta's API</li>
         <li>Message content sent to a GrowthMonk-powered bot (text only; no media is stored)</li>

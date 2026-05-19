@@ -155,7 +155,7 @@ const jsonLd = {
           name: "How does GrowthMonk capture leads from WhatsApp?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "GrowthMonk connects to your WhatsApp Business number via the official Meta WhatsApp Business API. When a patient sends a message, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — all automatically, 24 hours a day.",
+            text: "GrowthMonk connects to your WhatsApp Business number via the official Meta WhatsApp Business API. When a customer sends a message, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — all automatically, 24 hours a day.",
           },
         },
         {
@@ -163,7 +163,7 @@ const jsonLd = {
           name: "Does GrowthMonk support multiple languages?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. GrowthMonk detects the patient's language automatically and responds in that language throughout the entire conversation. Currently supported languages include English, German, Turkish, and Arabic, with more being added continuously.",
+            text: "Yes. GrowthMonk detects the customer's language automatically and responds in that language throughout the entire conversation. Currently supported languages include English, German, Turkish, and Arabic, with more being added continuously.",
           },
         },
         {
@@ -171,7 +171,7 @@ const jsonLd = {
           name: "What is Answer Engine Optimization (AEO) for healthcare?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Answer Engine Optimization (AEO) is the practice of structuring your online content so that AI search engines like ChatGPT, Perplexity, and Google AI Overviews will cite your practice when patients ask health-related questions. GrowthMonk helps healthcare businesses get discovered in these AI-powered search results, following Google's AI Overviews guidelines for structured content.",
+            text: "Answer Engine Optimization (AEO) is the practice of structuring your online content so that AI search engines like ChatGPT, Perplexity, and Google AI Overviews will cite your practice when customers ask health-related questions. GrowthMonk helps healthcare businesses get discovered in these AI-powered search results, following Google's AI Overviews guidelines for structured content.",
           },
         },
         {
@@ -184,10 +184,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          name: "Is patient data safe and GDPR-compliant?",
+          name: "Is customer data safe and GDPR-compliant?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. GrowthMonk is built with data privacy by design. All patient conversations are encrypted, data is processed within GDPR-compliant infrastructure, and you retain full control over what is stored and for how long.",
+            text: "Yes. GrowthMonk is built with data privacy by design. All customer conversations are encrypted, data is processed within GDPR-compliant infrastructure, and you retain full control over what is stored and for how long.",
           },
         },
       ],

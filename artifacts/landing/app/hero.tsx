@@ -294,7 +294,7 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
         </h1>
 
         <p className="sr-only">
-          GrowthMonk helps clinics, medspas, dental practices, and wellness centres grow revenue, capture more patient leads from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — before competitors. It qualifies patient enquiries automatically in under 90 seconds and books consultations directly into your calendar, available 24/7 in English, German, Turkish, and Arabic.
+          GrowthMonk helps clinics, medspas, dental practices, and wellness centres grow revenue, capture more customer enquiries from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — before competitors. It qualifies customer enquiries automatically in under 90 seconds and books consultations directly into your calendar, available 24/7 in English, German, Turkish, and Arabic.
         </p>
 
         <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.82)", maxWidth: "520px", marginBottom: "40px", fontWeight: 600 }}>
