@@ -838,7 +838,7 @@ function WhatsAppLinkDialog({
 
   const defaultMsg =
     (client.branding as BrandingConfig & { defaultMessage?: string | null }).defaultMessage ??
-    `Hi, I'd like to learn more about ${client.branding.companyName}`;
+    `Hi! I'm interested in your services 👋`;
 
   const [twilioSender, setTwilioSender] = useState(
     (client as DemoClient & { twilioSender?: string }).twilioSender ?? ""

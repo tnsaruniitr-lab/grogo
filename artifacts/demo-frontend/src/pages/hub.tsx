@@ -281,7 +281,7 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
   const [config, setConfig] = useState<{ manychatApiKey: string | null } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [welcomeText, setWelcomeText] = useState(
-    client.branding.defaultMessage ?? `[${client.slug}] `
+    client.branding.defaultMessage ?? `[${client.slug}] Hi! I'm interested in your services 👋`
   );
   const [saving, setSaving] = useState(false);
   const [savedWelcome, setSavedWelcome] = useState(false);
@@ -817,7 +817,7 @@ function PreviewModal({
                 const raw = client.branding.twilioSender ?? "";
                 const digits = raw.replace("whatsapp:", "").replace("+", "");
                 const number = digits || "15558085030";
-                const text = encodeURIComponent(`[${client.slug}] `);
+                const text = encodeURIComponent(`[${client.slug}] Hi! I'm interested in your services 👋`);
                 window.open(`https://wa.me/${number}?text=${text}`, "_blank");
               }}
             >
