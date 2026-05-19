@@ -58,6 +58,9 @@ const GENERIC_PROFILE: BotProfile = {
     { key: "careType", label: { de: "Art des Anliegens", tr: "Kaygı türü", en: "Nature of enquiry", ar: "طبيعة الاستفسار" } },
     { key: "city", label: { de: "Stadt oder Region", tr: "Şehir veya bölge", en: "City or region", ar: "المدينة أو المنطقة" } },
     { key: "preferredTime", label: { de: "Bevorzugte Rückrufzeit", tr: "Tercih edilen geri arama zamanı", en: "Preferred callback time", ar: "وقت المعاودة المفضل" } },
+    { key: "serviceType", label: { de: "Gewünschte Leistung", tr: "İstenen hizmet", en: "Requested service", ar: "الخدمة المطلوبة" } },
+    { key: "appointmentDate", label: { de: "Wunschtermin (Datum)", tr: "Tercih edilen tarih", en: "Preferred appointment date", ar: "تاريخ الموعد المفضل" } },
+    { key: "appointmentTime", label: { de: "Wunschtermin (Uhrzeit)", tr: "Tercih edilen saat", en: "Preferred appointment time", ar: "وقت الموعد المفضل" } },
   ],
   outOfScopeTopics: "medical diagnoses, legal advice, financial advice, emergency situations",
   createdAt: new Date(),
@@ -238,6 +241,8 @@ function intentToStatus(intent: Intent, currentStatus: string): string {
   switch (intent) {
     case "book_callback":
       return "callback_booked";
+    case "book_appointment":
+      return "appointment_booked";
     case "request_call_now":
       return "escalated";
     case "escalate_human":
@@ -529,6 +534,12 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     noteParts.push(`City: ${String(data["city"])}`);
   if (typeof data["whoNeedsCare"] === "string" && data["whoNeedsCare"])
     noteParts.push(`For: ${String(data["whoNeedsCare"])}`);
+  if (typeof data["serviceType"] === "string" && data["serviceType"])
+    noteParts.push(`ApptService: ${String(data["serviceType"])}`);
+  if (typeof data["appointmentDate"] === "string" && data["appointmentDate"])
+    noteParts.push(`ApptDate: ${String(data["appointmentDate"])}`);
+  if (typeof data["appointmentTime"] === "string" && data["appointmentTime"])
+    noteParts.push(`ApptTime: ${String(data["appointmentTime"])}`);
   if (noteParts.length > 0) {
     leadUpdates.notes = lead.notes
       ? `${lead.notes}\n${noteParts.join(", ")}`
@@ -571,6 +582,51 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       direction: "system",
       body: notifBody,
       intentDetected: "book_callback_confirmed",
+    });
+  }
+
+  if (botResponse.intent === "book_appointment") {
+    const serviceType =
+      typeof data["serviceType"] === "string" && data["serviceType"]
+        ? (data["serviceType"] as string)
+        : null;
+    const appointmentDate =
+      typeof data["appointmentDate"] === "string" && data["appointmentDate"]
+        ? (data["appointmentDate"] as string)
+        : null;
+    const appointmentTime =
+      typeof data["appointmentTime"] === "string" && data["appointmentTime"]
+        ? (data["appointmentTime"] as string)
+        : null;
+    const apptPreferredTime =
+      [appointmentDate, appointmentTime].filter(Boolean).join(" ") || preferredTime || null;
+
+    await db.insert(appointmentsTable).values({
+      clientId: clientRecord.id,
+      leadId,
+      type: "visit",
+      preferredTime: apptPreferredTime ?? undefined,
+      outcome: "pending",
+      notes: [`Visit booked via bot (${language})`, serviceType ? `Service: ${serviceType}` : null]
+        .filter(Boolean)
+        .join(" · "),
+    });
+
+    const apptNotifBody =
+      language === "ar"
+        ? `[النظام] تم حجز موعد زيارة. الخدمة: ${serviceType ?? "غير محدد"} — الوقت: ${apptPreferredTime ?? "غير محدد"}`
+        : language === "tr"
+          ? `[SİSTEM] Ziyaret randevusu oluşturuldu. Hizmet: ${serviceType ?? "belirtilmedi"} — Zaman: ${apptPreferredTime ?? "belirtilmedi"}`
+          : language === "en"
+            ? `[SYSTEM] Visit booked. Service: ${serviceType ?? "not specified"} — Time: ${apptPreferredTime ?? "not specified"}`
+            : `[SYSTEM] Termin gebucht. Leistung: ${serviceType ?? "nicht angegeben"} — Zeit: ${apptPreferredTime ?? "nicht angegeben"}`;
+
+    notificationInserts.push({
+      clientId: clientRecord.id,
+      leadId,
+      direction: "system",
+      body: apptNotifBody,
+      intentDetected: "appointment_booked_confirmed",
     });
   }
 

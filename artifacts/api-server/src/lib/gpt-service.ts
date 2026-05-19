@@ -12,6 +12,7 @@ export const intentEnum = [
   "qualify",
   "info_request",
   "book_callback",
+  "book_appointment",
   "request_call_now",
   "escalate_human",
   "out_of_scope",
@@ -21,6 +22,7 @@ export type Intent = (typeof intentEnum)[number];
 export const actionEnum = [
   "none",
   "book_callback",
+  "book_appointment",
   "request_call_now",
   "escalate_human",
   "out_of_scope",
@@ -37,6 +39,9 @@ export const BotResponseSchema = z.object({
       name: z.string().nullable().optional(),
       city: z.string().nullable().optional(),
       whoNeedsCare: z.string().nullable().optional(),
+      serviceType: z.string().nullable().optional(),
+      appointmentDate: z.string().nullable().optional(),
+      appointmentTime: z.string().nullable().optional(),
       switchToLanguage: z.string().min(2).max(10).nullable().optional(),
     })
     .optional()
@@ -166,16 +171,17 @@ Use EXACTLY these values:
 - User asks general info → intent: "info_request", action: "none"
 - Qualifying/gathering info → intent: "qualify", action: "none"
 - User wants callback and gives time → intent: "book_callback", action: "book_callback"
+- User wants to book a service visit/appointment and gives a date or time → intent: "book_appointment", action: "book_appointment"
 - User requests immediate call / urgent / distress → intent: "request_call_now", action: "request_call_now"
 - User explicitly requests human agent → intent: "escalate_human", action: "escalate_human"
 - Topic outside scope / forbidden info → intent: "out_of_scope", action: "out_of_scope"
 IMPORTANT: action must NEVER be "info_request" or "qualify" — those are intent-only values. Use "none" for action in those cases.
 
 ## Response Format
-Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, request_call_now, escalate_human, out_of_scope.
+Return ONLY valid JSON — no markdown, no extra text. IMPORTANT: action MUST be one of: none, book_callback, book_appointment, request_call_now, escalate_human, out_of_scope.
 {
   "reply": "<your response — in switchToLanguage if switching, otherwise in the locked language>",
-  "action": "<none|book_callback|request_call_now|escalate_human|out_of_scope>",
+  "action": "<none|book_callback|book_appointment|request_call_now|escalate_human|out_of_scope>",
   "data": {
 ${dataFieldLines},
     "switchToLanguage": "<ISO 639-1 code e.g. en/de/tr/ar/fr/es if switching, otherwise null>"

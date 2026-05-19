@@ -47,7 +47,7 @@ export interface DemoT {
   noLeads: { title: string; desc: string };
   leads: string;
   detail: {
-    phone: string; status: string; callbackPlanned: string; flexible: string;
+    phone: string; status: string; callbackPlanned: string; appointmentPlanned: string; flexible: string;
     outcome: string; aiSummary: string; noMessages: string; unknownLead: string;
     unknownContact: string;
   };
@@ -106,12 +106,12 @@ const de: DemoT = {
   noLeads: { title: "Noch keine Leads vorhanden", desc: "Sobald der Bot aktiviert ist und WhatsApp-Nachrichten eingehen, erscheinen die Leads hier." },
   leads: "Aktuelle Leads",
   detail: {
-    phone: "Telefon", status: "Status", callbackPlanned: "Rückruf geplant", flexible: "Zeitpunkt flexibel",
+    phone: "Telefon", status: "Status", callbackPlanned: "Rückruf geplant", appointmentPlanned: "Termin gebucht", flexible: "Zeitpunkt flexibel",
     outcome: "Ergebnis", aiSummary: "KI-Zusammenfassung", noMessages: "Noch keine Nachrichten",
     unknownLead: "Unbekannter Lead", unknownContact: "Unbekannt",
   },
-  statusLabels: { new: "Neu", qualified: "Qualifiziert", callback_booked: "Rückruf", escalated: "Eskaliert", needs_human: "Beratung", converted: "Gewonnen", archived: "Archiviert" },
-  selectStatus: { new: "Neu", qualified: "Qualifiziert", callback_booked: "Rückruf gebucht", escalated: "Eskaliert", needs_human: "Braucht Beratung", converted: "Gewonnen", archived: "Archiviert" },
+  statusLabels: { new: "Neu", qualified: "Qualifiziert", callback_booked: "Rückruf", appointment_booked: "Termin", escalated: "Eskaliert", needs_human: "Beratung", converted: "Gewonnen", archived: "Archiviert" },
+  selectStatus: { new: "Neu", qualified: "Qualifiziert", callback_booked: "Rückruf gebucht", appointment_booked: "Termin gebucht", escalated: "Eskaliert", needs_human: "Braucht Beratung", converted: "Gewonnen", archived: "Archiviert" },
 };
 
 const tr: DemoT = {
@@ -165,12 +165,12 @@ const tr: DemoT = {
   noLeads: { title: "Henüz kayıt yok", desc: "Bot etkinleştirilip WhatsApp mesajları gelmeye başladığında kayıtlar burada görünecek." },
   leads: "Güncel Kayıtlar",
   detail: {
-    phone: "Telefon", status: "Durum", callbackPlanned: "Geri Arama Planlandı", flexible: "Zaman esnek",
+    phone: "Telefon", status: "Durum", callbackPlanned: "Geri Arama Planlandı", appointmentPlanned: "Randevu Alındı", flexible: "Zaman esnek",
     outcome: "Sonuç", aiSummary: "YZ Özeti", noMessages: "Henüz mesaj yok",
     unknownLead: "Bilinmeyen Kayıt", unknownContact: "Bilinmiyor",
   },
-  statusLabels: { new: "Yeni", qualified: "Nitelikli", callback_booked: "Geri Arama", escalated: "Yükseltildi", needs_human: "Danışmanlık", converted: "Kazanıldı", archived: "Arşivlendi" },
-  selectStatus: { new: "Yeni", qualified: "Nitelikli", callback_booked: "Geri Arama Planlandı", escalated: "Yükseltildi", needs_human: "Danışmanlık Gerekli", converted: "Kazanıldı", archived: "Arşivlendi" },
+  statusLabels: { new: "Yeni", qualified: "Nitelikli", callback_booked: "Geri Arama", appointment_booked: "Randevu", escalated: "Yükseltildi", needs_human: "Danışmanlık", converted: "Kazanıldı", archived: "Arşivlendi" },
+  selectStatus: { new: "Yeni", qualified: "Nitelikli", callback_booked: "Geri Arama Planlandı", appointment_booked: "Randevu Alındı", escalated: "Yükseltildi", needs_human: "Danışmanlık Gerekli", converted: "Kazanıldı", archived: "Arşivlendi" },
 };
 
 const en: DemoT = {
@@ -224,12 +224,12 @@ const en: DemoT = {
   noLeads: { title: "No leads yet", desc: "Once the bot is active and WhatsApp messages start coming in, leads will appear here." },
   leads: "Recent Leads",
   detail: {
-    phone: "Phone", status: "Status", callbackPlanned: "Callback Scheduled", flexible: "Time flexible",
+    phone: "Phone", status: "Status", callbackPlanned: "Callback Scheduled", appointmentPlanned: "Visit Booked", flexible: "Time flexible",
     outcome: "Outcome", aiSummary: "AI Summary", noMessages: "No messages yet",
     unknownLead: "Unknown Lead", unknownContact: "Unknown",
   },
-  statusLabels: { new: "New", qualified: "Qualified", callback_booked: "Callback", escalated: "Escalated", needs_human: "Needs Agent", converted: "Won", archived: "Archived" },
-  selectStatus: { new: "New", qualified: "Qualified", callback_booked: "Callback booked", escalated: "Escalated", needs_human: "Needs agent", converted: "Won", archived: "Archived" },
+  statusLabels: { new: "New", qualified: "Qualified", callback_booked: "Callback", appointment_booked: "Visit", escalated: "Escalated", needs_human: "Needs Agent", converted: "Won", archived: "Archived" },
+  selectStatus: { new: "New", qualified: "Qualified", callback_booked: "Callback booked", appointment_booked: "Visit booked", escalated: "Escalated", needs_human: "Needs agent", converted: "Won", archived: "Archived" },
 };
 
 const ar: DemoT = {
@@ -283,12 +283,12 @@ const ar: DemoT = {
   noLeads: { title: "لا يوجد عملاء بعد", desc: "بمجرد تفعيل الروبوت وبدء وصول رسائل واتساب، ستظهر العملاء هنا." },
   leads: "العملاء الأخيرون",
   detail: {
-    phone: "الهاتف", status: "الحالة", callbackPlanned: "المعاودة مجدولة", flexible: "الوقت مرن",
+    phone: "الهاتف", status: "الحالة", callbackPlanned: "المعاودة مجدولة", appointmentPlanned: "الزيارة محجوزة", flexible: "الوقت مرن",
     outcome: "النتيجة", aiSummary: "ملخص الذكاء الاصطناعي", noMessages: "لا توجد رسائل بعد",
     unknownLead: "عميل مجهول", unknownContact: "مجهول",
   },
-  statusLabels: { new: "جديد", qualified: "مؤهل", callback_booked: "معاودة اتصال", escalated: "تصعيد", needs_human: "يحتاج وكيل", converted: "فاز", archived: "مؤرشف" },
-  selectStatus: { new: "جديد", qualified: "مؤهل", callback_booked: "معاودة اتصال محجوزة", escalated: "تصعيد", needs_human: "يحتاج وكيل", converted: "فاز", archived: "مؤرشف" },
+  statusLabels: { new: "جديد", qualified: "مؤهل", callback_booked: "معاودة اتصال", appointment_booked: "زيارة", escalated: "تصعيد", needs_human: "يحتاج وكيل", converted: "فاز", archived: "مؤرشف" },
+  selectStatus: { new: "جديد", qualified: "مؤهل", callback_booked: "معاودة اتصال محجوزة", appointment_booked: "زيارة محجوزة", escalated: "تصعيد", needs_human: "يحتاج وكيل", converted: "فاز", archived: "مؤرشف" },
 };
 
 const translations: Record<DemoLang, DemoT> = { de, tr, en, ar };

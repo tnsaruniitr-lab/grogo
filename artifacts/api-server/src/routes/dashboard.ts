@@ -74,7 +74,7 @@ router.get("/dashboard/stats", async (req: Request, res: Response) => {
     totalLeads,
     newLeads: byStatus["new"] ?? 0,
     qualifiedLeads: byStatus["qualified"] ?? 0,
-    callbackBooked: byStatus["callback_booked"] ?? 0,
+    callbackBooked: (byStatus["callback_booked"] ?? 0) + (byStatus["appointment_booked"] ?? 0),
     escalated: byStatus["escalated"] ?? 0,
     needsHuman: byStatus["needs_human"] ?? 0,
     bookedToday: bookedTodayRows[0]?.count ?? 0,

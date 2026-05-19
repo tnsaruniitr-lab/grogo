@@ -334,7 +334,10 @@ function LeadDetailPanel({
           {appointments.length > 0 && (
             <div className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: primaryColor + "15", borderColor: primaryColor + "40", borderWidth: 1 }}>
               <h4 className="text-xs font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: primaryColor }}>
-                <Calendar className="h-4 w-4" /> {t.detail.callbackPlanned}
+                <Calendar className="h-4 w-4" />
+                {(appointments[0] as { type?: string }).type === "visit"
+                  ? t.detail.appointmentPlanned
+                  : t.detail.callbackPlanned}
               </h4>
               <div className="text-sm font-bold">{appointments[0].preferredTime || t.detail.flexible}</div>
               <div className="text-xs font-medium opacity-70 mt-1">{t.detail.outcome}: {appointments[0].outcome}</div>
@@ -443,6 +446,7 @@ function StatusBadge({ status, labels }: { status: string; labels: Record<string
     new: "bg-blue-100 text-blue-800 border-blue-200",
     qualified: "bg-indigo-100 text-indigo-800 border-indigo-200",
     callback_booked: "bg-green-100 text-green-800 border-green-300",
+    appointment_booked: "bg-purple-100 text-purple-800 border-purple-300",
     escalated: "bg-red-100 text-red-800 border-red-200",
     needs_human: "bg-orange-100 text-orange-800 border-orange-200",
     converted: "bg-emerald-100 text-emerald-800 border-emerald-300",

@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
 
-export const leadStatusEnum = ["new", "qualified", "callback_booked", "escalated", "needs_human", "closed"] as const;
+export const leadStatusEnum = ["new", "qualified", "callback_booked", "appointment_booked", "escalated", "needs_human", "closed"] as const;
 export type LeadStatus = typeof leadStatusEnum[number];
 
 export const leadSourceEnum = ["website_widget", "whatsapp_ad", "instagram_ad", "direct", "unknown"] as const;
