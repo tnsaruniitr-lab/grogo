@@ -234,53 +234,61 @@ export async function runCrawlPipeline(
           const unique = deduplicateV2Items(v2Items);
           uniqueLength = unique.length;
 
-          for (const item of unique) {
-            const embeddingInput = `${item.question} ${item.answer}`;
-            const embedding = await embedText(embeddingInput);
-            const embeddingJson = embedding ? embeddingToJson(embedding) : null;
+          if (unique.length > 0) {
+            // Embed all items in parallel — eliminates the serial bottleneck
+            const embeddings = await Promise.all(
+              unique.map((item) => embedText(`${item.question} ${item.answer}`)),
+            );
 
-            await db.insert(companyKnowledgeTable).values({
-              clientId,
-              category: item.category,
-              question: item.question,
-              answer: item.answer,
-              language: item.language,
-              priority: CATEGORY_PRIORITY[item.category] ?? 5,
-              source: "crawl",
-              sourceUrl: url,
-              confidence: item.confidence,
-              embeddingJson,
-              approvalStatus: "pending",
-              crawlJobId: jobId,
-              reviewKey: item.reviewKey ?? null,
-              evidenceQuote: item.evidenceQuote ?? null,
-              sourceSection: item.sourceSection ?? null,
-              riskFlags: item.riskFlags && item.riskFlags.length > 0 ? JSON.stringify(item.riskFlags) : null,
-            });
+            // Single batch insert instead of N round-trips
+            await db.insert(companyKnowledgeTable).values(
+              unique.map((item, i) => ({
+                clientId,
+                category: item.category,
+                question: item.question,
+                answer: item.answer,
+                language: item.language,
+                priority: CATEGORY_PRIORITY[item.category] ?? 5,
+                source: "crawl" as const,
+                sourceUrl: url,
+                confidence: item.confidence,
+                embeddingJson: embeddings[i] ? embeddingToJson(embeddings[i]!) : null,
+                approvalStatus: "pending" as const,
+                crawlJobId: jobId,
+                reviewKey: item.reviewKey ?? null,
+                evidenceQuote: item.evidenceQuote ?? null,
+                sourceSection: item.sourceSection ?? null,
+                riskFlags: item.riskFlags && item.riskFlags.length > 0 ? JSON.stringify(item.riskFlags) : null,
+              })),
+            );
           }
         } else {
           const items = await extractKnowledge(result.text, url);
           const unique = deduplicateItems(items);
           uniqueLength = unique.length;
 
-          for (const item of unique) {
-            const embeddingInput = `${item.question} ${item.answer}`;
-            const embedding = await embedText(embeddingInput);
-            const embeddingJson = embedding ? embeddingToJson(embedding) : null;
+          if (unique.length > 0) {
+            // Embed all items in parallel
+            const embeddings = await Promise.all(
+              unique.map((item) => embedText(`${item.question} ${item.answer}`)),
+            );
 
-            await db.insert(companyKnowledgeTable).values({
-              clientId,
-              category: item.category,
-              question: item.question,
-              answer: item.answer,
-              language: item.language,
-              priority: CATEGORY_PRIORITY[item.category] ?? 5,
-              source: "crawl",
-              sourceUrl: url,
-              confidence: item.confidence,
-              embeddingJson,
-              approvalStatus: "approved", // V1: auto-approved so bot sees them immediately
-            });
+            // Single batch insert
+            await db.insert(companyKnowledgeTable).values(
+              unique.map((item, i) => ({
+                clientId,
+                category: item.category,
+                question: item.question,
+                answer: item.answer,
+                language: item.language,
+                priority: CATEGORY_PRIORITY[item.category] ?? 5,
+                source: "crawl" as const,
+                sourceUrl: url,
+                confidence: item.confidence,
+                embeddingJson: embeddings[i] ? embeddingToJson(embeddings[i]!) : null,
+                approvalStatus: "approved" as const, // V1: auto-approved so bot sees them immediately
+              })),
+            );
           }
         }
 
