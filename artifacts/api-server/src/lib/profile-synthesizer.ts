@@ -209,19 +209,22 @@ export async function synthesizeProfile(
   log.info({ factCount: facts.length }, "Profile synthesis starting");
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: settings.profileSynthesisModel,
-      max_completion_tokens: 4_000,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Synthesize a canonical business profile from these ${facts.length} extracted facts:\n\n${factSummary}`,
-        },
-      ],
-      tools: [SYNTHESIZE_TOOL],
-      tool_choice: { type: "function", function: { name: "synthesize_business_profile" } },
-    });
+    const completion = await openai.chat.completions.create(
+      {
+        model: settings.profileSynthesisModel,
+        max_completion_tokens: 4_000,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Synthesize a canonical business profile from these ${facts.length} extracted facts:\n\n${factSummary}`,
+          },
+        ],
+        tools: [SYNTHESIZE_TOOL],
+        tool_choice: { type: "function", function: { name: "synthesize_business_profile" } },
+      },
+      { signal: AbortSignal.timeout(120_000) },
+    );
 
     const rawCall = completion.choices[0]?.message?.tool_calls?.[0];
     if (!rawCall || rawCall.type !== "function") {

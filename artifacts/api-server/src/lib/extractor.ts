@@ -95,19 +95,22 @@ export async function extractKnowledge(
   const truncated = text.slice(0, 12_000);
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_completion_tokens: 3_000,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Extract knowledge from this webpage (${sourceUrl}):\n\n${truncated}`,
-        },
-      ],
-      tools: [EXTRACT_TOOL],
-      tool_choice: { type: "function", function: { name: "extract_knowledge" } },
-    });
+    const completion = await openai.chat.completions.create(
+      {
+        model: "gpt-4o-mini",
+        max_completion_tokens: 3_000,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Extract knowledge from this webpage (${sourceUrl}):\n\n${truncated}`,
+          },
+        ],
+        tools: [EXTRACT_TOOL],
+        tool_choice: { type: "function", function: { name: "extract_knowledge" } },
+      },
+      { signal: AbortSignal.timeout(60_000) },
+    );
 
     const rawCall = completion.choices[0]?.message?.tool_calls?.[0];
     if (!rawCall || rawCall.type !== "function") {

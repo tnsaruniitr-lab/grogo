@@ -143,19 +143,22 @@ export async function extractKnowledgeV2(
   const truncated = text.slice(0, 12_000);
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: settings.pageExtractionModel,
-      max_completion_tokens: 4_000,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT_V2 },
-        {
-          role: "user",
-          content: `Extract evidence-backed knowledge from this webpage (${sourceUrl}):\n\n${truncated}`,
-        },
-      ],
-      tools: [EXTRACT_TOOL_V2],
-      tool_choice: { type: "function", function: { name: "extract_knowledge_v2" } },
-    });
+    const completion = await openai.chat.completions.create(
+      {
+        model: settings.pageExtractionModel,
+        max_completion_tokens: 4_000,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT_V2 },
+          {
+            role: "user",
+            content: `Extract evidence-backed knowledge from this webpage (${sourceUrl}):\n\n${truncated}`,
+          },
+        ],
+        tools: [EXTRACT_TOOL_V2],
+        tool_choice: { type: "function", function: { name: "extract_knowledge_v2" } },
+      },
+      { signal: AbortSignal.timeout(60_000) },
+    );
 
     const rawCall = completion.choices[0]?.message?.tool_calls?.[0];
     if (!rawCall || rawCall.type !== "function") {

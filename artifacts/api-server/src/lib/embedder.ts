@@ -13,7 +13,10 @@ export async function embedText(text: string): Promise<number[] | null> {
   const input = text.slice(0, 8_000).replace(/\n+/g, " ").trim();
   if (!input) return null;
   try {
-    const res = await openai.embeddings.create({ model: EMBEDDING_MODEL, input });
+    const res = await openai.embeddings.create(
+      { model: EMBEDDING_MODEL, input },
+      { signal: AbortSignal.timeout(30_000) },
+    );
     return res.data[0]?.embedding ?? null;
   } catch (err) {
     logger.error({ err }, "Embedder: failed to embed text");
