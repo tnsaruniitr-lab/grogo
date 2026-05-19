@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AdminNav } from "@/components/layout/admin-nav";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -126,12 +126,14 @@ export default function SettingsPage() {
 
   const [draft, setDraft] = useState<Partial<SystemSettings>>({});
   const [dirty, setDirty] = useState(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (serverSettings && !dirty) {
+    if (serverSettings && !initialized.current) {
+      initialized.current = true;
       setDraft(serverSettings);
     }
-  }, [serverSettings, dirty]);
+  }, [serverSettings]);
 
   const set = <K extends keyof SystemSettings>(key: K, value: SystemSettings[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));

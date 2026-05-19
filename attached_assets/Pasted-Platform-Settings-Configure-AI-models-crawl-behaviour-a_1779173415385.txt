@@ -1,0 +1,114 @@
+Platform Settings
+Configure AI models, crawl behaviour, and pipeline controls.
+
+Reset
+Save
+AI Models
+Choose which OpenAI model runs each pipeline stage. Stronger models produce better results but cost more.
+Page extraction model
+Used for per-page Q&A extraction. Keep cheap.
+
+
+gpt-4o-mini
+Profile synthesis model
+Synthesises the canonical business profile. Use strong model.
+
+
+gpt-4o
+Web research model
+Used for external evidence enrichment.
+
+
+o4-mini
+Live chat model
+Powers WhatsApp conversations.
+
+
+gpt-4o-mini
+Crawl Pipeline
+Controls page discovery, extraction limits, and extractor version.
+Extractor version
+V1: simple extraction, auto-approve. V2: evidence-backed, pending until human activates.
+
+
+v2
+new
+Max pages per crawl
+50
+Crawl concurrency
+5
+Min extraction confidence
+0.6
+Structured data parsing
+
+coming soon
+Parse JSON-LD / Schema.org markup during extraction
+
+
+JS render fallback
+
+coming soon
+Attempt headless rendering when page text is too short
+
+
+Approval & Activation
+Controls when extracted knowledge becomes visible to the live chatbot.
+Require human activation (V2)
+
+coming soon
+V2 crawl results stay pending until an admin activates them. Disable to auto-activate.
+
+
+Auto-approve manual entries
+
+Knowledge entries added manually in the admin panel are approved immediately
+
+
+Approved-only for live chat
+
+coming soon
+Only approved knowledge rows are returned to the live chatbot
+
+
+Web Research Enrichment
+After crawling, optionally run web searches to enrich the business profile evidence.
+Enable web research
+
+coming soon
+Uses the web research model + web_search to gather external evidence for profile fields
+
+
+Own domain auto-trusted
+
+coming soon
+Results from the client's own website domain are trusted without human review
+
+
+Require review for external sources
+
+coming soon
+Evidence from external sites always requires human review before activation
+
+
+Chat Retrieval
+Tuning for how knowledge is ranked and served to the live chatbot.
+Facts pack enabled
+
+coming soon
+Pack the top-5 knowledge chunks into every bot turn
+
+
+Same-language boost
+
+coming soon
+Rank knowledge entries in the same language as the conversation higher
+
+
+Manual source boost
+
+coming soon
+Rank manually-entered knowledge entries above crawled entries
+
+
+Reset
+Save settings
