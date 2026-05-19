@@ -1,0 +1,57 @@
+Reviewed remote main at commit 89164c1. Local checkout is still stale, so this review is against the GitHub code.
+
+Short answer: not fully done as per the locked plan. The immediate fixes are mostly there, but V2 is currently more of a scaffold than a safe production implementation.
+
+Findings
+
+[P0] V1 default can now wipe live crawl knowledge
+knowledge.ts now only retrieves approved rows, but crawl-pipeline.ts still deletes old crawl rows for V1 and then inserts new rows as pending. Since settings default to v1, a normal re-crawl can delete the old approved crawl KB and replace it with hidden pending rows. That breaks the “no behaviour change with V1 default” promise.
+
+[P0] Activation is not atomic and does not activate/archive profiles correctly
+admin.ts performs sequential updates, not a DB transaction. It archives old KB before approving new KB, does not archive old active profiles, and only activates a profile if profileId is passed. The UI does not pass profileId, so synthesized profiles will usually remain pending.
+
+[P0] Review panel still uses old heuristic critical facts, not client_profiles.profile
+admin.ts still builds criticalFacts from category/keyword heuristics and even keeps the old priority === 1 scoring. knowledge-review-panel.tsx consumes that endpoint, not the new profile endpoint. This misses the core V2 promise.
+
+[P1] Settings snapshot is recorded but not actually used
+startCrawlJob stores settingsSnapshot, but runCrawlPipeline calls getSettings() again. If settings change after the job is created, the crawl is no longer reproducible.
+
+[P1] Schema does not match the plan
+company-knowledge.ts, client-profiles.ts, and system-settings.ts use loose text for statuses, JSON blobs, risk flags, settings, and profiles. The plan required DB-enforced status values and JSONB. sourceType is also missing.
+
+[P1] Evidence exists in extraction but is not enforced or shown
+extractor-v2.ts makes evidenceQuote optional, despite the plan saying every crawl-sourced entry should show evidence. The review endpoint also does not select evidenceQuote, riskFlags, reviewKey, or sourceSection, and the panel’s expanded row only shows the answer.
+
+[P1] mustNotClaim is not operationalized
+The profile synthesizer creates mustNotClaim, but live chat never loads active client_profiles, and gpt-service.ts does not inject those negative instructions. So this part of the plan is not implemented.
+
+[P2] Settings are not validated server-side and many are unused
+settings.ts accepts arbitrary patches. The allowlist exists but is not enforced. Also liveChatModel, embeddingModel, approvedOnlyForLiveChat, factsPackEnabled, sameLanguageBoost, manualSourceBoost, enableStructuredDataParsing, and enableJsRenderFallback are not wired into the relevant code paths.
+
+[P2] Structured data and web research are not implemented
+Settings exist, but there is no JSON-LD/schema.org parser and no web research corroborator. That is fine if this was meant as scaffolding, but it is not done per the plan.
+
+What Is Done
+
+Approval filter added to live retrieval.
+getLatestCrawlJob ordering fixed.
+system_settings scaffold added.
+extractorVersion and settingsSnapshot added to crawl jobs.
+V2 extractor added.
+Profile synthesizer added.
+Pending V2 KB rows get crawlJobId, reviewKey, evidenceQuote, sourceSection, riskFlags.
+Activation endpoint exists.
+Admin settings page exists.
+Verdict
+
+This should not be considered plan-complete and I would not flip extractorVersion to v2 yet.
+
+The next fixes should be:
+
+Fix V1 + approval-filter interaction so default V1 cannot wipe live KB.
+Make activation a real transaction and activate/archive profiles correctly.
+Change review endpoint/panel to use client_profiles.profile.
+Select and display evidence/risk fields in review.
+Use settingsSnapshot during the crawl, not current settings.
+Add DB constraints/JSONB/sourceType migrations.
+Wire settings into retrieval/chat/extraction or remove inactive toggles until wired.
