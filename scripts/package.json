@@ -8,6 +8,7 @@
     "seed": "tsx ./src/seed.ts",
     "backfill-embeddings": "tsx ./src/backfill-embeddings.ts",
     "seed-bot-profiles": "tsx ./src/seed-bot-profiles.ts",
+    "seed-growthmonk": "tsx ./src/seed-growthmonk.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
