@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | GrowthMonk",
   },
   description:
-    "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses grow revenue, capture more patient leads from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — automatically, 24/7, multilingual.",
+    "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses capture inbound enquiries from WhatsApp and social media, qualify them automatically, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — 24/7, multilingual.",
   keywords: [
     "AI healthcare marketing",
     "wellness lead generation",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     siteName: "GrowthMonk",
     title: "GrowthMonk — AI Growth Engine for Healthcare & Wellness",
     description:
-      "Get discovered in AI search and social media. Convert leads to booked patients automatically. The AI growth engine built for healthcare and wellness businesses.",
+      "Get discovered in AI search and social media. Capture inbound enquiries automatically and turn them into booked consultations. Built for healthcare and wellness businesses.",
     images: [
       {
         url: "/og-image.jpg",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GrowthMonk — AI Growth Engine for Healthcare & Wellness",
     description:
-      "Get discovered in AI search and social media. Convert leads to booked patients automatically.",
+      "Get discovered in AI search and social media. Capture inbound enquiries and turn them into booked consultations.",
     images: ["/og-image.jpg"],
     creator: "@growthmonk",
   },
@@ -84,7 +84,7 @@ const jsonLd = {
       name: "GrowthMonk",
       url: BASE_URL,
       description:
-        "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses grow revenue, capture more patient leads, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews before competitors.",
+        "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses capture inbound enquiries from WhatsApp and social media, qualify them using business-approved rules, and get discovered in AI search engines. GrowthMonk does not provide medical advice or clinical decision-making.",
       foundingDate: "2024",
       areaServed: "Worldwide",
       logo: {
@@ -117,9 +117,9 @@ const jsonLd = {
       operatingSystem: "Web",
       url: BASE_URL,
       datePublished: "2025-01-01",
-      dateModified: "2026-05-17",
+      dateModified: "2026-05-19",
       description:
-        "GrowthMonk is an AI growth platform that helps clinics, medspas, dental practices, and healthcare businesses grow revenue, generate more leads, and get discovered in AI search. It captures leads from WhatsApp, Instagram, and social media, qualifies them automatically in any language in under 90 seconds, and converts them to booked appointments 24/7.",
+        "GrowthMonk is a business communication and lead management platform for healthcare, wellness, medspa, and service businesses. It captures inbound enquiries from WhatsApp, Instagram, and social media, qualifies them using business-approved questions, routes them to staff, and supports appointment booking — 24/7, multilingual. GrowthMonk does not provide medical advice, diagnosis, treatment recommendations, prescriptions, emergency support, or clinical decision-making.",
       featureList: [
         "AI search discovery and optimization",
         "WhatsApp and Instagram lead capture",
@@ -147,7 +147,7 @@ const jsonLd = {
           name: "What is GrowthMonk?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "GrowthMonk is an AI growth engine that helps clinics, medspas, dental practices, and wellness businesses grow revenue, capture more patient leads from WhatsApp and social media, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews before competitors. It qualifies leads automatically and converts enquiries into booked appointments — 24/7, in multiple languages.",
+            text: "GrowthMonk is a business communication and lead management platform for healthcare, wellness, medspa, and service businesses. It captures inbound enquiries from WhatsApp, Instagram, Facebook and websites, qualifies them using business-approved questions, routes them to staff, and supports appointment booking. GrowthMonk does not provide medical advice, diagnosis, treatment recommendations, prescriptions, emergency support, or clinical decision-making.",
           },
         },
         {

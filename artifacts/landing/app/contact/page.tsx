@@ -37,8 +37,7 @@ export default function ContactPage() {
       <ul>
         <li>
           Email <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a> with your
-          preferred time, or message us on WhatsApp at{" "}
-          <a href="https://wa.me/15558085030">+1 555 808 5030</a>.
+          preferred time and we will send you a booking link.
         </li>
       </ul>
 
