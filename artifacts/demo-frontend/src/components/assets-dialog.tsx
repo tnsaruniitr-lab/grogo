@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   CalendarDays,
   Video,
@@ -80,8 +79,8 @@ const ASSET_TYPE_CONFIG: Record<AssetType, {
     showContext: true,
     contextLabel: "Service (optional)",
     contextPlaceholder: "e.g. physiotherapy, live-in care",
-    accept: "application/pdf",
-    fileHint: "PDF files only",
+    accept: "application/pdf,image/*",
+    fileHint: "PDF, JPG, PNG, WebP",
   },
   image: {
     label: "Price Chart",
@@ -203,8 +202,8 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
     const config = ASSET_TYPE_CONFIG[selectedType];
 
     // Validate type
-    if (selectedType === "pdf" && file.type !== "application/pdf") {
-      toast({ title: "Please select a PDF file", variant: "destructive" });
+    if (selectedType === "pdf" && file.type !== "application/pdf" && !file.type.startsWith("image/")) {
+      toast({ title: "Please select a PDF or image file", variant: "destructive" });
       return;
     }
     if (selectedType === "image" && !file.type.startsWith("image/")) {
@@ -316,7 +315,7 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Existing assets */}
             {loading ? (
@@ -555,7 +554,7 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {!adding && (
           <div className="px-6 py-4 border-t">
