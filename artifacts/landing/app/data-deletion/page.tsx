@@ -88,6 +88,9 @@ export default function DataDeletionPage() {
       <ul>
         <li>Email: <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a></li>
         <li>Operator: Dreamport Technology Private Limited</li>
+        <li>CIN: U78100RJ2025PTC104714</li>
+        <li>Registered Address: 72 Mangal Vihar (MCL), Scheme No. 5, Bhoggore, Alwar,
+          Rajasthan – 301001, India</li>
         <li>
           See also: <a href="/privacy-policy">Privacy Policy</a>
         </li>

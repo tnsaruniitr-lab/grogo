@@ -189,6 +189,9 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li>Email: <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a></li>
         <li>Operator: Dreamport Technology Private Limited</li>
+        <li>CIN: U78100RJ2025PTC104714</li>
+        <li>Registered Address: 72 Mangal Vihar (MCL), Scheme No. 5, Bhoggore, Alwar,
+          Rajasthan – 301001, India</li>
         <li>Website: <a href="https://growthmonk.ai">https://growthmonk.ai</a></li>
       </ul>
     </LegalLayout>

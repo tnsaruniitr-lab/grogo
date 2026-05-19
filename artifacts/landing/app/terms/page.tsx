@@ -47,9 +47,16 @@ export default function TermsPage() {
       <h2>3. Messaging and User Consent</h2>
       <p>
         <strong>Clients are solely responsible</strong> for ensuring they have obtained all
-        necessary permissions, consents, and opt-ins from their end users (patients, leads,
-        customers) before initiating or enabling automated messaging via WhatsApp, Instagram,
+        necessary permissions, consents, and opt-ins from their end users (customers and leads)
+        before initiating or enabling automated messaging via WhatsApp, Instagram,
         or any other channel connected to GrowthMonk.
+      </p>
+      <p>
+        <strong>No outbound messaging without consent.</strong> Clients must not use GrowthMonk
+        to send proactive or outbound messages to any end user who has not explicitly opted in
+        to receive automated messages from that business. GrowthMonk's bot responds to
+        inbound messages initiated by the end user. Any outbound or proactive messaging
+        feature must only be used with documented opt-in consent.
       </p>
       <p>
         GrowthMonk does not independently verify that Clients have obtained the required
@@ -74,10 +81,16 @@ export default function TermsPage() {
       <p>You agree not to use GrowthMonk to:</p>
       <ul>
         <li>Send spam, unsolicited messages, or messages to users who have not consented</li>
-        <li>Violate Meta's WhatsApp Business Policy, Instagram Platform Policy, or Facebook
-          Platform Terms</li>
+        <li>Violate{" "}
+          <a href="https://www.whatsapp.com/legal/business-policy" target="_blank" rel="noopener noreferrer">
+            Meta's WhatsApp Business Policy
+          </a>, Instagram Platform Policy, or Facebook Platform Terms</li>
         <li>Violate any applicable data protection, privacy, or consumer protection law,
           including GDPR, India's DPDP Act, or UAE data laws</li>
+        <li>Provide clinical mental health assessments, crisis intervention, medical diagnosis,
+          reproductive health advice, prescription recommendations, or any content that
+          constitutes regulated clinical or medical advice — GrowthMonk is a booking and
+          communication tool only</li>
         <li>Impersonate any person or entity or misrepresent your affiliation</li>
         <li>Transmit malware, viruses, or any harmful code</li>
         <li>Attempt to reverse-engineer, copy, or circumvent the GrowthMonk platform</li>
@@ -134,6 +147,9 @@ export default function TermsPage() {
       <ul>
         <li>Email: <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a></li>
         <li>Operator: Dreamport Technology Private Limited</li>
+        <li>CIN: U78100RJ2025PTC104714</li>
+        <li>Registered Address: 72 Mangal Vihar (MCL), Scheme No. 5, Bhoggore, Alwar,
+          Rajasthan – 301001, India</li>
         <li>Website: <a href="https://growthmonk.ai">https://growthmonk.ai</a></li>
       </ul>
     </LegalLayout>

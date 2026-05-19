@@ -48,6 +48,9 @@ export default function ContactPage() {
       <ul>
         <li><strong>Business Name:</strong> Dreamport Technology Private Limited</li>
         <li><strong>Brand:</strong> GrowthMonk</li>
+        <li><strong>CIN:</strong> U78100RJ2025PTC104714</li>
+        <li><strong>Registered Address:</strong> 72 Mangal Vihar (MCL), Scheme No. 5,
+          Bhoggore, Alwar, Rajasthan – 301001, India</li>
         <li><strong>Website:</strong>{" "}
           <a href="https://growthmonk.ai">https://growthmonk.ai</a>
         </li>

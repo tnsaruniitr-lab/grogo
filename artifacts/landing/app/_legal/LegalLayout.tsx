@@ -55,7 +55,10 @@ export function LegalLayout({
       {/* Footer */}
       <footer className="border-t border-gray-800/60 px-6 py-10 mt-10">
         <div className="mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-600">
-          <p>GrowthMonk is operated by <strong className="text-gray-500">Dreamport Technology Private Limited</strong>.</p>
+          <div>
+            <p>GrowthMonk is operated by <strong className="text-gray-500">Dreamport Technology Private Limited</strong>.</p>
+            <p className="text-xs text-gray-700 mt-1">CIN: U78100RJ2025PTC104714 &middot; 72 Mangal Vihar (MCL), Scheme No. 5, Bhoggore, Alwar, Rajasthan &ndash; 301001, India</p>
+          </div>
           <nav className="flex flex-wrap gap-5">
             <a href="/privacy-policy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
             <a href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</a>
