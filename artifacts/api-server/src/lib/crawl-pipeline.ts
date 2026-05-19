@@ -1,7 +1,7 @@
 import { db } from "@workspace/db";
 import { crawlJobsTable, crawlPagesTable, companyKnowledgeTable } from "@workspace/db";
 import { eq, and, inArray, desc } from "drizzle-orm";
-import { fetchPage, fetchRobotsTxt, fetchSitemapUrls, isAllowed, withConcurrency } from "./crawler";
+import { fetchPage, fetchRobotsTxt, fetchSitemapUrls, isAllowed, withLiveQueue } from "./crawler";
 import { extractKnowledge, deduplicateItems } from "./extractor";
 import { extractKnowledgeV2, deduplicateV2Items } from "./extractor-v2";
 import { synthesizeProfile } from "./profile-synthesizer";
@@ -140,11 +140,11 @@ export async function runCrawlPipeline(
       .set({ pagesFound: discovered.size })
       .where(eq(crawlJobsTable.id, jobId));
 
-    // BFS crawl
-    while (queued.length > 0 && discovered.size <= MAX_PAGES) {
-      const batch = queued.splice(0, CONCURRENCY);
-
-      await withConcurrency(batch, CONCURRENCY, async ({ url, depth }) => {
+    // Dynamic worker pool — drains the live shared queue so workers immediately
+    // pick up newly discovered pages. MAX_PAGES is enforced only in link-discovery below.
+    // Per-page try-catch isolates failures so one bad page cannot kill a worker.
+    await withLiveQueue(queued, CONCURRENCY, async ({ url, depth }) => {
+      try {
         if (!isAllowed(url, disallowed)) {
           await db
             .update(crawlPagesTable)
@@ -325,8 +325,27 @@ export async function runCrawlPipeline(
         }
 
         log.info({ url, chunks: uniqueLength }, "Page processed");
-      });
-    }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log.warn({ url, error: msg }, "Page processing error — skipping");
+        try {
+          await db
+            .update(crawlPagesTable)
+            .set({ status: "failed", lastError: msg.slice(0, 200), crawledAt: new Date() })
+            .where(and(eq(crawlPagesTable.jobId, jobId), eq(crawlPagesTable.url, url)));
+          const failCount = await db.$count(
+            crawlPagesTable,
+            and(eq(crawlPagesTable.jobId, jobId), eq(crawlPagesTable.status, "failed")),
+          );
+          await db
+            .update(crawlJobsTable)
+            .set({ pagesFailed: failCount })
+            .where(eq(crawlJobsTable.id, jobId));
+        } catch {
+          // ignore DB errors during failure marking
+        }
+      }
+    });
 
     // Final status
     const [finalJob] = await db

@@ -255,3 +255,25 @@ export async function withConcurrency<T>(
   });
   await Promise.all(workers);
 }
+
+/**
+ * Like withConcurrency but operates on a live mutable array.
+ * Workers drain `queue` continuously — items pushed during processing are
+ * picked up immediately by the next free worker, with no batch synchronisation.
+ */
+export async function withLiveQueue<T>(
+  queue: T[],
+  limit: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  if (queue.length === 0) return;
+  const numWorkers = Math.min(limit, queue.length);
+  const workers = Array.from({ length: numWorkers }, async () => {
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (item === undefined) break;
+      await fn(item);
+    }
+  });
+  await Promise.all(workers);
+}
