@@ -1,0 +1,194 @@
+Got it. No code changes. Here are the exact fixes I’d ask them to make, in order.
+
+Fix 1 — V1 Must Not Break Live KB
+Problem: knowledge.ts now only reads approved, but V1 crawl still deletes old crawl rows and inserts new rows as pending.
+
+Change in crawl-pipeline.ts:
+
+const approvalStatus = isV2 ? "pending" : "approved";
+Then use that for inserts:
+
+approvalStatus,
+crawlJobId: isV2 ? jobId : null,
+For V1 specifically:
+
+either keep destructive delete + insert approved
+or better, stop deleting and archive old rows even for V1
+Minimum safe fix: V1 inserts approved rows. V2 inserts pending rows.
+
+Fix 2 — Use Crawl Job Settings Snapshot
+Problem: startCrawlJob() stores settingsSnapshot, but runCrawlPipeline() calls getSettings() again.
+
+Change runCrawlPipeline() to load the job first:
+
+const [job] = await db
+  .select({
+    extractorVersion: crawlJobsTable.extractorVersion,
+    settingsSnapshot: crawlJobsTable.settingsSnapshot,
+  })
+  .from(crawlJobsTable)
+  .where(eq(crawlJobsTable.id, jobId))
+  .limit(1);
+
+const settings = job?.settingsSnapshot
+  ? { ...DEFAULT_SETTINGS, ...JSON.parse(job.settingsSnapshot) }
+  : await getSettings();
+
+const isV2 = job?.extractorVersion === "v2";
+Also export DEFAULT_SETTINGS from settings.ts.
+
+Fix 3 — Make Activation Atomic
+Problem: activation is sequential, not transactional.
+
+Wrap all activation changes in db.transaction.
+
+Inside the transaction:
+
+Find pending rows for clientId + crawlJobId.
+Archive old approved crawl rows only:
+approvalStatus = "archived"
+where clientId = client.id
+and approvalStatus = "approved"
+and source != "manual"
+and crawlJobId != crawlJobId
+Approve new rows:
+approvalStatus = "approved"
+where clientId = client.id
+and crawlJobId = crawlJobId
+and approvalStatus = "pending"
+Archive old active profiles:
+status = "archived"
+where clientId = client.id
+and status = "active"
+Activate the new profile by profileId, or if missing, latest pending profile for that crawl:
+status = "active",
+activatedAt = new Date()
+where clientId = client.id
+and crawlJobId = crawlJobId
+and status = "pending"
+Fix 4 — Activation Endpoint Should Not Require profileId
+The UI currently calls activate with only crawlJobId.
+
+Backend should auto-resolve:
+
+const profileToActivate =
+  profileId ??
+  latest pending profile where clientId + crawlJobId;
+Return that profile id.
+
+Fix 5 — Review Critical Facts Must Come From client_profiles.profile
+Problem: /knowledge/review still uses category/keyword heuristics.
+
+Change endpoint to:
+
+Fetch latest pending profile for latest crawl job.
+If none, fetch active profile.
+Build criticalFacts from profile.profile.
+Example mapping:
+
+[
+  { key: "whatItDoes", label: "What this business does", value: profile.whatItDoes.value, confidence: profile.whatItDoes.confidence, needsReview: profile.whatItDoes.needsReview },
+  { key: "targetCustomers", label: "Target customers", value: profile.targetCustomers.value.join(", "), ... },
+]
+Keep old heuristic only as fallback if no profile exists.
+
+Fix 6 — Review Endpoint Must Return Evidence Fields
+Add these to the knowledge review select:
+
+crawlJobId,
+reviewKey,
+evidenceQuote,
+sourceSection,
+riskFlags,
+confidence,
+Then serialize riskFlags:
+
+riskFlags: row.riskFlags ? JSON.parse(row.riskFlags) : []
+Fix 7 — Review Panel Must Show Evidence/Risk
+In expanded EntryRow, show:
+
+{entry.evidenceQuote && (
+  <div>
+    <p>Evidence</p>
+    <blockquote>{entry.evidenceQuote}</blockquote>
+  </div>
+)}
+
+{entry.riskFlags?.length > 0 && (
+  <div>{entry.riskFlags.map(flag => <Badge>{flag}</Badge>)}</div>
+)}
+Also show sourceSection, reviewKey, and confidence.
+
+Fix 8 — Require Evidence Quote in V2
+In extractor-v2.ts, make it required:
+
+evidenceQuote: z.string().min(5),
+sourceSection: z.string().optional(),
+And in tool schema:
+
+required: [
+  "category",
+  "question",
+  "answer",
+  "confidence",
+  "language",
+  "evidenceQuote",
+  "riskFlags"
+]
+Fix 9 — Server-Side Settings Validation
+In settings.ts, validate patch with Zod before saving.
+
+At minimum:
+
+model fields must be in ALLOWED_MODEL_VALUES
+extractorVersion must be v1 | v2
+maxPagesPerCrawl between 1 and 500
+crawlConcurrency between 1 and 20
+minExtractionConfidence between 0 and 1
+Do not accept arbitrary keys.
+
+Fix 10 — mustNotClaim Into Live Chat Prompt
+In bot pipeline:
+
+Load active client_profiles row.
+Parse profile JSON.
+Extract profile.mustNotClaim.value.
+Pass it into callGpt.
+In gpt-service.ts, add:
+
+## Must Not Claim
+Never claim any of the following:
+- ...
+This one is crucial. Otherwise the profile field exists but has no effect.
+
+Fix 11 — Do Not Expose Fake Settings
+Either wire these settings or remove them from UI until wired:
+
+factsPackEnabled
+sameLanguageBoost
+manualSourceBoost
+approvedOnlyForLiveChat
+liveChatModel
+embeddingModel
+enableStructuredDataParsing
+enableJsRenderFallback
+Better: leave disabled labels saying “coming soon” if not wired.
+
+Fix 12 — Schema Hardening
+Later but important:
+
+Use jsonb for settings, profile, evidence, searchSources, riskFlags
+Add DB check constraints for:
+approval_status in ('pending','approved','rejected','archived')
+client_profiles.status in ('pending','active','archived','rejected')
+source_type in ('manual','crawl','structured_data')
+Minimum Patch Set Before V2 Testing
+Tell them to do only these first:
+
+V1 inserts approved, V2 inserts pending.
+Use crawl settingsSnapshot.
+Atomic activation with profile auto-resolution.
+Review endpoint uses client_profiles.profile.
+Evidence/risk fields returned and displayed.
+mustNotClaim injected into chat.
+After those, V2 becomes worth testing manually on 2-3 clients.
