@@ -84,19 +84,27 @@ function ModelSelect({ label, value, onChange, description }: {
   );
 }
 
-function ToggleRow({ label, description, checked, onChange }: {
+function ToggleRow({ label, description, checked, onChange, comingSoon }: {
   label: string;
   description?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  comingSoon?: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <div className={`flex items-start justify-between gap-4 ${comingSoon ? "opacity-50" : ""}`}>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold">{label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold">{label}</p>
+          {comingSoon && (
+            <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-slate-300 text-slate-500 font-normal">
+              coming soon
+            </Badge>
+          )}
+        </div>
         {description && <p className="text-[11px] text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} className="shrink-0 mt-0.5" />
+      <Switch checked={checked} onCheckedChange={onChange} className="shrink-0 mt-0.5" disabled={comingSoon} />
     </div>
   );
 }
@@ -281,12 +289,14 @@ export default function SettingsPage() {
               description="Parse JSON-LD / Schema.org markup during extraction"
               checked={s.enableStructuredDataParsing ?? true}
               onChange={(v) => set("enableStructuredDataParsing", v)}
+              comingSoon
             />
             <ToggleRow
               label="JS render fallback"
               description="Attempt headless rendering when page text is too short"
               checked={s.enableJsRenderFallback ?? false}
               onChange={(v) => set("enableJsRenderFallback", v)}
+              comingSoon
             />
           </SettingsSection>
 
@@ -301,6 +311,7 @@ export default function SettingsPage() {
               description="V2 crawl results stay pending until an admin activates them. Disable to auto-activate."
               checked={s.requireHumanActivation ?? true}
               onChange={(v) => set("requireHumanActivation", v)}
+              comingSoon
             />
             <ToggleRow
               label="Auto-approve manual entries"
@@ -313,6 +324,7 @@ export default function SettingsPage() {
               description="Only approved knowledge rows are returned to the live chatbot"
               checked={s.approvedOnlyForLiveChat ?? true}
               onChange={(v) => set("approvedOnlyForLiveChat", v)}
+              comingSoon
             />
           </SettingsSection>
 
@@ -327,23 +339,22 @@ export default function SettingsPage() {
               description="Uses the web research model + web_search to gather external evidence for profile fields"
               checked={s.enableWebResearch ?? false}
               onChange={(v) => set("enableWebResearch", v)}
+              comingSoon
             />
-            {s.enableWebResearch && (
-              <div className="pl-4 border-l-2 border-muted space-y-2">
-                <ToggleRow
-                  label="Own domain auto-trusted"
-                  description="Results from the client's own website domain are trusted without human review"
-                  checked={s.ownDomainAutoTrusted ?? true}
-                  onChange={(v) => set("ownDomainAutoTrusted", v)}
-                />
-                <ToggleRow
-                  label="Require review for external sources"
-                  description="Evidence from external sites always requires human review before activation"
-                  checked={s.requireExternalSourceReview ?? true}
-                  onChange={(v) => set("requireExternalSourceReview", v)}
-                />
-              </div>
-            )}
+            <ToggleRow
+              label="Own domain auto-trusted"
+              description="Results from the client's own website domain are trusted without human review"
+              checked={s.ownDomainAutoTrusted ?? true}
+              onChange={(v) => set("ownDomainAutoTrusted", v)}
+              comingSoon
+            />
+            <ToggleRow
+              label="Require review for external sources"
+              description="Evidence from external sites always requires human review before activation"
+              checked={s.requireExternalSourceReview ?? true}
+              onChange={(v) => set("requireExternalSourceReview", v)}
+              comingSoon
+            />
           </SettingsSection>
 
           {/* Chat Retrieval */}
@@ -357,18 +368,21 @@ export default function SettingsPage() {
               description="Pack the top-5 knowledge chunks into every bot turn"
               checked={s.factsPackEnabled ?? true}
               onChange={(v) => set("factsPackEnabled", v)}
+              comingSoon
             />
             <ToggleRow
               label="Same-language boost"
               description="Rank knowledge entries in the same language as the conversation higher"
               checked={s.sameLanguageBoost ?? true}
               onChange={(v) => set("sameLanguageBoost", v)}
+              comingSoon
             />
             <ToggleRow
               label="Manual source boost"
               description="Rank manually-entered knowledge entries above crawled entries"
               checked={s.manualSourceBoost ?? true}
               onChange={(v) => set("manualSourceBoost", v)}
+              comingSoon
             />
           </SettingsSection>
 

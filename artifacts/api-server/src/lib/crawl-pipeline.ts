@@ -53,12 +53,23 @@ export async function runCrawlPipeline(
   websiteUrl: string,
   jobId: number,
 ): Promise<void> {
-  const settings = await getSettings();
+  // Load settings from the job's snapshot so mid-crawl setting changes don't affect this run
+  const [jobRow] = await db
+    .select({ settingsSnapshot: crawlJobsTable.settingsSnapshot, extractorVersion: crawlJobsTable.extractorVersion })
+    .from(crawlJobsTable)
+    .where(eq(crawlJobsTable.id, jobId))
+    .limit(1);
+
+  const { DEFAULT_SETTINGS } = await import("./settings");
+  const settings = jobRow?.settingsSnapshot
+    ? { ...DEFAULT_SETTINGS, ...(JSON.parse(jobRow.settingsSnapshot) as Partial<typeof DEFAULT_SETTINGS>) }
+    : await getSettings();
+
   const MAX_PAGES = settings.maxPagesPerCrawl;
   const CONCURRENCY = settings.crawlConcurrency;
-  const isV2 = settings.extractorVersion === "v2";
+  const isV2 = (jobRow?.extractorVersion ?? settings.extractorVersion) === "v2";
 
-  const log = logger.child({ clientId, jobId, extractorVersion: settings.extractorVersion });
+  const log = logger.child({ clientId, jobId, extractorVersion: isV2 ? "v2" : "v1" });
   log.info({ websiteUrl }, "Crawl pipeline starting");
 
   try {
@@ -268,7 +279,7 @@ export async function runCrawlPipeline(
               sourceUrl: url,
               confidence: item.confidence,
               embeddingJson,
-              approvalStatus: "pending",
+              approvalStatus: "approved", // V1: auto-approved so bot sees them immediately
             });
           }
         }

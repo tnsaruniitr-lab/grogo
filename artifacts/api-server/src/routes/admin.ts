@@ -406,8 +406,43 @@ router.get("/admin/clients/:slug/knowledge/review", async (req: Request, res: Re
 
   const serialised = entries.map((e) => ({ ...e, createdAt: e.createdAt.toISOString() }));
 
-  // Score candidates so manual/homepage entries beat deep listicle pages.
-  // Lower score = better. manual source = 0, priority 1 = 0, each URL segment = +1.
+  // Try to load a synthesized profile (V2): prefer latest pending for an in-progress review,
+  // fall back to the active profile if no pending one exists.
+  const [pendingProfile] = await db
+    .select({ profile: clientProfilesTable.profile, status: clientProfilesTable.status })
+    .from(clientProfilesTable)
+    .where(and(eq(clientProfilesTable.clientId, client.id), eq(clientProfilesTable.status, "pending")))
+    .orderBy(desc(clientProfilesTable.createdAt))
+    .limit(1);
+
+  const [activeProfile] = pendingProfile
+    ? [pendingProfile]
+    : await db
+        .select({ profile: clientProfilesTable.profile, status: clientProfilesTable.status })
+        .from(clientProfilesTable)
+        .where(and(eq(clientProfilesTable.clientId, client.id), eq(clientProfilesTable.status, "active")))
+        .orderBy(desc(clientProfilesTable.createdAt))
+        .limit(1);
+
+  type ProfileField = { value: string | string[]; confidence: number; needsReview: boolean };
+  type ParsedProfile = Record<string, ProfileField>;
+
+  let parsedProfile: ParsedProfile | null = null;
+  if (activeProfile?.profile) {
+    try { parsedProfile = JSON.parse(activeProfile.profile) as ParsedProfile; } catch { /* ignore */ }
+  }
+
+  const PROFILE_FACT_MAP = [
+    { key: "what_it_does",       label: "What this business does",    profileKey: "whatItDoes" },
+    { key: "target_customers",   label: "Target customers",           profileKey: "targetCustomers" },
+    { key: "main_services",      label: "Main services",              profileKey: "mainServices" },
+    { key: "pricing_policy",     label: "Pricing policy",             profileKey: "pricingPolicy" },
+    { key: "booking_path",       label: "How to book / get started",  profileKey: "bookingPath" },
+    { key: "trust_signals",      label: "Trust & credibility",        profileKey: "trustSignals" },
+    { key: "must_not_claim",     label: "Must NOT claim (bot limits)", profileKey: "mustNotClaim" },
+  ] as const;
+
+  // Build criticalFacts from synthesized profile when available; fall back to heuristic.
   const urlDepth = (url: string | null) => {
     if (!url) return 0;
     try { return new URL(url).pathname.split("/").filter(Boolean).length; } catch { return 5; }
@@ -415,25 +450,45 @@ router.get("/admin/clients/:slug/knowledge/review", async (req: Request, res: Re
   const candidateScore = (e: typeof serialised[number]) =>
     (e.source === "manual" ? 0 : 10) + (e.priority === 1 ? 0 : 5) + urlDepth(e.sourceUrl);
 
-  const criticalFacts = [
-    { key: "business_name", label: "Business name", value: client.name, entryId: null as number | null },
-    ...CRITICAL_FACT_RULES.map((rule) => {
-      const candidates = serialised
-        .filter((e) => (rule.categories as readonly string[]).includes(e.category))
-        .sort((a, b) => candidateScore(a) - candidateScore(b));
-      const match = rule.keywords
-        ? (candidates.find((e) => rule.keywords!.some((kw) => e.question.toLowerCase().includes(kw))) ?? candidates[0] ?? null)
-        : (candidates[0] ?? null);
-      return {
-        key: rule.key,
-        label: rule.label,
-        value: match ? match.answer.slice(0, 400) : "",
-        entryId: match ? match.id : null,
-        sourceUrl: match ? (match.sourceUrl ?? null) : null,
-        source: match ? match.source : null,
-      };
-    }),
-  ];
+  const criticalFacts = parsedProfile
+    ? [
+        { key: "business_name", label: "Business name", value: client.name, entryId: null as number | null, confidence: 1, needsReview: false, source: "profile" as string | null },
+        ...PROFILE_FACT_MAP.map((m) => {
+          const field = parsedProfile![m.profileKey];
+          const rawValue = field?.value ?? "";
+          const value = Array.isArray(rawValue) ? rawValue.join(", ") : String(rawValue);
+          return {
+            key: m.key,
+            label: m.label,
+            value: value.slice(0, 600),
+            entryId: null as number | null,
+            confidence: field?.confidence ?? null,
+            needsReview: field?.needsReview ?? false,
+            source: "profile" as string | null,
+          };
+        }),
+      ]
+    : [
+        { key: "business_name", label: "Business name", value: client.name, entryId: null as number | null, confidence: null, needsReview: false, source: null as string | null },
+        ...CRITICAL_FACT_RULES.map((rule) => {
+          const candidates = serialised
+            .filter((e) => (rule.categories as readonly string[]).includes(e.category))
+            .sort((a, b) => candidateScore(a) - candidateScore(b));
+          const match = rule.keywords
+            ? (candidates.find((e) => rule.keywords!.some((kw) => e.question.toLowerCase().includes(kw))) ?? candidates[0] ?? null)
+            : (candidates[0] ?? null);
+          return {
+            key: rule.key,
+            label: rule.label,
+            value: match ? match.answer.slice(0, 400) : "",
+            entryId: match ? match.id : null,
+            confidence: null as number | null,
+            needsReview: false,
+            sourceUrl: match ? (match.sourceUrl ?? null) : null,
+            source: match ? match.source : null,
+          };
+        }),
+      ];
 
   const categoryOrder = ["identity", "about", "services", "service", "pricing", "faq", "process", "contact", "team", "location", "other"];
   const allCats = [...new Set(serialised.map((e) => e.category))].sort(
@@ -710,66 +765,72 @@ router.post("/admin/clients/:slug/knowledge/activate", async (req: Request, res:
 
   const pendingIds = pendingRows.map((r) => r.id);
 
-  // Atomic activation: archive old approved crawl rows → approve new pending rows → activate profile
-  if (archivePrevious) {
-    await db
+  // Fully atomic activation inside a single DB transaction
+  const resolvedProfileId = await db.transaction(async (tx) => {
+    // 1. Archive old approved crawl rows (keep manual entries live)
+    if (archivePrevious) {
+      await tx
+        .update(companyKnowledgeTable)
+        .set({ approvalStatus: "archived" })
+        .where(
+          and(
+            eq(companyKnowledgeTable.clientId, client.id),
+            eq(companyKnowledgeTable.approvalStatus, "approved"),
+            ne(companyKnowledgeTable.source, "manual"),
+          ),
+        );
+    }
+
+    // 2. Approve new pending rows
+    await tx
       .update(companyKnowledgeTable)
-      .set({ approvalStatus: "archived" })
-      .where(
-        and(
-          eq(companyKnowledgeTable.clientId, client.id),
-          eq(companyKnowledgeTable.approvalStatus, "approved"),
-          ne(companyKnowledgeTable.source, "manual"),
-        ),
-      );
-  }
+      .set({ approvalStatus: "approved" })
+      .where(inArray(companyKnowledgeTable.id, pendingIds));
 
-  await db
-    .update(companyKnowledgeTable)
-    .set({ approvalStatus: "approved" })
-    .where(inArray(companyKnowledgeTable.id, pendingIds));
+    // 3. Resolve profile: use explicit profileId or auto-find latest pending for this job
+    let resolvedId = profileId ?? null;
+    if (!resolvedId) {
+      const [latestProfile] = await tx
+        .select({ id: clientProfilesTable.id })
+        .from(clientProfilesTable)
+        .where(
+          and(
+            eq(clientProfilesTable.clientId, client.id),
+            eq(clientProfilesTable.crawlJobId, crawlJobId),
+            eq(clientProfilesTable.status, "pending"),
+          ),
+        )
+        .orderBy(desc(clientProfilesTable.createdAt))
+        .limit(1);
+      resolvedId = latestProfile?.id ?? null;
+    }
 
-  // Activate profile: use explicit profileId if given, otherwise auto-find the
-  // most recent pending profile for this crawl job.
-  let resolvedProfileId = profileId ?? null;
-  if (!resolvedProfileId) {
-    const [latestProfile] = await db
-      .select({ id: clientProfilesTable.id })
-      .from(clientProfilesTable)
-      .where(
-        and(
-          eq(clientProfilesTable.clientId, client.id),
-          eq(clientProfilesTable.crawlJobId, crawlJobId),
-          eq(clientProfilesTable.status, "pending"),
-        ),
-      )
-      .orderBy(desc(clientProfilesTable.createdAt))
-      .limit(1);
-    resolvedProfileId = latestProfile?.id ?? null;
-  }
+    if (resolvedId) {
+      // 4. Archive currently active profiles
+      await tx
+        .update(clientProfilesTable)
+        .set({ status: "archived" })
+        .where(
+          and(
+            eq(clientProfilesTable.clientId, client.id),
+            eq(clientProfilesTable.status, "active"),
+          ),
+        );
 
-  if (resolvedProfileId) {
-    // Archive any currently active profiles for this client first
-    await db
-      .update(clientProfilesTable)
-      .set({ status: "archived" })
-      .where(
-        and(
-          eq(clientProfilesTable.clientId, client.id),
-          eq(clientProfilesTable.status, "active"),
-        ),
-      );
-    // Activate the new profile
-    await db
-      .update(clientProfilesTable)
-      .set({ status: "active", activatedAt: new Date() })
-      .where(
-        and(
-          eq(clientProfilesTable.id, resolvedProfileId),
-          eq(clientProfilesTable.clientId, client.id),
-        ),
-      );
-  }
+      // 5. Activate new profile
+      await tx
+        .update(clientProfilesTable)
+        .set({ status: "active", activatedAt: new Date() })
+        .where(
+          and(
+            eq(clientProfilesTable.id, resolvedId),
+            eq(clientProfilesTable.clientId, client.id),
+          ),
+        );
+    }
+
+    return resolvedId;
+  });
 
   req.log.info(
     { clientId: client.id, crawlJobId, approvedCount: pendingIds.length, profileId: resolvedProfileId },
