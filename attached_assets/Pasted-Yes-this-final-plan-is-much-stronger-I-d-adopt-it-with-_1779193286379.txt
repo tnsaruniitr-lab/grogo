@@ -1,0 +1,55 @@
+Yes, this final plan is much stronger. I’d adopt it with a few important tweaks.
+
+Main Changes I’d Suggest
+
+Do not resolve assets from knowledgeChunks.
+Current RAG only injects up to 5 asset entries. If a client has 8 assets, the right price list may not be in context. The asset resolver should query approved category = "asset" rows directly from DB, then match by requestedAssetType + serviceRequested.
+
+Add requestedHuman to the typed GPT data fields.
+Your rule engine references requestedHuman, but the table of GPT fields does not include it. Add:
+
+requestedHuman: boolean
+This catches “agent”, “human”, “can someone call me”, “I want to talk to a person.”
+
+Clarify timingPreference.
+The rules say timingPreference, but data fields are appointmentDate and appointmentTime. Either add:
+
+timingPreference: string | null
+or define it as derived:
+
+timingPreference = appointmentDate || appointmentTime || preferredTime
+I’d keep a single preferredTime field plus optional structured date/time if needed.
+
+Be careful with readyToBook.
+This is still GPT-inferred, so don’t let it be the only gate. Better field name:
+
+bookingConfirmed: boolean
+Prompt it narrowly: true only when the user explicitly says they want to book/proceed/schedule. Not just “I’m interested.”
+
+Keep book_callback for confusion, not distress.
+If someone is confused commercially, callback is fine. If someone sounds urgent/distressed, route to escalate_human with handoffReason = "urgent_call_now". Don’t let medical/urgent distress become a normal callback.
+
+Three files may be too optimistic.
+Core logic is three files, yes. But robust asset parsing may need a small shared helper because asset creation/parsing currently lives inside admin.ts. Otherwise bot-pipeline.ts will duplicate string parsing. I’d accept one helper file if needed.
+
+Final Shape I’d Recommend
+Actions stay exactly five:
+
+book_service
+book_online_consultation
+book_walkin_consultation
+book_callback
+escalate_human
+GPT extracts structured signals. Backend decides final action. That’s the right architecture.
+
+Asset resolver should be backend-owned:
+
+requestedAssetType = price/demo/booking/brochure
+serviceRequested = physiotherapy/etc.
+query approved assets directly
+service-specific match first
+generic fallback second
+send media/link deterministically
+One more practical note: update the empty-KB override too. Right now it can override useful non-callback actions. After this change, the override should exempt all five resolved actions.
+
+So overall: plan is solid. The main correction is to make the asset resolver DB-driven, not RAG-driven, and add the missing structured fields (requestedHuman, clarified timing, stricter booking confirmation).
