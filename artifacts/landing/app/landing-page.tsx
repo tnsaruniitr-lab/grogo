@@ -275,7 +275,6 @@ function HowItWorks({ t }: { t: Translations }) {
 function Testimonials({ t }: { t: Translations }) {
   const testimonials = [
     { quote: "We were tired of trying to adapt generic tools to the realities of outpatient care. GrowthMonk helped us launch a healthcare-focused WhatsApp CRM with AI documentation, workforce measurement, and efficiency tracking built around how our team actually works. Even at the pilot stage, it shows strong potential to reduce admin effort, improve operational visibility, and support our broader AI transformation. We're excited to expand this further with their AI Growth Engine.", company: "Dosteli", logo: "/images/logo-dosteli.png", logoBg: "#ffffff" },
-    { quote: "As a healthcare brand, we needed a clearer way to understand why we were not being surfaced or cited consistently in AI search. GrowthMonk's healthcare-focused Growth Engine gave us a practical roadmap across website structure, schema, and discoverability, with recommendations grounded in Google and Schema.org guidance. It helped us move from guesswork to clear, actionable fixes our team could implement.", company: "Valeo Health", logo: "/images/logo-valeo-health.png", logoBg: "#F5A623" },
   ];
   return (
     <section style={{ backgroundColor: "#030712", position: "relative", overflow: "hidden" }} className="px-6 py-20" aria-labelledby="testimonials-heading">
