@@ -8,7 +8,7 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "uat": "TWILIO_SANDBOX=true tsx src/uat-test.ts"
+    "uat": "TWILIO_SANDBOX=true TWILIO_LOG_ONLY=true tsx src/uat-test.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",

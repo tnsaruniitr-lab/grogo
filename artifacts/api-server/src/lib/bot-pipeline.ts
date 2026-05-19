@@ -183,7 +183,7 @@ async function checkRateLimit(lead: Lead): Promise<boolean> {
  * Send a WhatsApp message via Twilio REST API with one retry on failure.
  */
 async function sendWhatsAppReply(from: string, to: string, body: string): Promise<void> {
-  if (process.env.TWILIO_SANDBOX === "true") {
+  if (process.env.TWILIO_LOG_ONLY === "true") {
     logger.info({ from, to, body: body.slice(0, 120) }, "[SANDBOX] Reply logged only (sandbox mode)");
     return;
   }
@@ -216,7 +216,7 @@ async function sendWhatsAppReply(from: string, to: string, body: string): Promis
 // for [ASSET:image] and [ASSET:pdf] entries when the bot's reply references them.
 // Failure is non-fatal — the text reply (with the URL) is already delivered.
 async function sendWhatsAppMedia(from: string, to: string, mediaUrl: string): Promise<void> {
-  if (process.env.TWILIO_SANDBOX === "true") {
+  if (process.env.TWILIO_LOG_ONLY === "true") {
     logger.info({ from, to, mediaUrl }, "[SANDBOX] Media message logged only (sandbox mode)");
     return;
   }
