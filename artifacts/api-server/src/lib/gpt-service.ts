@@ -245,10 +245,12 @@ Callback hours: ${callbackHours}${
 }
 
 const FALLBACK_REPLIES: Record<string, string> = {
-  de: "Vielen Dank für Ihre Nachricht. Leider habe ich kurz ein technisches Problem. Darf ich Sie zurückrufen? Unser Team ist Montag–Freitag 8–18 Uhr erreichbar.",
-  tr: "Mesajınız için teşekkür ederiz. Maalesef kısa bir teknik sorun yaşıyoruz. Sizi geri arayabilir miyiz? Ekibimiz Pazartesi–Cuma 08–18 saatleri arasında hizmet vermektedir.",
-  en: "Thank you for your message. I'm experiencing a brief technical issue. May I arrange a callback for you? Our team is available Monday–Friday 8am–6pm.",
+  de: "Darf ich Ihnen einen Rückruf von unserem Team arrangieren? Wir sind Montag–Freitag 8–18 Uhr erreichbar.",
+  tr: "Sizi ekibimizle buluşturmak ister misiniz? Pazartesi–Cuma 08–18 saatleri arasında hizmetinizdeyiz.",
+  en: "Would you like me to arrange a callback from our team? We're available Monday–Friday, 8am–6pm.",
 };
+
+const HISTORY_CAP = 20; // keep last 20 messages (~10 exchanges) to prevent context bloat
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile, model, mustNotClaim } =
@@ -256,9 +258,11 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
 
   const systemPrompt = buildSystemPrompt(language, clientName, callbackHours, knowledgeChunks, profile, mustNotClaim ?? []);
 
+  const cappedHistory = conversationHistory.slice(-HISTORY_CAP);
+
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
-    ...conversationHistory.map((m) => ({ role: m.role, content: m.content })),
+    ...cappedHistory.map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: userMessage },
   ];
 
