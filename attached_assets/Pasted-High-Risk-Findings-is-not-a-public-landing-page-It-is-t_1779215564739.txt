@@ -1,0 +1,39 @@
+High-Risk Findings
+/ is not a public landing page. It is the internal demo hub.
+App.tsx (line 17) routes / to Hub, not HomePage. That means a Meta reviewer visiting the app domain may see “Demo System”, “All Demos”, “New Demo”, dashboard links, and internal tooling.
+Fix: make / a real public GrowthMonk/company landing page. Move Hub behind a protected route.
+
+Admin APIs appear unauthenticated even if /admin UI is blocked.
+routes/index.ts (line 14) mounts adminRouter, dashboardRouter, leadsRouter, crawlRouter, and storageRouter under /api without an auth wrapper.
+Examples: /api/leads?clientId=..., /api/dashboard/stats, /api/admin/clients, /api/admin/crawl/:slug, upload URL generation.
+This is a data-protection and review risk. Blocking /admin at the frontend is not sufficient.
+
+Public dashboard exposes lead/customer data.
+App.tsx (line 22) exposes /demo/:slug/dashboard, and demo-dashboard.tsx (line 97) fetches leads/stats publicly by clientId.
+leads.ts (line 15) returns lead phone, notes, conversation summary, conversations, and appointments. This should be behind auth.
+
+No public privacy policy, terms, or data deletion page.
+I found no /privacy, /terms, /data-deletion, or equivalent files/routes. WhatsApp’s policy explicitly requires necessary notices/permissions and a published privacy policy for data collection/use. For Meta app review, a privacy policy and data deletion instructions/callback URL are table stakes.
+
+Opt-in/opt-out language is missing from the public WhatsApp CTA.
+The WhatsApp FAB opens wa.me with a slug tag in demo.tsx (line 760), but there is no visible consent text like “By messaging us, you agree to receive WhatsApp replies about your enquiry; reply STOP to opt out.” WhatsApp policy requires opt-in and honoring opt-out.
+
+Healthcare/medical positioning needs safer disclaimers.
+The public demo and SSR fallbacks repeatedly mention clinics, care, dental, medical, aesthetics, urgent care, appointments, and automated booking. WhatsApp policy has special restrictions around medical/healthcare products and health-related information. Add clear language: not for emergencies, not medical advice, don’t submit sensitive medical data, human escalation available.
+
+Potential misrepresentation / brand mismatch.
+The app mixes Dosteli, demo clients, AI WhatsApp Bot, and “Demo by Dosteli System” in public surfaces. WhatsApp policy warns against impersonation or misleading users about the nature of the business. For Meta/WABA direct integration, the public domain, app name, privacy policy, support contact, and business identity should all match the submitting business.
+
+Robots/sitemap index active demo pages.
+ssr.ts (line 154) allows all crawlers, and ssr.ts (line 203) adds active /demo/:slug pages to the sitemap. If these are demo/prospect pages, they should be noindex unless intentionally public and legally approved.
+
+What I’d Fix Before Meta Review
+Make / a clean public company landing page for the actual submitter.
+Add /privacy, /terms, /data-deletion, /support, and visible company/legal contact info.
+Put all admin, dashboard, leads, crawl, upload, and client-management APIs behind authentication.
+Remove public links to dashboard/mockups/admin/demo system from public pages.
+Add WhatsApp opt-in/opt-out disclosure near every WhatsApp CTA.
+Add healthcare safety disclaimers and “not for emergency/medical advice” language.
+Ensure app/domain/business name match the WABA/legal business being submitted.
+Set demo/prospect pages to noindex unless intentionally public.
+Sources checked: WhatsApp Business Messaging Policy especially quality/business identity, opt-in, human escalation, privacy/data protection, and regulated vertical sections.
