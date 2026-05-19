@@ -1,0 +1,76 @@
+01
+Audit your AI search presence and outpace competitors
+We scan how your practice appears across ChatGPT, Perplexity, and Google AI Overviews - then benchmark it against your top competitors. You get a clear picture of the gap, quick wins to close it fast, and a strategic roadmap to rank above competitors in AI search.
+
+AI search audit · Competitor analysis · Strategic roadmap
+
+02
+Connect your channels
+Link your WhatsApp Business number, Instagram, and other social media channels to GrowthMonk in minutes. No technical skills needed - we handle the integration.
+
+WhatsApp · Instagram · Facebook · Website chat
+
+03
+AI captures and qualifies every lead
+The moment a prospective customer sends a message, our AI responds instantly - in their language. It asks the right questions, understands their need, and qualifies their intent automatically.
+
+24/7 response · Multilingual · Zero staff time
+
+04
+You receive booked appointments
+Qualified customers are booked into your calendar or scheduled for a callback automatically. You open your dashboard to a list of warm, qualified leads ready to convert.
+
+Auto-booking · Callback scheduling · Live dashboard
+
+Industries
+Built for every healthcare vertical
+Whether you run a boutique medspa or a multi-location clinic, GrowthMonk adapts to your specialty and customer demographics.
+
+🏥
+Medical Clinics
+GP practices, specialist clinics, and private hospitals
+
+🦷
+Dental Practices
+General dentistry, orthodontics, and implant centres
+
+✨
+MedSpas & Aesthetics
+Aesthetic clinics, laser centres, and skin practices
+
+🤸
+Physiotherapy
+Physio, sports rehab, and movement clinics
+
+🧠
+Mental Health
+Therapy, counselling, and psychiatry practices
+
+❤️
+Care Services
+Home nursing, elderly care, and care agencies
+
+🥗
+Nutrition & Wellness
+Nutritionists, dietitians, and wellness coaches
+
+👶
+Fertility & IVF
+Fertility clinics and reproductive health centres
+
+FAQ
+Common questions
+Everything you need to know about GrowthMonk and AI-powered growth for healthcare.
+
+What is GrowthMonk?
+GrowthMonk is a business communication and lead management platform for healthcare, wellness, medspa, and service businesses. It helps businesses capture inbound enquiries from WhatsApp, Instagram, Facebook and websites, qualify them using business-approved questions, route them to staff, and support appointment booking. GrowthMonk does not provide medical advice, diagnosis, treatment recommendations, prescriptions, emergency support, or clinical decision-making.
+How does GrowthMonk capture leads from WhatsApp?
+GrowthMonk connects to your WhatsApp Business number via the official Meta WhatsApp Business API. When a customer messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — automatically, 24 hours a day.
+Does GrowthMonk support multiple languages?
+Yes. GrowthMonk detects the customer's language automatically and continues in that language for the entire conversation. Currently supported: English, Turkish, and Arabic, with more languages being added.
+What is Answer Engine Optimization (AEO) for healthcare?
+AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, Google AI Overviews) cite your practice when customers ask health questions. GrowthMonk builds your AEO foundation — structured data, semantic content, and Q&A pages — so you appear in AI answers before your competitors.
+How long does setup take?
+Most healthcare businesses are fully set up and live within 24 hours of onboarding. Our team handles the channel integrations, AI configuration, and knowledge base setup. You just review and approve.
+Is customer data safe and GDPR-compliant?
+Yes. GrowthMonk is built with data privacy by design. All customer conversations are encrypted, data is processed within compliant infrastructure, and you retain full control over what is stored and for how long.
