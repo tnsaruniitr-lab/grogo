@@ -25,7 +25,24 @@ app.use(
     },
   }),
 );
-app.use(cors());
+const allowedOrigins = [
+  "https://growthmonk.ai",
+  "https://www.growthmonk.ai",
+  /\.growthmonk\.ai$/,
+  /\.replit\.dev$/,
+  /\.replit\.app$/,
+  /^http:\/\/localhost(:\d+)?$/,
+];
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const allowed = allowedOrigins.some(p =>
+      typeof p === "string" ? p === origin : p.test(origin)
+    );
+    cb(allowed ? null : new Error("CORS: origin not allowed"), allowed);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

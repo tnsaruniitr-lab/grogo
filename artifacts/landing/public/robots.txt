@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /demo/
+Disallow: /api/
 
 Sitemap: https://growthmonk.ai/sitemap.xml
