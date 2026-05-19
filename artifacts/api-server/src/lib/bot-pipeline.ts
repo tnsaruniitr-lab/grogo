@@ -211,6 +211,52 @@ async function sendWhatsAppReply(from: string, to: string, body: string): Promis
   }
 }
 
+// Send a WhatsApp media message (image or PDF) so the file renders inline in
+// the chat rather than appearing as a plain URL. Called after the text reply
+// for [ASSET:image] and [ASSET:pdf] entries when the bot's reply references them.
+// Failure is non-fatal — the text reply (with the URL) is already delivered.
+async function sendWhatsAppMedia(from: string, to: string, mediaUrl: string): Promise<void> {
+  if (process.env.TWILIO_SANDBOX === "true") {
+    logger.info({ from, to, mediaUrl }, "[SANDBOX] Media message logged only (sandbox mode)");
+    return;
+  }
+
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return;
+
+  try {
+    const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+    await twilioClient.messages.create({ from, to, mediaUrl: [mediaUrl] });
+    logger.info({ from, to, mediaUrl }, "Twilio WhatsApp media sent (inline rendering)");
+  } catch (err) {
+    logger.warn({ err, mediaUrl }, "WhatsApp media send failed — text reply still delivered");
+  }
+}
+
+// Extract media asset URLs (image / pdf only) referenced in the bot reply.
+// Asset entries are formatted: [ASSET:type] emoji label: https://...
+// We check whether the reply actually contains the URL before sending media,
+// so we never send an asset the bot didn't explicitly mention.
+function extractReferencedMediaAssets(
+  chunks: { question: string; answer: string }[],
+  reply: string,
+): string[] {
+  const MEDIA_TYPES = new Set(["image", "pdf"]);
+  const urls: string[] = [];
+
+  for (const chunk of chunks) {
+    const match = chunk.answer.match(/^\[ASSET:(\w+)\].*?(https?:\/\/[^\s()]+)/);
+    if (!match) continue;
+    const assetType = match[1]!;
+    const assetUrl = match[2]!.replace(/[.,)]+$/, ""); // strip trailing punctuation
+    if (!MEDIA_TYPES.has(assetType)) continue;
+    if (reply.includes(assetUrl)) {
+      urls.push(assetUrl);
+    }
+  }
+
+  return urls;
+}
+
 function buildSummary(
   lead: Lead,
   botResponse: BotResponse,
@@ -675,8 +721,16 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     intentDetected: botResponse.intent,
   });
 
-  // 10. Twilio reply
+  // 10. Twilio reply (text — always sent first)
   await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
+
+  // 10a. If the bot mentioned an image or PDF asset URL, send it again as a
+  // Twilio media message so WhatsApp renders it inline (image preview / PDF card).
+  // This is fire-and-forget — failure is logged but never crashes the pipeline.
+  const mediaUrls = extractReferencedMediaAssets(knowledgeChunks, botResponse.reply);
+  for (const mediaUrl of mediaUrls) {
+    await sendWhatsAppMedia(twilioSender, `whatsapp:${userPhone}`, mediaUrl);
+  }
 
   // 11. Mark job done
   await markJobDone(messageEventId);
