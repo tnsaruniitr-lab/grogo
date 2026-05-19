@@ -29,6 +29,14 @@ export default function PrivacyPolicyPage() {
         discovered in AI search engines.
       </p>
       <p>
+        <strong>About our WhatsApp number:</strong> Dreamport Pvt Ltd operates a WhatsApp
+        Business account used to respond to inbound enquiries from businesses and individuals
+        interested in the GrowthMonk platform — including answering product questions,
+        qualifying prospective clients, and booking product demonstration calls. This Privacy
+        Policy governs all data collected through that account and through any GrowthMonk
+        Client deployment.
+      </p>
+      <p>
         For any privacy-related enquiries, contact us at:{" "}
         <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a>
       </p>
