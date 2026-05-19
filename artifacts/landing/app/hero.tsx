@@ -293,7 +293,7 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
         </h1>
 
         <p className="sr-only">
-          GrowthMonk is a business communication and lead management platform for healthcare and wellness businesses. It captures inbound customer enquiries from WhatsApp, Instagram, Facebook and websites, qualifies them using business-approved questions, routes them to staff, and supports appointment booking — available 24/7 in English, Turkish, and Arabic. GrowthMonk does not provide medical advice, diagnosis, or clinical decision-making.
+          GrowthMonk is a business communication and lead management platform for healthcare and wellness businesses. It captures inbound customer enquiries from WhatsApp via the official Meta API, qualifies them using business-approved questions, routes them to staff, and supports appointment scheduling — available 24/7 in English, Turkish, and Arabic. GrowthMonk does not provide medical advice, diagnosis, or clinical decision-making.
         </p>
 
         <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.82)", maxWidth: "520px", marginBottom: "40px", fontWeight: 600 }}>
