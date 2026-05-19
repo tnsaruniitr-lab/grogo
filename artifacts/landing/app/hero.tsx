@@ -8,12 +8,11 @@ const FADE_MS = 450;
 
 const LANG_OPTIONS: { code: Lang; label: string; href: string }[] = [
   { code: "en", label: "EN", href: "/" },
-  { code: "de", label: "DE", href: "/de" },
   { code: "tr", label: "TR", href: "/tr" },
   { code: "ar", label: "AR", href: "/ar" },
 ];
 
-const LANG_LABELS: Record<Lang, string> = { en: "English", de: "Deutsch", tr: "Türkçe", ar: "العربية" };
+const LANG_LABELS: Record<Lang, string> = { en: "English", tr: "Türkçe", ar: "العربية" };
 
 function LangDropdown({ lang }: { lang: Lang }) {
   const [open, setOpen] = useState(false);
@@ -294,7 +293,7 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
         </h1>
 
         <p className="sr-only">
-          GrowthMonk is a business communication and lead management platform for healthcare and wellness businesses. It captures inbound customer enquiries from WhatsApp, Instagram, Facebook and websites, qualifies them using business-approved questions, routes them to staff, and supports appointment booking — available 24/7 in English, German, Turkish, and Arabic. GrowthMonk does not provide medical advice, diagnosis, or clinical decision-making.
+          GrowthMonk is a business communication and lead management platform for healthcare and wellness businesses. It captures inbound customer enquiries from WhatsApp, Instagram, Facebook and websites, qualifies them using business-approved questions, routes them to staff, and supports appointment booking — available 24/7 in English, Turkish, and Arabic. GrowthMonk does not provide medical advice, diagnosis, or clinical decision-making.
         </p>
 
         <p className="vh-in3 gm-hero-sub" style={{ fontSize: "19px", lineHeight: 1.65, color: "rgba(255,255,255,0.82)", maxWidth: "520px", marginBottom: "40px", fontWeight: 600 }}>

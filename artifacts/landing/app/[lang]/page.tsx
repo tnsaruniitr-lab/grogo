@@ -2,19 +2,17 @@ import type { Metadata } from "next";
 import { LandingPage } from "../landing-page";
 import { translations, type Lang } from "../i18n/translations";
 
-const VALID_LANGS: Lang[] = ["en", "de", "tr", "ar"];
+const VALID_LANGS: Lang[] = ["en", "tr", "ar"];
 const BASE_URL = "https://growthmonk.ai";
 
 const LANG_META: Record<Lang, { title: string; locale: string }> = {
   en: { title: "GrowthMonk — AI Growth Engine for Healthcare & Wellness", locale: "en_US" },
-  de: { title: "GrowthMonk — KI-Wachstumsmotor für Gesundheit & Wellness", locale: "de_DE" },
   tr: { title: "GrowthMonk — Sağlık için Yapay Zeka Büyüme Motoru", locale: "tr_TR" },
   ar: { title: "GrowthMonk — محرك النمو بالذكاء الاصطناعي للرعاية الصحية", locale: "ar_SA" },
 };
 
 const HREFLANG_ALTERNATES = {
   en: BASE_URL,
-  de: `${BASE_URL}/de`,
   tr: `${BASE_URL}/tr`,
   ar: `${BASE_URL}/ar`,
   "x-default": BASE_URL,

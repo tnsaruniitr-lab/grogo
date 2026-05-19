@@ -8,10 +8,10 @@ import {
 import { VideoHero } from "./hero";
 import { translations, type Lang, type Translations } from "./i18n/translations";
 
-const FEATURE_ICONS = [Search, MessageCircle, Globe, Bot, Calendar, TrendingUp, BarChart3];
+const FEATURE_ICONS = [Search, MessageCircle, Globe, Bot, Calendar, BarChart3];
 
 export function LandingPage({ lang }: { lang: string }) {
-  const safeLang = (["en", "de", "tr", "ar"].includes(lang) ? lang : "en") as Lang;
+  const safeLang = (["en", "tr", "ar"].includes(lang) ? lang : "en") as Lang;
   const t = translations[safeLang];
   const fontFamily = safeLang === "ar" ? "'Cairo', 'Segoe UI', Arial, sans-serif" : "'Plus Jakarta Sans', sans-serif";
 
@@ -171,12 +171,12 @@ function Features({ t }: { t: Translations }) {
           {t.features.list.map((f, i) => {
             const Icon = FEATURE_ICONS[i];
             const isReversed = i % 2 === 1;
-            const isSmall = i === 5;
+            const isSmall = false;
             return (
               <div key={i} className="gm-feature-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center", direction: isReversed ? "rtl" : "ltr" }}>
                 <div className="gm-feature-img" style={{ direction: "ltr", position: "relative", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(55,65,81,0.55)", boxShadow: "0 0 80px rgba(34,197,94,0.07), 0 32px 64px rgba(0,0,0,0.45)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={["/features/ai-search.png","/features/whatsapp-capture.png","/features/multilingual.png","/features/qualification.png","/features/booking.png","/features/reactivation.png","/features/analytics.png"][i]} alt={f.tag} style={{ width: "100%", display: "block" }} />
+                  <img src={["/features/ai-search.png","/features/whatsapp-capture.png","/features/multilingual.png","/features/qualification.png","/features/booking.png","/features/analytics.png"][i]} alt={f.tag} style={{ width: "100%", display: "block" }} />
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #22c55e 40%, #4ade80 60%, transparent)", opacity: 0.5 }} />
                 </div>
                 <div className="gm-feature-text" style={{ direction: "ltr" }}>

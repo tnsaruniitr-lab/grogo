@@ -1,4 +1,4 @@
-export type Lang = "en" | "de" | "tr" | "ar";
+export type Lang = "en" | "tr" | "ar";
 
 export interface Translations {
   dir: "ltr" | "rtl";
@@ -62,7 +62,7 @@ const en: Translations = {
       "Optimised for AI search engines - customers find you first",
       "AI responds to every message in under 2 minutes, 24/7",
       "AI qualifies, filters, and routes leads automatically",
-      "Conversations in English, German, Turkish, Arabic and more",
+      "Conversations in English, Turkish, Arabic and more",
       "AI books appointments and callbacks without human input",
     ],
   },
@@ -99,7 +99,7 @@ const en: Translations = {
           "Teach it your exact services, FAQs, pricing, and intake questions through WhatsApp - no technical skills needed",
           "Handles enquiries with a careful, professional tone and escalates sensitive or clinical questions to your team immediately",
           "Continuously improves as you add knowledge - every update reflects instantly across all customer conversations",
-          "Responds in the customer's own language throughout the full conversation - English, German, Turkish, Arabic and more",
+          "Responds in the customer's own language throughout the full conversation - English, Turkish, Arabic and more",
         ],
       },
       {
@@ -120,16 +120,6 @@ const en: Translations = {
           "Schedules callbacks for customers who need more time before committing",
           "Syncs with your calendar in real time - zero double-booking, zero manual entry",
           "Works around the clock so you wake up to a full diary every morning",
-        ],
-      },
-      {
-        tag: "Customer Reactivation",
-        title: "Turn cold leads and past customers into booked appointments",
-        bullets: [
-          "Re-engages cold leads, lapsed customers, and unconverted consultations automatically via WhatsApp",
-          "Recovers abandoned enquiries - customers who dropped off mid-conversation are followed up without any manual effort",
-          "Post-appointment follow-up built in - AI checks in, prompts a rebooking, and requests a review at the right moment",
-          "Specialty recall intervals handled automatically - dental check-ups, medspa top-ups, physio course completions and more",
         ],
       },
       {
@@ -185,7 +175,7 @@ const en: Translations = {
     items: [
       { q: "What is GrowthMonk?", a: "GrowthMonk is a business communication and lead management platform for healthcare, wellness, medspa, and service businesses. It helps businesses capture inbound enquiries from WhatsApp, Instagram, Facebook and websites, qualify them using business-approved questions, route them to staff, and support appointment booking. GrowthMonk does not provide medical advice, diagnosis, treatment recommendations, prescriptions, emergency support, or clinical decision-making." },
       { q: "How does GrowthMonk capture leads from WhatsApp?", a: "GrowthMonk connects to your WhatsApp Business number via the official Meta WhatsApp Business API. When a customer messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — automatically, 24 hours a day." },
-      { q: "Does GrowthMonk support multiple languages?", a: "Yes. GrowthMonk detects the customer's language automatically and continues in that language for the entire conversation. Currently supported: English, German, Turkish, and Arabic, with more languages being added." },
+      { q: "Does GrowthMonk support multiple languages?", a: "Yes. GrowthMonk detects the customer's language automatically and continues in that language for the entire conversation. Currently supported: English, Turkish, and Arabic, with more languages being added." },
       { q: "What is Answer Engine Optimization (AEO) for healthcare?", a: "AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, Google AI Overviews) cite your practice when customers ask health questions. GrowthMonk builds your AEO foundation — structured data, semantic content, and Q&A pages — so you appear in AI answers before your competitors." },
       { q: "How long does setup take?", a: "Most healthcare businesses are fully set up and live within 24 hours of onboarding. Our team handles the channel integrations, AI configuration, and knowledge base setup. You just review and approve." },
       { q: "Is customer data safe and GDPR-compliant?", a: "Yes. GrowthMonk is built with data privacy by design. All customer conversations are encrypted, data is processed within compliant infrastructure, and you retain full control over what is stored and for how long." },
@@ -199,183 +189,6 @@ const en: Translations = {
     badges: ["No credit card", "24-hour setup", "Cancel anytime", "GDPR compliant"],
   },
   footer: { features: "Features", howItWorks: "How It Works", industries: "Industries", faq: "FAQ", contact: "Contact" },
-};
-
-const de: Translations = {
-  dir: "ltr", lang: "de",
-  nav: { features: "Funktionen", howItWorks: "So funktioniert es", industries: "Branchen", faq: "FAQ", bookDemo: "Demo buchen →" },
-  hero: {
-    words: ["Gesundheitsunternehmen", "Kliniken", "Medspas", "Wellnesszentren"],
-    headline1: "Die KI-Wachstumsmaschine",
-    headline2: "für",
-    sub: "Werden Sie in KI-Suchanfragen gefunden, erfassen Sie jeden WhatsApp- und Social-Media-Lead, qualifizieren Sie Anfragen automatisch und wandeln Sie mehr Anfragen in Beratungstermine um.",
-    ctaPrimary: "Kostenlose Demo buchen",
-    ctaSecondary: "So funktioniert es",
-  },
-  trust: {
-    eyebrow: "Was GrowthMonk liefert",
-    heading: "Messbare Ergebnisse für Gesundheitsunternehmen",
-    stats: [
-      { value: "2-4×",   label: "Mehr Sichtbarkeit in KI-Suchanfragen für Ihr Unternehmen" },
-      { value: "3×",     label: "Mehr entdeckte und erfasste Leads" },
-      { value: "80%",    label: "Der Leads werden automatisch durch KI qualifiziert" },
-      { value: "15–20%", label: "Mehr gebuchte Beratungen für Ihre Klinik" },
-    ],
-  },
-  ps: {
-    eyebrowProblem: "Das Problem", eyebrowFix: "Die Lösung",
-    heading: "Hören Sie auf, Kunden an schnellere Wettbewerber zu verlieren",
-    sub: "Gesundheitsunternehmen, die auf manuelle Prozesse setzen, verlieren Kunden an KI-gestützte Konkurrenten. GrowthMonk schließt diese Lücke.",
-    oldTitle: "✗  Der alte Weg", oldSub: "Langsam, manuell, undichter Funnel",
-    newTitle: "✓  Der GrowthMonk-Weg", newSub: "Automatisiert, sofortig, immer verfügbar",
-    problems: [
-      "Unsichtbar in KI-Suchen (ChatGPT, Perplexity, AI Overviews)",
-      "WhatsApp- und Instagram-Anfragen bleiben stundenlang unbeantwortet",
-      "Mitarbeiter verbringen Stunden damit, dieselben Anfragen zu qualifizieren",
-      "Sprachbarrieren kosten Sie mehrsprachige Kunden",
-      "Leads werden erfasst, aber nie konsequent nachverfolgt",
-    ],
-    solutions: [
-      "Für KI-Suchmaschinen optimiert – Kunden finden Sie zuerst",
-      "KI antwortet auf jede Nachricht in unter 2 Minuten, 24/7",
-      "KI qualifiziert, filtert und leitet Leads automatisch weiter",
-      "Gespräche auf Deutsch, Englisch, Türkisch, Arabisch und mehr",
-      "KI bucht Termine und Rückrufe ohne menschlichen Eingriff",
-    ],
-  },
-  features: {
-    eyebrow: "Plattform-Funktionen",
-    heading: "Alles, was Sie für schnelleres Wachstum brauchen",
-    sub: "GrowthMonk vereint KI-Suchsichtbarkeit, Lead-Erfassung, Qualifizierung und Buchung in einer vernetzten Plattform für das Gesundheitswesen.",
-    list: [
-      {
-        tag: "KI-Suchentdeckung",
-        title: "Werden Sie vor Ihren Konkurrenten gefunden – in der KI-Suche",
-        bullets: [
-          "Erstellen Sie eine vollständig AEO-, SEO- & GEO-optimierte Website in Stunden – oder lassen Sie Ihre bestehende auditieren",
-          "Analysieren Sie, was Top-Konkurrenten tun, um in ChatGPT, Perplexity und Google AI Overviews zu ranken",
-          "Identifizieren Sie Autoritätsquellen und lassen Sie unseren Agenten automatisch Zitierungen für Sie erwerben",
-          "Humanisierte Blog-Inhalte, die KI-Suchmaschinen zitieren können – basierend auf offiziellen Frameworks von Google, Perplexity und Schema.org",
-        ],
-      },
-      {
-        tag: "WhatsApp & Social-Media-Erfassung",
-        title: "Erfassen Sie jeden Lead in dem Moment, in dem er schreibt",
-        bullets: [
-          "KI antwortet auf jede WhatsApp-, Instagram-DM- und Facebook-Nachricht in unter 90 Sekunden – 24/7",
-          "Keine Anfrage geht verloren – alle Kanäle in einem verbundenen Posteingang erfasst",
-          "Bewältigt hohe Volumina ohne zusätzliches Personal – skaliert sofort ohne Mehrkosten",
-          "Intelligente Übergabe an Ihr Team, wenn ein menschlicher Touch erforderlich ist",
-        ],
-      },
-      {
-        tag: "Maßgeschneiderter KI-Bot",
-        title: "Gebaut für das Gesundheitswesen – kein generischer Chatbot",
-        bullets: [
-          "Trainiert auf Gesundheits- und Wellness-Protokollen, klinischer Empathie und Best Practices in der Kundenkommunikation",
-          "Bringen Sie ihm Ihre genauen Dienstleistungen, FAQs, Preise und Aufnahmefragen per WhatsApp bei – ohne technische Kenntnisse",
-          "Behandelt sensible Kundenanfragen mit der notwendigen Sorgfalt und eskaliert bei Bedarf an Ihr Team",
-          "Verbessert sich kontinuierlich mit Ihrem Wissen – jede Aktualisierung wirkt sich sofort aus",
-          "Antwortet in der Sprache des Kunden – Deutsch, Englisch, Türkisch, Arabisch und mehr",
-        ],
-      },
-      {
-        tag: "Automatische Qualifizierung",
-        title: "Ihr Team spricht nur mit ernsthaften Interessenten",
-        bullets: [
-          "KI stellt die richtigen Fragen, um den Bedarf und die Absicht jedes Patienten zu verstehen",
-          "Bewertet und qualifiziert automatisch jeden Lead – keine manuelle Überprüfung erforderlich",
-          "Leitet heiße Leads direkt an Ihr Team weiter und filtert Zeitfresser heraus",
-          "Mitarbeiter bearbeiten nur buchungsbereite Interessenten – Fokus auf Konversion, nicht auf Filterung",
-        ],
-      },
-      {
-        tag: "Sofortbuchung",
-        title: "Ihr Kalender füllt sich, während Sie Ihre Kunden betreuen",
-        bullets: [
-          "Wandelt qualifizierte Leads automatisch in gebuchte Beratungen um – kein Hin und Her",
-          "Plant Rückrufe für Kunden, die mehr Zeit benötigen",
-          "Synchronisiert sich in Echtzeit mit Ihrem Kalender – keine Doppelbuchungen, kein manueller Aufwand",
-          "Arbeitet rund um die Uhr – morgens wartet ein voller Kalender auf Sie",
-        ],
-      },
-      {
-        tag: "Kundenreaktivierung",
-        title: "Verwandeln Sie alte Leads und ehemalige Kunden in Termine",
-        bullets: [
-          "Reaktiviert kalte Leads, frühere Kunden und nicht konvertierte Beratungen automatisch per WhatsApp",
-          "Holt abgebrochene Anfragen zurück – ohne manuellen Aufwand",
-          "Eingebaute Post-Termin-Nachverfolgung – KI fordert im richtigen Moment eine Neubuchung und Bewertung an",
-          "Spezialrückruf-Intervalle automatisch behandelt – Zahnarzt-Check-ups, Medspa-Auffrischungen und mehr",
-        ],
-      },
-      {
-        tag: "Live-Analytics-Dashboard",
-        title: "Vollständige Übersicht – kein manuelles Tracking",
-        bullets: [
-          "Verfolgen Sie jeden Lead, jede Konversation und jede Konversion in Echtzeit – alles an einem Ort",
-          "Quelle, Sprache, KI-erkannte Absicht und Status auf einen Blick",
-          "Nichts wird manuell erfasst – jeder Datenpunkt wird automatisch aufgezeichnet",
-          "Identifizieren Sie Absprungpunkte und optimieren Sie Ihren Funnel mit Live-Daten",
-        ],
-      },
-    ],
-  },
-  video: {
-    eyebrow: "In Aktion sehen",
-    heading: "Sehen Sie GrowthMonk in Aktion",
-    sub: "Ein Live-Walkthrough, wie GrowthMonk Leads erfasst, sie in Sekunden qualifiziert und Termine automatisch bucht.",
-    slideTitle: "GrowthMonk im Einsatz",
-    slideDesc: "Sehen Sie, wie der KI-Bot Leads erfasst, qualifiziert und automatisch bucht – von Anfang bis Ende.",
-  },
-  how: {
-    eyebrow: "So funktioniert es",
-    heading: "In 24 Stunden einsatzbereit",
-    sub: "Vier Schritte von der Registrierung zu einer vollautomatisierten, KI-sichtbaren Lead-Pipeline für Ihr Gesundheitsunternehmen.",
-    steps: [
-      { title: "Prüfen Sie Ihre KI-Suchpräsenz und überholen Sie Konkurrenten", description: "Wir scannen, wie Ihre Praxis in ChatGPT, Perplexity und Google AI Overviews erscheint – und vergleichen sie mit Ihren Top-Konkurrenten. Sie erhalten ein klares Bild der Lücke und einen strategischen Fahrplan.", detail: "KI-Suchaudit · Wettbewerbsanalyse · Strategischer Fahrplan" },
-      { title: "Verbinden Sie Ihre Kanäle", description: "Verbinden Sie Ihre WhatsApp Business-Nummer, Instagram und andere Social-Media-Kanäle in Minuten mit GrowthMonk. Keine technischen Kenntnisse erforderlich – wir übernehmen die Integration.", detail: "WhatsApp · Instagram · Facebook · Website-Chat" },
-      { title: "KI erfasst und qualifiziert jeden Lead", description: "Sobald ein potenzieller Kunde eine Nachricht sendet, antwortet unsere KI sofort – in seiner Sprache. Sie stellt die richtigen Fragen und qualifiziert automatisch.", detail: "24/7-Antwort · Mehrsprachig · Kein Personalaufwand" },
-      { title: "Sie erhalten gebuchte Termine", description: "Qualifizierte Kunden werden automatisch in Ihren Kalender eingetragen oder für einen Rückruf eingeplant. Sie öffnen Ihr Dashboard und finden eine Liste warmer, qualifizierter Leads.", detail: "Automatische Buchung · Rückrufplanung · Live-Dashboard" },
-    ],
-  },
-  testimonials: { eyebrow: "Kundenstimmen", heading: "Von Gesundheitsunternehmen vertraut" },
-  industries: {
-    eyebrow: "Branchen",
-    heading: "Für alle Gesundheitsbereiche entwickelt",
-    sub: "Ob Boutique-Medspa oder Klinik mit mehreren Standorten – GrowthMonk passt sich Ihrer Spezialität und Ihren Kunden an.",
-    list: [
-      { name: "Medizinische Kliniken",   icon: "🏥", desc: "Allgemeinpraxen, Fachkliniken und Privatkrankenhäuser" },
-      { name: "Zahnarztpraxen",          icon: "🦷", desc: "Allgemeine Zahnheilkunde, Kieferorthopädie und Implantatzentren" },
-      { name: "Medspas & Ästhetik",      icon: "✨", desc: "Ästhetische Kliniken, Laserzentren und Hautpraxen" },
-      { name: "Physiotherapie",          icon: "🤸", desc: "Physio, Sportrehabilitation und Bewegungskliniken" },
-      { name: "Psychische Gesundheit",   icon: "🧠", desc: "Therapie, Beratung und Psychiatriepraxen" },
-      { name: "Pflegedienste",           icon: "❤️", desc: "Häusliche Pflege, Altenpflege und Pflegeagenturen" },
-      { name: "Ernährung & Wellness",    icon: "🥗", desc: "Ernährungsberater, Diätassistenten und Wellness-Coaches" },
-      { name: "Fertilität & IVF",        icon: "👶", desc: "Fertilitätskliniken und reproduktive Gesundheitszentren" },
-    ],
-  },
-  faq: {
-    eyebrow: "FAQ",
-    heading: "Häufige Fragen",
-    sub: "Alles, was Sie über GrowthMonk und KI-gestütztes Wachstum für das Gesundheitswesen wissen müssen.",
-    items: [
-      { q: "Was ist GrowthMonk?", a: "GrowthMonk ist eine KI-Wachstumsmaschine für Gesundheits- und Wellnessunternehmen. Es hilft Kliniken, Medspas, Zahnarztpraxen und Pflegeanbietern, in KI-Suchmaschinen wie ChatGPT und Perplexity gefunden zu werden, Leads aus WhatsApp und Social Media zu erfassen und automatisch in gebuchte Termine umzuwandeln." },
-      { q: "Wie erfasst GrowthMonk Leads aus WhatsApp?", a: "GrowthMonk verbindet sich über die offizielle Meta WhatsApp Business API mit Ihrer WhatsApp Business-Nummer. Wenn ein Kunde schreibt, antwortet der KI-Bot sofort, erfasst die Details, qualifiziert den Bedarf und bucht entweder einen Termin oder plant einen Rückruf – automatisch, 24 Stunden am Tag." },
-      { q: "Unterstützt GrowthMonk mehrere Sprachen?", a: "Ja. GrowthMonk erkennt die Sprache des Kunden automatisch und führt das gesamte Gespräch in dieser Sprache. Derzeit unterstützt: Englisch, Deutsch, Türkisch und Arabisch – weitere werden hinzugefügt." },
-      { q: "Was ist Answer Engine Optimization (AEO) für das Gesundheitswesen?", a: "AEO ist die Praxis, Ihre Inhalte so zu strukturieren, dass KI-Suchmaschinen (ChatGPT, Perplexity, Google AI Overviews) Ihre Praxis zitieren, wenn Kunden Gesundheitsfragen stellen. GrowthMonk baut Ihre AEO-Grundlage – strukturierte Daten, semantische Inhalte und Q&A-Seiten." },
-      { q: "Wie lange dauert die Einrichtung?", a: "Die meisten Gesundheitsunternehmen sind innerhalb von 24 Stunden nach dem Onboarding vollständig eingerichtet und live. Unser Team kümmert sich um die Kanalintegrationen, KI-Konfiguration und Wissensbasis. Sie prüfen und genehmigen nur." },
-      { q: "Sind Kundendaten sicher und DSGVO-konform?", a: "Ja. GrowthMonk wurde von Grund auf mit Datenschutz entwickelt. Alle Kundengespräche sind verschlüsselt, Daten werden in konformer Infrastruktur verarbeitet, und Sie behalten die volle Kontrolle über das, was gespeichert wird und wie lange." },
-    ],
-  },
-  cta: {
-    eyebrow: "Starten Sie heute",
-    heading: "Bereit, Ihre Praxis mit KI zu wachsen?",
-    sub: "Buchen Sie eine kostenlose 30-minütige Demo. Wir zeigen Ihnen genau, wie GrowthMonk für Ihre Praxis funktioniert – live, ohne Folien, ohne Verkaufsgespräch.",
-    button: "Kostenlose Demo buchen",
-    badges: ["Keine Kreditkarte", "24-Stunden-Einrichtung", "Jederzeit kündbar", "DSGVO-konform"],
-  },
-  footer: { features: "Funktionen", howItWorks: "So funktioniert es", industries: "Branchen", faq: "FAQ", contact: "Kontakt" },
 };
 
 const tr: Translations = {
@@ -416,7 +229,7 @@ const tr: Translations = {
       "Yapay zeka arama motorları için optimize edilmiş – müşteriler sizi ilk bulur",
       "Yapay zeka her mesaja 2 dakika içinde yanıt verir, 7/24",
       "Yapay zeka leadleri otomatik olarak niteler, filtreler ve yönlendirir",
-      "Türkçe, Almanca, İngilizce, Arapça ve daha fazlasında konuşmalar",
+      "Türkçe, İngilizce, Arapça ve daha fazlasında konuşmalar",
       "Yapay zeka insan müdahalesi olmadan randevu ve geri arama oluşturur",
     ],
   },
@@ -449,11 +262,11 @@ const tr: Translations = {
         tag: "Özel Eğitimli Yapay Zeka Botu",
         title: "Sağlık sektörü için üretildi – genel bir chatbot değil",
         bullets: [
-          "Sağlık ve wellness protokolleri, klinik empati ve müşteri iletişimi üzerine eğitildi",
+          "Hizmetlerinize, SSS'lerinize, fiyatlarınıza, müsaitlik durumuna ve eskalasyon kurallarınıza göre eğitildi — genel protokollere değil",
           "Hizmetlerinizi, SSS'lerinizi ve fiyatlarınızı WhatsApp üzerinden öğretin – teknik bilgi gerekmez",
           "Hassas müşteri taleplerini gereken özenle karşılar, gerektiğinde ekibinize aktarır",
           "Bilginiz arttıkça sürekli gelişir – her güncelleme anında yansır",
-          "Müşterinin kendi dilinde yanıt verir – Türkçe, Almanca, İngilizce, Arapça ve daha fazlası",
+          "Müşterinin kendi dilinde yanıt verir – Türkçe, İngilizce, Arapça ve daha fazlası",
         ],
       },
       {
@@ -474,16 +287,6 @@ const tr: Translations = {
           "Daha fazla zamana ihtiyaç duyan müşteriler için geri arama planlar",
           "Takviminizle gerçek zamanlı senkronize olur – çift rezervasyon, manuel giriş yok",
           "Gece gündüz çalışır – sabah dolu bir takvimiyle uyanırsınız",
-        ],
-      },
-      {
-        tag: "Müşteri Reaktivasyonu",
-        title: "Soğuk leadleri ve eski müşterileri randevuya dönüştürün",
-        bullets: [
-          "Soğuk leadleri, eski müşterileri ve dönüşmeyen danışmaları otomatik olarak WhatsApp üzerinden yeniden devreye sokar",
-          "Yarım kalan talepleri geri kazanır – konuşmayı yarıda bırakan müşterilere manuel çaba gerektirmeden ulaşır",
-          "Randevu sonrası takip dahil – yapay zeka doğru anda yeniden rezervasyon ve değerlendirme ister",
-          "Uzmanlık hatırlatma aralıkları otomatik – diş kontrolleri, medspa yenilemeler ve daha fazlası",
         ],
       },
       {
@@ -539,8 +342,8 @@ const tr: Translations = {
     items: [
       { q: "GrowthMonk nedir?", a: "GrowthMonk, sağlık ve wellness işletmeleri için bir yapay zeka büyüme motorudur. Kliniklerin, medispaların, diş kliniklerinin ve bakım sağlayıcıların ChatGPT ve Perplexity gibi yapay zeka arama motorlarında keşfedilmesine, WhatsApp ve sosyal medyadan lead elde etmesine ve otomatik olarak randevuya dönüştürmesine yardımcı olur." },
       { q: "GrowthMonk WhatsApp'tan nasıl lead yakalar?", a: "GrowthMonk, resmi Meta WhatsApp Business API aracılığıyla WhatsApp Business numaranıza bağlanır. Bir müşteri mesaj attığında yapay zeka botu anında yanıt verir, bilgileri alır, ihtiyacını niteler ve otomatik olarak randevu oluşturur ya da geri arama planlar – günün 24 saati." },
-      { q: "GrowthMonk birden fazla dili destekliyor mu?", a: "Evet. GrowthMonk müşterinin dilini otomatik olarak algılar ve tüm konuşmayı o dilde sürdürür. Şu anda desteklenen diller: Türkçe, Almanca, İngilizce ve Arapça; daha fazlası ekleniyor." },
-      { q: "Sağlık sektöründe Answer Engine Optimization (AEO) nedir?", a: "AEO, içeriklerinizi yapay zeka arama motorlarının (ChatGPT, Perplexity, Google AI Overviews) hastalar sağlık soruları sorduğunda pratiğinizi alıntılaması için yapılandırma pratiğidir. GrowthMonk yapılandırılmış veri, semantik içerik ve SSS sayfaları ile AEO temelini oluşturur." },
+      { q: "GrowthMonk birden fazla dili destekliyor mu?", a: "Evet. GrowthMonk müşterinin dilini otomatik olarak algılar ve tüm konuşmayı o dilde sürdürür. Şu anda desteklenen diller: Türkçe, İngilizce ve Arapça; daha fazlası ekleniyor." },
+      { q: "Sağlık sektöründe Answer Engine Optimization (AEO) nedir?", a: "AEO, içeriklerinizi yapay zeka arama motorlarının (ChatGPT, Perplexity, Google AI Overviews) müşteriler sağlık soruları sorduğunda pratiğinizi alıntılaması için yapılandırma pratiğidir. GrowthMonk yapılandırılmış veri, semantik içerik ve SSS sayfaları ile AEO temelini oluşturur." },
       { q: "Kurulum ne kadar sürer?", a: "Çoğu sağlık işletmesi, kurulum sürecinden sonra 24 saat içinde tam olarak kurulur ve yayına girer. Ekibimiz kanal entegrasyonlarını, yapay zeka yapılandırmasını ve bilgi tabanı kurulumunu üstlenir. Siz yalnızca inceleyip onaylarsınız." },
       { q: "Müşteri verileri güvenli ve GDPR uyumlu mu?", a: "Evet. GrowthMonk, veri gizliliği gözetilerek sıfırdan oluşturulmuştur. Tüm müşteri görüşmeleri şifrelenir, veriler uyumlu altyapıda işlenir ve nelerin ne kadar süre saklandığı konusunda tam kontrole sahipsiniz." },
     ],
@@ -593,7 +396,7 @@ const ar: Translations = {
       "محسّن لمحركات البحث الذكي – العملاء يجدونك أولًا",
       "الذكاء الاصطناعي يرد على كل رسالة خلال دقيقتين، 24/7",
       "الذكاء الاصطناعي يؤهل ويصفي ويوجه العملاء تلقائيًا",
-      "محادثات بالعربية والإنجليزية والألمانية والتركية والمزيد",
+      "محادثات بالعربية والإنجليزية والتركية والمزيد",
       "الذكاء الاصطناعي يحجز المواعيد دون تدخل بشري",
     ],
   },
@@ -626,11 +429,11 @@ const ar: Translations = {
         tag: "بوت ذكاء اصطناعي مدرَّب خصيصًا",
         title: "مصمم للرعاية الصحية، ليس روبوتًا اعتياديًا",
         bullets: [
-          "مدرَّب على بروتوكولات الرعاية الصحية والتعاطف السريري وأفضل ممارسات التواصل مع العملاء",
+          "مدرَّب على خدماتك وأسئلتك الشائعة وأسعارك ومواعيد توافرك وقواعد التصعيد — لا على بروتوكولات عامة",
           "علّمه خدماتك وأسعارك وأسئلتك عبر واتساب دون أي خبرة تقنية",
           "يتعامل مع الاستفسارات الحساسة بالرعاية اللازمة ويحيلها للفريق عند الحاجة",
           "يتحسن باستمرار مع كل معلومة تضيفها – كل تحديث ينعكس فورًا",
-          "يرد بلغة العميل – العربية والإنجليزية والألمانية والتركية والمزيد",
+          "يرد بلغة العميل – العربية والإنجليزية والتركية والمزيد",
         ],
       },
       {
@@ -651,16 +454,6 @@ const ar: Translations = {
           "يجدول مكالمات استرداد للعملاء الذين يحتاجون مزيدًا من الوقت",
           "يتزامن مع تقويمك في الوقت الفعلي – لا ازدواجية، لا إدخال يدوي",
           "يعمل على مدار الساعة – تستيقظ على تقويم ممتلئ",
-        ],
-      },
-      {
-        tag: "إعادة تفعيل العملاء",
-        title: "حوّل العملاء الخاملين والعملاء السابقين إلى مواعيد",
-        bullets: [
-          "يعيد تفعيل العملاء الخاملين والعملاء القدامى والاستشارات غير المحوّلة تلقائيًا عبر واتساب",
-          "يستعيد الاستفسارات المتوقفة – العملاء الذين أوقفوا المحادثة يُتابَعون دون جهد يدوي",
-          "متابعة ما بعد الموعد مدمجة – الذكاء الاصطناعي يتابع ويطلب إعادة الحجز والتقييم في الوقت المناسب",
-          "فترات تذكير التخصصات تلقائية – مراجعات الأسنان وتجديدات المراكز الجمالية والمزيد",
         ],
       },
       {
@@ -716,7 +509,7 @@ const ar: Translations = {
     items: [
       { q: "ما هو GrowthMonk؟", a: "GrowthMonk هو محرك نمو مدعوم بالذكاء الاصطناعي للمنشآت الصحية ومراكز العافية. يساعد العيادات ومراكز التجميل وعيادات الأسنان ومزودي الرعاية على الظهور في محركات البحث الذكية كـ ChatGPT وPerplexity، والتقاط عملاء محتملين من واتساب ووسائل التواصل، وتحويلهم تلقائيًا إلى مواعيد محجوزة." },
       { q: "كيف يلتقط GrowthMonk العملاء من واتساب؟", a: "يتصل GrowthMonk برقم WhatsApp Business الخاص بك عبر واجهة برمجة تطبيقات واتساب الرسمية من Meta. عند إرسال عميل رسالة، يرد البوت فورًا، يسجّل بياناته، يؤهّل احتياجاته، ويحجز موعدًا أو مكالمة استرداد تلقائيًا على مدار الساعة." },
-      { q: "هل يدعم GrowthMonk لغات متعددة؟", a: "نعم. يكتشف GrowthMonk لغة العميل تلقائيًا ويواصل المحادثة كاملة بتلك اللغة. اللغات المدعومة حاليًا: العربية والإنجليزية والألمانية والتركية، مع إضافة لغات أخرى قريبًا." },
+      { q: "هل يدعم GrowthMonk لغات متعددة؟", a: "نعم. يكتشف GrowthMonk لغة العميل تلقائيًا ويواصل المحادثة كاملة بتلك اللغة. اللغات المدعومة حاليًا: العربية والإنجليزية والتركية، مع إضافة لغات أخرى قريبًا." },
       { q: "ما هو تحسين محركات الإجابة (AEO) في قطاع الرعاية الصحية؟", a: "AEO هو هيكلة محتواك لكي تستشهد به محركات البحث الذكية (ChatGPT وPerplexity ونتائج Google) عند سؤال العملاء عن الرعاية الصحية. يبني GrowthMonk أساس AEO الخاص بك – بيانات منظمة، محتوى دلالي، وصفحات أسئلة وأجوبة – لتظهر في إجابات الذكاء الاصطناعي قبل منافسيك." },
       { q: "كم يستغرق الإعداد؟", a: "تكون معظم المنشآت الصحية جاهزة وتعمل بالكامل خلال 24 ساعة من بدء الانضمام. يتولى فريقنا تكاملات القنوات وإعداد الذكاء الاصطناعي وقاعدة المعرفة. أنت فقط تراجع وتوافق." },
       { q: "هل بيانات العملاء آمنة ومتوافقة مع GDPR؟", a: "نعم. بُني GrowthMonk بخصوصية البيانات كأولوية. جميع محادثات العملاء مشفرة، تُعالَج البيانات ضمن بنية تحتية متوافقة، وتحتفظ بالسيطرة الكاملة على ما يُخزَّن ومدته." },
@@ -732,4 +525,4 @@ const ar: Translations = {
   footer: { features: "المميزات", howItWorks: "كيف يعمل", industries: "القطاعات", faq: "الأسئلة الشائعة", contact: "تواصل معنا" },
 };
 
-export const translations: Record<Lang, Translations> = { en, de, tr, ar };
+export const translations: Record<Lang, Translations> = { en, tr, ar };

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses capture inbound enquiries from WhatsApp and social media, qualify them automatically, and get discovered in AI search engines like ChatGPT, Perplexity, and Google AI Overviews — 24/7, multilingual.",
   keywords: [
-    "AI healthcare marketing",
+    "AI healthcare lead capture",
     "wellness lead generation",
     "WhatsApp chatbot healthcare",
     "AI search optimization healthcare",
@@ -66,7 +66,6 @@ export const metadata: Metadata = {
     canonical: BASE_URL,
     languages: {
       en: BASE_URL,
-      de: `${BASE_URL}/de`,
       tr: `${BASE_URL}/tr`,
       ar: `${BASE_URL}/ar`,
       "x-default": BASE_URL,
@@ -85,7 +84,7 @@ const jsonLd = {
       url: BASE_URL,
       description:
         "GrowthMonk helps clinics, medspas, dental practices, and wellness businesses capture inbound enquiries from WhatsApp and social media, qualify them using business-approved rules, and get discovered in AI search engines. GrowthMonk does not provide medical advice or clinical decision-making.",
-      foundingDate: "2024",
+      foundingDate: "2025",
       areaServed: "Worldwide",
       logo: {
         "@type": "ImageObject",
@@ -113,7 +112,7 @@ const jsonLd = {
       "@id": `${BASE_URL}#software`,
       name: "GrowthMonk",
       applicationCategory: "BusinessApplication",
-      applicationSubCategory: "Healthcare Marketing Automation",
+      applicationSubCategory: "AI Search and Appointment Booking",
       operatingSystem: "Web",
       url: BASE_URL,
       datePublished: "2025-01-01",
@@ -123,7 +122,7 @@ const jsonLd = {
       featureList: [
         "AI search discovery and optimization",
         "WhatsApp and Instagram lead capture",
-        "Multilingual AI conversations (English, German, Turkish, Arabic)",
+        "Multilingual AI conversations (English, Turkish, Arabic)",
         "Automated lead qualification",
         "Instant appointment booking",
         "Real-time analytics dashboard",
@@ -163,7 +162,7 @@ const jsonLd = {
           name: "Does GrowthMonk support multiple languages?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. GrowthMonk detects the customer's language automatically and responds in that language throughout the entire conversation. Currently supported languages include English, German, Turkish, and Arabic, with more being added continuously.",
+            text: "Yes. GrowthMonk detects the customer's language automatically and responds in that language throughout the entire conversation. Currently supported languages include English, Turkish, and Arabic, with more being added continuously.",
           },
         },
         {
