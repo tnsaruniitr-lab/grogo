@@ -308,6 +308,72 @@ function actionToStatus(resolvedAction: ResolvedAction, currentStatus: string): 
 }
 
 /**
+ * Backend-guaranteed confirmation tail appended to the GPT reply for every
+ * resolved booking or escalation action. Ensures the customer-visible WhatsApp
+ * text always agrees with what the backend actually wrote to the DB — GPT
+ * wording and DB action can never drift apart.
+ *
+ * Kept intentionally short: GPT already wrote the main reply; this is just an
+ * unambiguous receipt line.
+ */
+function buildActionConfirmation(
+  resolvedAction: ResolvedAction,
+  language: string,
+  serviceRequested: string | null,
+  preferredTime: string | null,
+): string | null {
+  const timeStr = preferredTime ? ` (${preferredTime})` : "";
+
+  switch (resolvedAction) {
+    case "book_service": {
+      const svc = serviceRequested ?? "";
+      const svcStr = svc ? ` — ${svc}` : "";
+      return language === "tr"
+        ? `✅ Randevunuz alındı${svcStr}${timeStr}. Ekibimiz en kısa sürede sizi arayacak.`
+        : language === "ar"
+          ? `✅ تم تسجيل حجزك${svcStr}${timeStr}. سيتواصل فريقنا معك قريباً.`
+          : language === "de"
+            ? `✅ Ihre Buchung${svcStr}${timeStr} wurde erfasst. Wir melden uns in Kürze.`
+            : `✅ Your booking${svcStr}${timeStr} has been received. We'll be in touch shortly.`;
+    }
+    case "book_online_consultation":
+      return language === "tr"
+        ? `✅ Online görüşme talebiniz alındı${timeStr}. Ekibimiz sizinle iletişime geçecek.`
+        : language === "ar"
+          ? `✅ تم تسجيل طلب الاستشارة عبر الإنترنت${timeStr}. سيتواصل فريقنا معك.`
+          : language === "de"
+            ? `✅ Ihre Online-Beratungsanfrage${timeStr} wurde erfasst. Wir kommen auf Sie zu.`
+            : `✅ Your online consultation request${timeStr} has been received. We'll reach out to confirm.`;
+    case "book_walkin_consultation":
+      return language === "tr"
+        ? `✅ Yüz yüze görüşme talebiniz alındı${timeStr}. Ekibimiz sizinle iletişime geçecek.`
+        : language === "ar"
+          ? `✅ تم تسجيل طلب الاستشارة الشخصية${timeStr}. سيتواصل فريقنا معك.`
+          : language === "de"
+            ? `✅ Ihre Vor-Ort-Beratungsanfrage${timeStr} wurde erfasst. Wir melden uns zur Bestätigung.`
+            : `✅ Your in-person consultation request${timeStr} has been received. We'll be in touch to confirm.`;
+    case "book_callback":
+      return language === "tr"
+        ? `✅ Geri arama talebiniz alındı${timeStr}. Ekibimiz sizi arayacak.`
+        : language === "ar"
+          ? `✅ تم تسجيل طلب معاودة الاتصال${timeStr}. سيتصل بك فريقنا.`
+          : language === "de"
+            ? `✅ Ihr Rückrufwunsch${timeStr} wurde notiert. Wir melden uns.`
+            : `✅ Your callback request${timeStr} has been noted. We'll call you soon.`;
+    case "escalate_human":
+      return language === "tr"
+        ? `🔴 Sizi bir ekip üyesine bağlıyoruz. Lütfen bekleyin.`
+        : language === "ar"
+          ? `🔴 جارٍ تحويلك إلى أحد أعضاء الفريق. يُرجى الانتظار.`
+          : language === "de"
+            ? `🔴 Wir verbinden Sie mit einem Teammitglied. Bitte einen Moment Geduld.`
+            : `🔴 We're connecting you with a team member. Please hold on.`;
+    default:
+      return null;
+  }
+}
+
+/**
  * Rate-limit reply — language-aware.
  */
 function rateLimitReply(language: string): string {
@@ -577,6 +643,25 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     botResponse.intent = "out_of_scope";
     botResponse.action = "out_of_scope";
     logger.info({ leadId, language, industry }, "Empty knowledge base — backend override to callback-offer template");
+  }
+
+  // 6e. Backend-guaranteed confirmation tail for all 5 resolved actions.
+  // Appended AFTER GPT reply and asset URL so it is always the final line the
+  // customer reads. Prevents DB action and WhatsApp text from drifting apart.
+  if (resolvedAction !== "qualify") {
+    const d = botResponse.data ?? {};
+    const svcReq =
+      typeof d["serviceRequested"] === "string" && d["serviceRequested"]
+        ? (d["serviceRequested"] as string)
+        : null;
+    const prefTime =
+      typeof d["preferredTime"] === "string" && d["preferredTime"]
+        ? (d["preferredTime"] as string)
+        : null;
+    const confirmTail = buildActionConfirmation(resolvedAction, language, svcReq, prefTime);
+    if (confirmTail) {
+      botResponse.reply = `${botResponse.reply}\n\n${confirmTail}`;
+    }
   }
 
   const now = new Date();

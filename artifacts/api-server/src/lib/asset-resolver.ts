@@ -18,7 +18,7 @@ const ASSET_TYPE_MATCH: Record<string, Set<string>> = {
   price:    new Set(["pdf", "image"]),
   demo:     new Set(["loom"]),
   booking:  new Set(["calendly", "gmeet"]),
-  brochure: new Set(["pdf"]),
+  brochure: new Set(["pdf", "image", "custom"]),
 };
 
 interface ParsedAsset {

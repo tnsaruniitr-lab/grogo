@@ -1,0 +1,37 @@
+Mostly yes: the important code was pushed, and it is much closer to the promised design. I’d rate it 80-85% implemented, with a few sharp gaps to fix before calling it production-solid.
+
+What Was Delivered
+
+gpt-service.ts now has the locked five actions: book_service, book_online_consultation, book_walkin_consultation, book_callback, escalate_human.
+request_call_now is removed from the code.
+GPT data fields now include serviceRequested, preferredTime, consultationMode, bookingConfirmed, requestedHuman, handoffReason, and requestedAssetType.
+bot-pipeline.ts now has a deterministic resolveAction() rule engine. GPT action is advisory; backend action is authoritative.
+Lead status now maps from resolved backend action, not GPT intent.
+appointments.ts now has service_booking, online_consultation, walkin_consultation, and serviceRequested.
+Legacy visit was kept, which is correct for old dashboard rows.
+New asset-resolver.ts exists and is DB-driven. It queries approved category = "asset" rows directly, not just RAG chunks.
+Empty-KB override now only fires when resolvedAction === "qualify", so it will not clobber the five resolved actions.
+Issues / Gaps
+
+DB migration/push is not visible in repo.
+The schema expects appointments.service_requested. If production DB was not pushed separately, service bookings will fail at insert time. I can’t verify DB push from the repo alone.
+
+No automated UAT/tests were added.
+The 28 UAT scenarios are not implemented as tests. Only code changed. So behavior still needs manual sandbox validation.
+
+User-facing reply can still disagree with backend action.
+Backend may resolve book_service, insert appointment, and create a system timeline message, but the outbound WhatsApp text is still GPT’s original reply. If GPT extracted fields correctly but wrote a weak reply, the customer may not see a clear booking confirmation. I’d append a backend confirmation line for resolved booking/escalation actions.
+
+Prompt has duplicate/legacy fields.
+The response template explicitly lists preferredTime, appointmentDate, appointmentTime, then injects profile.dataFields, which includes some of those again. Not fatal, but it can confuse GPT.
+
+Asset resolver is good, but minimal.
+It matches service context, label/question/answer, and type. Good. But brochure only maps to PDF, not image/custom. That may be okay, but be aware.
+
+Two attached_assets/...txt files were committed.
+The compare shows pasted planning docs added under attached_assets. If intentional, fine. If not, that’s repo hygiene noise.
+
+Verdict
+The core architecture promised was pushed: five actions, rule engine, DB-driven asset resolver, service booking schema, and empty-KB fix. The main thing I would not sign off on yet is production reliability until you confirm the DB push and manually run the UAT set, especially direct booking, asset delivery, and escalation.
+
+The next small fix I’d make: backend-append a user-facing confirmation for every resolved action, so the DB action and WhatsApp reply can’t drift apart.

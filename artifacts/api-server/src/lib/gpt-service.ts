@@ -129,8 +129,16 @@ function buildSystemPrompt(
   const gdprAllowed = pickLang(profile.gdprAllowedFields, language);
   const gdprRedirectMsg = pickLang(profile.gdprRedirect, language);
 
-  // Build the data JSON template from the profile's data fields
+  // Build the data JSON template from the profile's data fields.
+  // Exclude keys that are now hardcoded in the response format template above
+  // to prevent GPT seeing the same field twice with conflicting descriptions.
+  const HARDCODED_DATA_KEYS = new Set([
+    "serviceRequested", "preferredTime", "appointmentDate", "appointmentTime",
+    "consultationMode", "bookingConfirmed", "requestedHuman",
+    "handoffReason", "requestedAssetType", "switchToLanguage",
+  ]);
   const dataFieldLines = profile.dataFields
+    .filter((f) => !HARDCODED_DATA_KEYS.has(f.key))
     .map((f) => {
       const label = f.label[language] ?? f.label["en"] ?? f.key;
       return `    "${f.key}": "<${label} or null>"`;
