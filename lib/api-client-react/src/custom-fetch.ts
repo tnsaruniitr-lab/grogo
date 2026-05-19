@@ -21,6 +21,20 @@ let _basicAuthHeader: string | null = null;
 let _basicAuthFallback: (() => string | null) | null = null;
 let _demoToken: string | null = null;
 
+// Internal session-storage key used to survive HMR module resets without
+// requiring an external fallback to be re-registered.
+const _SS_KEY = "__cf_ba";
+
+function _ssRead(): string | null {
+  try { return (typeof sessionStorage !== "undefined" && sessionStorage.getItem(_SS_KEY)) || null; } catch { return null; }
+}
+function _ssWrite(value: string | null): void {
+  try {
+    if (typeof sessionStorage === "undefined") return;
+    if (value) sessionStorage.setItem(_SS_KEY, value); else sessionStorage.removeItem(_SS_KEY);
+  } catch { /* ignore — e.g. in SSR or private browsing */ }
+}
+
 /**
  * Set a per-client demo token appended as ?demoToken=... on requests that
  * carry no Basic Auth header.  Used by public demo dashboard pages.
@@ -44,8 +58,10 @@ export function getDemoToken(): string | null {
 export function setBasicAuth(user: string | null, pass: string | null): void {
   if (user && pass) {
     _basicAuthHeader = `Basic ${btoa(`${user}:${pass}`)}`;
+    _ssWrite(_basicAuthHeader);
   } else {
     _basicAuthHeader = null;
+    _ssWrite(null);
   }
 }
 
@@ -399,7 +415,7 @@ export async function customFetch<T = unknown>(
 
   // Attach Basic Auth or Bearer token when configured and no explicit header present.
   if (!headers.has("authorization")) {
-    const basicAuth = _basicAuthHeader ?? _basicAuthFallback?.() ?? null;
+    const basicAuth = _basicAuthHeader ?? _basicAuthFallback?.() ?? _ssRead() ?? null;
     if (basicAuth) {
       if (!_basicAuthHeader) _basicAuthHeader = basicAuth; // re-hydrate module state
       headers.set("authorization", basicAuth);
