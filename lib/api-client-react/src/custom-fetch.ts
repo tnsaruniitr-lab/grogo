@@ -79,7 +79,7 @@ export function setBasicAuthFallback(fn: (() => string | null) | null): void {
  * Use this to add auth to raw fetch() calls outside the generated hooks.
  */
 export function getBasicAuthHeader(): string | null {
-  return _basicAuthHeader ?? _basicAuthFallback?.() ?? null;
+  return _basicAuthHeader ?? _basicAuthFallback?.() ?? _ssRead() ?? null;
 }
 
 /**

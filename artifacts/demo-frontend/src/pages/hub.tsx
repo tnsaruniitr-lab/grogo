@@ -9,7 +9,9 @@ import {
   useGetDashboardStats,
   useGetCrawlStatus,
   useTriggerCrawl,
+  getBasicAuthHeader,
 } from "@workspace/api-client-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,6 +68,12 @@ import { INDUSTRY_OPTIONS } from "@/lib/industry-themes";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
 import { AssetsDialog } from "@/components/assets-dialog";
+
+/** Build fetch headers that always include the admin Basic Auth credential. */
+function authH(extra: Record<string, string> = {}): Record<string, string> {
+  const auth = getBasicAuthHeader();
+  return auth ? { Authorization: auth, ...extra } : extra;
+}
 
 interface BrandingConfig {
   clientId?: number;
@@ -305,7 +313,7 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
   const [savedWelcome, setSavedWelcome] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/install-config")
+    fetch("/api/admin/install-config", { headers: authH() })
       .then((r) => r.json())
       .then(setConfig)
       .catch(() => setConfig({ manychatApiKey: null }));
@@ -322,7 +330,7 @@ function InstallPanel({ client, onClose }: { client: DemoClient; onClose: () => 
     try {
       await fetch(`/api/admin/clients/${client.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authH({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           branding: { ...client.branding, defaultMessage: welcomeText },
         }),
@@ -998,7 +1006,7 @@ function CreateDemoDialog({
       const url = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
       const res = await fetch("/api/admin/extract-branding", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authH({ "Content-Type": "application/json" }),
         body: JSON.stringify({ url }),
       });
       if (!res.ok) { toast({ title: "Extraction failed", variant: "destructive" }); return; }
@@ -1032,7 +1040,7 @@ function CreateDemoDialog({
     try {
       const meta = await fetch("/api/storage/uploads/request-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authH({ "Content-Type": "application/json" }),
         body: JSON.stringify({ name: logoFile.name, size: logoFile.size, contentType: logoFile.type }),
       });
       const { uploadURL, objectPath } = await meta.json();
@@ -1058,7 +1066,7 @@ function CreateDemoDialog({
             : {};
       const res = await fetch("/api/admin/clients", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authH({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           name: branding.companyName,
           slug: branding.slug,
@@ -1604,7 +1612,7 @@ function EditDemoDialog({
     try {
       const meta = await fetch("/api/storage/uploads/request-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authH({ "Content-Type": "application/json" }),
         body: JSON.stringify({ name: logoFile.name, size: logoFile.size, contentType: logoFile.type }),
       });
       const { uploadURL, objectPath } = await meta.json();
@@ -1624,7 +1632,7 @@ function EditDemoDialog({
       const finalLogoUrl = await uploadLogo();
       const res = await fetch(`/api/admin/clients/${client.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authH({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           name: branding.companyName,
           twilioSender: twilioSender.trim(),
