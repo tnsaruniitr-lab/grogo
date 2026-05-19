@@ -683,6 +683,151 @@ router.delete("/admin/clients/:slug/knowledge/:id", async (req: Request, res: Re
   res.status(204).end();
 });
 
+// ── Demo Assets ───────────────────────────────────────────────────────────────
+// Assets (Calendly links, Loom videos, GMeet links, PDFs, etc.) are stored as
+// company_knowledge entries with category="asset". The question field is
+// auto-generated with natural trigger phrases so RAG retrieval fires correctly;
+// the answer field carries the [ASSET:type] prefix + label + URL.
+
+const ASSET_TYPES = ["calendly", "loom", "gmeet", "pdf", "image", "custom"] as const;
+type AssetType = (typeof ASSET_TYPES)[number];
+
+const CreateAssetBody = z.object({
+  type: z.enum(ASSET_TYPES),
+  label: z.string().min(1).max(200),
+  url: z.string().url("Must be a valid URL"),
+  serviceContext: z.string().max(300).optional(),
+});
+
+function buildAssetEntry(type: AssetType, label: string, url: string, serviceContext?: string) {
+  const ctx = serviceContext ? ` ${serviceContext}.` : "";
+  const QUESTIONS: Record<AssetType, string> = {
+    calendly: `Can I book a call? How do I schedule a meeting? Can we get started? I want to book an appointment. When can we speak? Can I schedule a consultation? How do I book a meeting?`,
+    loom: `Can I see a demo? Do you have a video? Show me how it works? Can you walk me through it? Do you have a product demo? I'd like to see it in action. Is there a walkthrough video?`,
+    gmeet: `Can we do a video call? Can we meet online? Do you have a Google Meet link? Can we jump on a video call? I want to meet virtually. Can we video chat?`,
+    pdf: `Send me the pricing. What are your prices${ctx}? Do you have a price list? Can I see your pricing? How much does it cost? Can you send me your brochure? Do you have a price sheet? Can you send me information?`,
+    image: `Send me your price chart. Do you have pricing${ctx}? Can I see your rates? What does it cost? Can you send me an overview?`,
+    custom: `${label}? Tell me more about ${label}. Do you have information about ${label}? Can you share ${label} with me?`,
+  };
+  const PREFIXES: Record<AssetType, string> = {
+    calendly: "[ASSET:calendly] 📅",
+    loom: "[ASSET:loom] 🎬",
+    gmeet: "[ASSET:gmeet] 📹",
+    pdf: "[ASSET:pdf] 📋",
+    image: "[ASSET:image] 🖼️",
+    custom: "[ASSET:custom] 🔗",
+  };
+  const question = QUESTIONS[type];
+  const answer = `${PREFIXES[type]} ${label}: ${url}${serviceContext ? ` (${serviceContext})` : ""}`;
+  return { question, answer };
+}
+
+router.get("/admin/clients/:slug/assets", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const rows = await db
+    .select({
+      id: companyKnowledgeTable.id,
+      question: companyKnowledgeTable.question,
+      answer: companyKnowledgeTable.answer,
+      createdAt: companyKnowledgeTable.createdAt,
+    })
+    .from(companyKnowledgeTable)
+    .where(and(
+      eq(companyKnowledgeTable.clientId, client.id),
+      eq(companyKnowledgeTable.category, "asset"),
+    ))
+    .orderBy(asc(companyKnowledgeTable.id));
+
+  const assets = rows.map((r) => {
+    const typeMatch = r.answer.match(/^\[ASSET:(\w+)\]/);
+    const type = typeMatch?.[1] ?? "custom";
+    const withoutPrefix = r.answer.replace(/^\[ASSET:\w+\]\s*[\p{Emoji_Presentation}\p{Extended_Pictographic}]?\s*/u, "");
+    const colonIdx = withoutPrefix.indexOf(": ");
+    const label = colonIdx >= 0 ? withoutPrefix.slice(0, colonIdx).trim() : withoutPrefix.trim();
+    const rest = colonIdx >= 0 ? withoutPrefix.slice(colonIdx + 2).trim() : "";
+    const parenIdx = rest.lastIndexOf(" (");
+    const url = parenIdx >= 0 ? rest.slice(0, parenIdx).trim() : rest.trim();
+    const serviceContext = parenIdx >= 0 ? rest.slice(parenIdx + 2, -1).trim() : undefined;
+    return {
+      id: r.id,
+      type,
+      label,
+      url,
+      serviceContext: serviceContext || undefined,
+      createdAt: r.createdAt.toISOString(),
+    };
+  });
+
+  res.json({ assets });
+});
+
+router.post("/admin/clients/:slug/assets", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const parsed = CreateAssetBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
+
+  const { type, label, url, serviceContext } = parsed.data;
+  const { question, answer } = buildAssetEntry(type, label, url, serviceContext);
+  const embeddingText = `${question} ${label} ${url}`;
+  const embedding = await embedText(embeddingText);
+
+  const [created] = await db
+    .insert(companyKnowledgeTable)
+    .values({
+      clientId: client.id,
+      category: "asset",
+      question,
+      answer,
+      language: "en",
+      priority: 50,
+      source: "manual",
+      approvalStatus: "approved",
+      embeddingJson: embedding ? JSON.stringify(embedding) : null,
+    })
+    .returning({ id: companyKnowledgeTable.id, createdAt: companyKnowledgeTable.createdAt });
+
+  req.log.info({ clientId: client.id, type, label }, "Asset created");
+  res.status(201).json({ id: created.id, type, label, url, serviceContext, createdAt: created.createdAt.toISOString() });
+});
+
+router.delete("/admin/clients/:slug/assets/:id", async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const id = parseInt(req.params.id as string, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [client] = await db
+    .select({ id: clientsTable.id, deletedAt: clientsTable.deletedAt })
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const [existing] = await db
+    .select({ id: companyKnowledgeTable.id, category: companyKnowledgeTable.category })
+    .from(companyKnowledgeTable)
+    .where(and(eq(companyKnowledgeTable.id, id), eq(companyKnowledgeTable.clientId, client.id)))
+    .limit(1);
+  if (!existing) { res.status(404).json({ error: "Asset not found" }); return; }
+  if (existing.category !== "asset") { res.status(400).json({ error: "Entry is not an asset" }); return; }
+
+  await db.delete(companyKnowledgeTable).where(eq(companyKnowledgeTable.id, id));
+  res.status(204).end();
+});
+
 // Install config — exposes shared webhook API key to the hub UI (admin-only route)
 router.get("/admin/install-config", (_req: Request, res: Response) => {
   res.json({

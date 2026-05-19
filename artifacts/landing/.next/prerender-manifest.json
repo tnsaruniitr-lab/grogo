@@ -1,1 +1,11 @@
-{"version":4,"routes":{"/en":{},"/de":{},"/tr":{},"/ar":{}},"dynamicRoutes":{"/[lang]":{"dataRoute":null,"dataRouteRegex":null,"fallback":null,"fallbackRevalidate":false,"fallbackSourceRoute":"/[lang]","routeRegex":"^\\/([^/]+?)(?:\\/)?$","allowHeader":[]}},"notFoundRoutes":[],"preview":{"previewModeId":"f7015e8c09e09e49816be8bbca2589e2","previewModeSigningKey":"3669e93aeedd584ec5ba31b7ff7d67e551e693c116770f9124b52a8a6c54545a","previewModeEncryptionKey":"01663ab997d8bdeb2c95f3b867265b4555124f6b52b1b4ffd7f8777dc7d51073"}}
+{
+  "version": 4,
+  "routes": {},
+  "dynamicRoutes": {},
+  "notFoundRoutes": [],
+  "preview": {
+    "previewModeId": "5e959e511a57aa02eaa5a160c5e086bb",
+    "previewModeSigningKey": "950124aea095258cb75d3f799287a770c66cba816f6f6363ff451db451b144c0",
+    "previewModeEncryptionKey": "823a448a7aa034d48278fd05e542f35fc6ef72adaa526d630e4e27fc56bcac04"
+  }
+}

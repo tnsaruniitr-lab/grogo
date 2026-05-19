@@ -57,6 +57,7 @@ import {
   Save,
   User,
   FileText,
+  Package,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
@@ -64,6 +65,7 @@ import { LANG_OPTIONS, type DemoLang } from "@/lib/demo-i18n";
 import { INDUSTRY_OPTIONS } from "@/lib/industry-themes";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
+import { AssetsDialog } from "@/components/assets-dialog";
 
 interface BrandingConfig {
   clientId?: number;
@@ -109,6 +111,7 @@ export default function HubPage() {
   const [previewMode, setPreviewMode] = useState<"demo" | "site">("demo");
   const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
   const [reviewSlug, setReviewSlug] = useState<string | null>(null);
+  const [assetsSlug, setAssetsSlug] = useState<string | null>(null);
   const [installClient, setInstallClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
@@ -220,6 +223,7 @@ export default function HubPage() {
                     }}
                     onKnowledge={() => setKnowledgeSlug(client.slug)}
                     onReview={() => setReviewSlug(client.slug)}
+                    onAssets={() => setAssetsSlug(client.slug)}
                     onInstall={() => setInstallClient(client)}
                   />
                 </motion.div>
@@ -269,6 +273,13 @@ export default function HubPage() {
         <KnowledgeDialog
           slug={knowledgeSlug}
           onClose={() => setKnowledgeSlug(null)}
+        />
+      )}
+
+      {assetsSlug && (
+        <AssetsDialog
+          slug={assetsSlug}
+          onClose={() => setAssetsSlug(null)}
         />
       )}
 
@@ -527,6 +538,7 @@ function BrandCard({
   onPreview,
   onKnowledge,
   onReview,
+  onAssets,
   onInstall,
 }: {
   client: DemoClient;
@@ -537,6 +549,7 @@ function BrandCard({
   onPreview: (mode: "demo" | "site") => void;
   onKnowledge: () => void;
   onReview: () => void;
+  onAssets: () => void;
   onInstall: () => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
@@ -706,6 +719,14 @@ function BrandCard({
             title="Edit knowledge base"
           >
             <BookOpen className="h-3.5 w-3.5" /> Knowledge
+          </button>
+
+          <button
+            onClick={onAssets}
+            className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-[#A8C334] transition-colors"
+            title="Demo assets — Calendly, Loom, price lists, and more"
+          >
+            <Package className="h-3.5 w-3.5" /> Assets
           </button>
 
           <div className="ml-auto flex items-center gap-2">

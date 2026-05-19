@@ -55,8 +55,25 @@ export async function retrieveKnowledge(
     if (match) pinnedEntries.push(match);
   }
 
+  // Asset pack: always inject ALL category="asset" entries (capped at 5) so
+  // the bot knows every available demo resource on every turn. Assets are short
+  // (label + URL) and must not compete with semantic scoring — they are
+  // appended after the semantic chunks so GPT can reference them whenever a
+  // prospect asks for a demo, pricing, booking link, or video.
+  const assetEntries = allEntries.filter((e) => e.category === "asset").slice(0, 5);
+  const assetIds = new Set(assetEntries.map((e) => e.id));
+
+  if (assetEntries.length > 0) {
+    logger.info(
+      { assets: assetEntries.map((e) => ({ id: e.id, q: e.question.slice(0, 60) })) },
+      "Knowledge: asset pack injected",
+    );
+  }
+
   const pinnedIds = new Set(pinnedEntries.map((e) => e.id));
-  const semanticPool = allEntries.filter((e) => !pinnedIds.has(e.id));
+  // Exclude both facts-pack and asset-pack entries from the semantic pool so
+  // they are never double-counted.
+  const semanticPool = allEntries.filter((e) => !pinnedIds.has(e.id) && !assetIds.has(e.id));
   const semanticTopK = Math.max(topK - pinnedEntries.length, 1);
 
   const hasEmbeddings = semanticPool.some((e) => e.embeddingJson != null);
@@ -78,6 +95,7 @@ export async function retrieveKnowledge(
   return [
     ...pinnedEntries.map((e) => ({ question: e.question, answer: e.answer })),
     ...semanticChunks,
+    ...assetEntries.map((e) => ({ question: e.question, answer: e.answer })),
   ];
 }
 
