@@ -26,10 +26,15 @@ import type { SystemSettings } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 
 const MODEL_OPTIONS = [
+  "gpt-4.1-nano",
+  "gpt-4.1-mini",
+  "gpt-4.1",
   "gpt-4o-mini",
   "gpt-4o",
+  "gpt-4.5",
   "gpt-4o-search-preview",
   "o3-mini",
+  "o3",
   "o4-mini",
 ] as const;
 
