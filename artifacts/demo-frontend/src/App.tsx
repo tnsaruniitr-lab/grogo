@@ -37,8 +37,8 @@ function Router() {
       <Route path="/:vertical/:slug/dashboard" component={DemoDashboard} />
       <Route path="/:vertical/:slug" component={Demo} />
 
-      {/* Admin / internal pages — login required */}
-      <Route path="/">
+      {/* Admin / internal pages — login required (catch-all) */}
+      <Route>
         <LoginGate>
           <Switch>
             <Route path="/admin" component={Admin} />
