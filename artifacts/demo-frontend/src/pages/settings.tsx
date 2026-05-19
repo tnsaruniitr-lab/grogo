@@ -26,18 +26,20 @@ import type { SystemSettings } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 
 const MODEL_OPTIONS = [
+  "gpt-4o-mini",
+  "gpt-4o",
+  "gpt-4.1-mini",
+  "gpt-4.1",
+  "gpt-4.5",
   "gpt-5.4-nano",
   "gpt-5.4-mini",
   "gpt-5.4",
   "gpt-5.4-pro",
   "gpt-5.5",
   "gpt-5.5-pro",
-  "gpt-5.3-codex",
-  "chat-latest",
   "o4-mini",
-  "o4-mini-deep-research",
+  "o3",
   "o3-deep-research",
-  "computer-use-preview",
 ] as const;
 
 function SettingsSection({ title, description, icon: Icon, children }: {
