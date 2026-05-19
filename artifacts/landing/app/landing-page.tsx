@@ -393,7 +393,7 @@ function Footer({ t }: { t: Translations }) {
               </div>
               <span className="font-bold text-white">GrowthMonk</span>
             </div>
-            <span className="text-xs text-gray-500">Operated by Dreamport Pvt Ltd</span>
+            <span className="text-xs text-gray-500">Operated by Dreamport Technology Private Limited</span>
           </div>
           <nav aria-label="Footer navigation">
             <ul className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
@@ -407,7 +407,7 @@ function Footer({ t }: { t: Translations }) {
               <li><a href="/data-deletion" className="transition-colors hover:text-gray-300">Data Deletion</a></li>
             </ul>
           </nav>
-          <p className="text-sm text-gray-600">© {new Date().getFullYear()} Dreamport Pvt Ltd</p>
+          <p className="text-sm text-gray-600">© {new Date().getFullYear()} Dreamport Technology Private Limited</p>
         </div>
       </div>
     </footer>

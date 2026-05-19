@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
       lastUpdated="May 2026"
     >
       <p>
-        GrowthMonk is operated by <strong>Dreamport Pvt Ltd</strong> ("we", "us", or "our").
+        GrowthMonk is operated by <strong>Dreamport Technology Private Limited</strong> ("we", "us", or "our").
         This Privacy Policy explains what data we collect, how we use it, and your rights in
         relation to that data when you use the GrowthMonk platform or interact with a
         GrowthMonk-powered AI assistant on WhatsApp, Instagram, or Facebook.
@@ -24,12 +24,12 @@ export default function PrivacyPolicyPage() {
       <h2>1. Who We Are</h2>
       <p>
         GrowthMonk is an AI growth platform for healthcare and wellness businesses, operated by
-        Dreamport Pvt Ltd. The platform enables businesses (our "Clients") to capture and
+        Dreamport Technology Private Limited. The platform enables businesses (our "Clients") to capture and
         qualify leads via WhatsApp, Instagram, Facebook, and website chat, and to get
         discovered in AI search engines.
       </p>
       <p>
-        <strong>About our WhatsApp number:</strong> Dreamport Pvt Ltd operates a WhatsApp
+        <strong>About our WhatsApp number:</strong> Dreamport Technology Private Limited operates a WhatsApp
         Business account used to respond to inbound enquiries from businesses and individuals
         interested in the GrowthMonk platform — including answering product questions,
         qualifying prospective clients, and booking product demonstration calls. This Privacy
@@ -167,7 +167,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>11. Applicable Law</h2>
       <p>
-        GrowthMonk is operated by Dreamport Pvt Ltd, an Indian company. This Privacy Policy
+        GrowthMonk is operated by Dreamport Technology Private Limited, an Indian company. This Privacy Policy
         is governed by the laws of India, including India's{" "}
         <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>. For users
         in the European Economic Area (EEA) or United Kingdom, GrowthMonk processes data in
@@ -188,7 +188,7 @@ export default function PrivacyPolicyPage() {
       </p>
       <ul>
         <li>Email: <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a></li>
-        <li>Operator: Dreamport Pvt Ltd</li>
+        <li>Operator: Dreamport Technology Private Limited</li>
         <li>Website: <a href="https://growthmonk.ai">https://growthmonk.ai</a></li>
       </ul>
     </LegalLayout>

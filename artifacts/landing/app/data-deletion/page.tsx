@@ -15,7 +15,7 @@ export default function DataDeletionPage() {
       lastUpdated="May 2026"
     >
       <p>
-        GrowthMonk, operated by <strong>Dreamport Pvt Ltd</strong>, is committed to honouring
+        GrowthMonk, operated by <strong>Dreamport Technology Private Limited</strong>, is committed to honouring
         data deletion requests from both end users (patients and leads who interacted with a
         GrowthMonk-powered bot) and Clients (businesses using the GrowthMonk platform).
       </p>
@@ -87,7 +87,7 @@ export default function DataDeletionPage() {
       </p>
       <ul>
         <li>Email: <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a></li>
-        <li>Operator: Dreamport Pvt Ltd</li>
+        <li>Operator: Dreamport Technology Private Limited</li>
         <li>
           See also: <a href="/privacy-policy">Privacy Policy</a>
         </li>

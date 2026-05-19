@@ -16,7 +16,7 @@ export default function TermsPage() {
     >
       <p>
         These Terms of Service ("Terms") govern your access to and use of GrowthMonk, operated
-        by <strong>Dreamport Pvt Ltd</strong> ("GrowthMonk", "we", "us", or "our"). By
+        by <strong>Dreamport Technology Private Limited</strong> ("GrowthMonk", "we", "us", or "our"). By
         accessing or using the GrowthMonk platform, you agree to be bound by these Terms.
       </p>
 
@@ -103,14 +103,14 @@ export default function TermsPage() {
       <h2>8. Intellectual Property</h2>
       <p>
         GrowthMonk and all associated software, branding, and content are the intellectual
-        property of Dreamport Pvt Ltd. You may not copy, modify, distribute, or create
+        property of Dreamport Technology Private Limited. You may not copy, modify, distribute, or create
         derivative works from any part of the GrowthMonk platform without express written
         permission.
       </p>
 
       <h2>9. Limitation of Liability</h2>
       <p>
-        To the maximum extent permitted by applicable law, GrowthMonk and Dreamport Pvt Ltd
+        To the maximum extent permitted by applicable law, GrowthMonk and Dreamport Technology Private Limited
         shall not be liable for any indirect, incidental, special, consequential, or punitive
         damages arising from your use of the platform, including but not limited to loss of
         leads, revenue, or data.
@@ -133,7 +133,7 @@ export default function TermsPage() {
       <h2>12. Contact</h2>
       <ul>
         <li>Email: <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a></li>
-        <li>Operator: Dreamport Pvt Ltd</li>
+        <li>Operator: Dreamport Technology Private Limited</li>
         <li>Website: <a href="https://growthmonk.ai">https://growthmonk.ai</a></li>
       </ul>
     </LegalLayout>

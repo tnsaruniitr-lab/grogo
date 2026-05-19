@@ -14,7 +14,7 @@ export default function ContactPage() {
       description="Get in touch with the GrowthMonk team — we're here to help."
     >
       <p>
-        GrowthMonk is operated by <strong>Dreamport Pvt Ltd</strong>. Whether you have a
+        GrowthMonk is operated by <strong>Dreamport Technology Private Limited</strong>. Whether you have a
         question about the platform, a support issue, a partnership enquiry, or a privacy
         or data request, reach us at the contacts below.
       </p>
@@ -44,7 +44,7 @@ export default function ContactPage() {
 
       <h2>Legal Operator</h2>
       <ul>
-        <li><strong>Business Name:</strong> Dreamport Pvt Ltd</li>
+        <li><strong>Business Name:</strong> Dreamport Technology Private Limited</li>
         <li><strong>Brand:</strong> GrowthMonk</li>
         <li><strong>Website:</strong>{" "}
           <a href="https://growthmonk.ai">https://growthmonk.ai</a>

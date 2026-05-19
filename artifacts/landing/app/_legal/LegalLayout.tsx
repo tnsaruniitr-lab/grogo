@@ -55,7 +55,7 @@ export function LegalLayout({
       {/* Footer */}
       <footer className="border-t border-gray-800/60 px-6 py-10 mt-10">
         <div className="mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-600">
-          <p>GrowthMonk is operated by <strong className="text-gray-500">Dreamport Pvt Ltd</strong>.</p>
+          <p>GrowthMonk is operated by <strong className="text-gray-500">Dreamport Technology Private Limited</strong>.</p>
           <nav className="flex flex-wrap gap-5">
             <a href="/privacy-policy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
             <a href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</a>
