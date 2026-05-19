@@ -39,10 +39,10 @@ const en: Translations = {
     eyebrow: "What GrowthMonk delivers",
     heading: "Results healthcare businesses can measure",
     stats: [
-      { value: "2-4×", label: "More AI search appearances for your business" },
-      { value: "3×",   label: "More leads discovered and captured" },
-      { value: "80%",  label: "Of leads qualified automatically by AI" },
-      { value: "15–20%", label: "More booked consultations for your clinic" },
+      { value: "2-4×",   label: "More AI search appearances (based on early client results)" },
+      { value: "3×",     label: "More leads captured across all channels" },
+      { value: "80%",    label: "Of routine enquiries handled automatically" },
+      { value: "15–20%", label: "Increase in consultation bookings reported by clients" },
     ],
   },
   ps: {
@@ -95,9 +95,9 @@ const en: Translations = {
         tag: "Custom-Trained AI Bot",
         title: "Built for healthcare - not a generic chatbot",
         bullets: [
-          "Trained on healthcare and wellness protocols, clinical empathy, and patient communication best practices",
+          "Trained on your services, FAQs, intake flows, pricing, availability, tone of voice, and escalation rules — not generic protocols",
           "Teach it your exact services, FAQs, pricing, and intake questions through WhatsApp - no technical skills needed",
-          "Handles sensitive patient enquiries with the care and tone your practice demands, escalating to your team when appropriate",
+          "Handles enquiries with a careful, professional tone and escalates sensitive or clinical questions to your team immediately",
           "Continuously improves as you add knowledge - every update reflects instantly across all patient conversations",
           "Responds in the patient's own language throughout the full conversation - English, German, Turkish, Arabic and more",
         ],
@@ -106,9 +106,9 @@ const en: Translations = {
         tag: "Automated Qualification",
         title: "Your team only talks to serious prospects",
         bullets: [
-          "AI asks the right questions to understand each patient's need and intent",
-          "Scores and qualifies every lead automatically - no manual review required",
-          "Routes hot leads straight to your team and filters out time-wasters",
+          "AI asks approved intake and qualification questions based on your business rules",
+          "Scores commercial readiness and routes enquiries to the right person based on your rules",
+          "Routes warm enquiries straight to your team and filters out low-intent contacts",
           "Staff only handle ready-to-book prospects - focus on converting, not filtering",
         ],
       },
@@ -183,7 +183,7 @@ const en: Translations = {
     heading: "Common questions",
     sub: "Everything you need to know about GrowthMonk and AI-powered growth for healthcare.",
     items: [
-      { q: "What is GrowthMonk?", a: "GrowthMonk is an AI growth engine for healthcare and wellness businesses. It helps clinics, medspas, dental practices, and care providers get discovered in AI search engines like ChatGPT and Perplexity, capture leads from WhatsApp and social media, and automatically qualify and convert those leads into booked appointments." },
+      { q: "What is GrowthMonk?", a: "GrowthMonk is a business communication and lead management platform for healthcare, wellness, medspa, and service businesses. It helps businesses capture inbound enquiries from WhatsApp, Instagram, Facebook and websites, qualify them using business-approved questions, route them to staff, and support appointment booking. GrowthMonk does not provide medical advice, diagnosis, treatment recommendations, prescriptions, emergency support, or clinical decision-making." },
       { q: "How does GrowthMonk capture leads from WhatsApp?", a: "GrowthMonk connects to your WhatsApp Business number via the official Meta WhatsApp Business API. When a patient messages you, the AI bot responds instantly, captures their details, qualifies their needs, and either books an appointment or schedules a callback — automatically, 24 hours a day." },
       { q: "Does GrowthMonk support multiple languages?", a: "Yes. GrowthMonk detects the patient's language automatically and continues in that language for the entire conversation. Currently supported: English, German, Turkish, and Arabic, with more languages being added." },
       { q: "What is Answer Engine Optimization (AEO) for healthcare?", a: "AEO is the practice of structuring your content so AI search engines (ChatGPT, Perplexity, Google AI Overviews) cite your practice when patients ask health questions. GrowthMonk builds your AEO foundation — structured data, semantic content, and Q&A pages — so you appear in AI answers before your competitors." },

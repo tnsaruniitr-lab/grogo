@@ -1,0 +1,70 @@
+1. “Patient leads” / “patient enquiries”
+
+This is okay, but for Meta/App Review I’d soften to customer enquiries or prospective patient enquiries where possible.
+
+Better:
+
+Capture and qualify prospective patient enquiries from WhatsApp, Instagram, Facebook and your website.
+
+2. “Books consultations directly into your calendar”
+
+Fine, but make sure it is clearly booking/admin, not medical triage.
+
+Better:
+
+Helps eligible enquiries book consultations or request callbacks.
+
+3. “Trained on healthcare and wellness protocols”
+
+This is the riskiest line. It can sound like clinical protocol automation.
+
+Better:
+
+Trained on your services, FAQs, intake flows, pricing, availability, tone of voice, and escalation rules.
+
+4. “Handles sensitive patient enquiries”
+
+Also risky. It suggests the bot processes sensitive health information independently.
+
+Better:
+
+Handles enquiries with a careful, professional tone and escalates sensitive or clinical questions to your team.
+
+5. “AI asks the right questions to understand each patient’s need”
+
+Could be interpreted as medical intake/triage.
+
+Better:
+
+AI asks approved intake and qualification questions based on your business rules.
+
+6. “Scores and qualifies every lead automatically”
+
+Acceptable for sales, but in healthcare it should avoid sounding like care eligibility.
+
+Better:
+
+Scores commercial readiness and routes enquiries based on your rules.
+
+7. “2-4× / 3× / 80% / 15-20%”
+
+These are risky unless you can substantiate them. Meta may not care as much as ad platforms, but they look like hard performance claims.
+
+Better:
+
+Up to 2-4× more AI search appearances
+Up to 80% of routine enquiries qualified automatically
+Potential 15-20% increase in booked consultations
+
+Or safer:
+
+More AI search visibility
+Faster lead response
+Fewer missed enquiries
+More qualified consultations
+
+Safer app-review positioning
+
+Use this language in Meta review and website legal/help pages:
+
+GrowthMonk is a business communication and lead management platform for healthcare, wellness, medspa and service businesses. It helps businesses capture inbound enquiries from WhatsApp, Instagram, Facebook and websites, qualify them using business-approved questions, route them to staff, and support appointment booking. GrowthMonk does not provide medical advice, diagnosis, treatment recommendations, prescriptions, emergency support, or clinical decision-making.
