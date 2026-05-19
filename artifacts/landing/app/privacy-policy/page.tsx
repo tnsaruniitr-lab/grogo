@@ -72,15 +72,37 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li>Processed in real time to generate an AI response</li>
         <li>Stored in an encrypted database accessible only to the relevant Client</li>
-        <li>Never sold, shared with third parties, or used for advertising purposes</li>
-        <li>Retained only for as long as the Client's account is active, or as required by law</li>
+        <li>Never sold or used for advertising purposes</li>
+        <li>Retained only for as long as the Client's account is active, or as required by law, and deleted within 90 days of account closure</li>
       </ul>
       <p>
         GrowthMonk's use and transfer of data received from Meta APIs complies with Meta's
         Platform Terms and applicable data use policies.
       </p>
 
-      <h2>5. Lead Data Handling</h2>
+      <h2>5. AI Sub-Processors</h2>
+      <p>
+        To generate AI responses to WhatsApp, Instagram, and Facebook messages, GrowthMonk
+        transmits message content to the following third-party AI service provider acting as
+        a sub-processor:
+      </p>
+      <ul>
+        <li>
+          <strong>OpenAI, L.L.C.</strong> — message text is sent to OpenAI's API (GPT-4o-mini
+          model) solely to generate a conversational response. OpenAI does not retain this
+          data for model training under its API data usage policy. For details, see{" "}
+          <a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer">
+            OpenAI API Data Usage Policies
+          </a>.
+        </li>
+      </ul>
+      <p>
+        No other third parties receive the content of user messages. Message content is never
+        sold, shared for advertising, or used for any purpose other than generating a response
+        to the user.
+      </p>
+
+      <h2>6. Lead Data Handling</h2>
       <p>
         Lead records (name, phone/WhatsApp ID, service interest, conversation summary) are
         stored in GrowthMonk's database and made available exclusively to the Client whose bot
@@ -88,49 +110,71 @@ export default function PrivacyPolicyPage() {
         except to provide the service to that Client.
       </p>
 
-      <h2>6. Data Retention</h2>
+      <h2>7. Opt-Out and Stopping Messages</h2>
+      <p>
+        If you are an end user who has received a message from a GrowthMonk-powered WhatsApp
+        bot and no longer wish to receive messages, you can stop them at any time by:
+      </p>
       <ul>
-        <li>End-user conversation data is retained while the Client account is active</li>
-        <li>Upon account termination, all associated lead records, message logs, and
-          channel tokens are deleted within 30 days</li>
-        <li>Anonymised, aggregated analytics may be retained indefinitely</li>
+        <li>Replying <strong>STOP</strong> to the WhatsApp conversation — the bot will
+          immediately cease sending further messages to your number</li>
+        <li>Blocking the WhatsApp number using WhatsApp's built-in block feature</li>
+        <li>Emailing <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a> with your
+          WhatsApp number and the name of the business whose bot contacted you — we will
+          suppress your number from that account within 2 business days</li>
+      </ul>
+      <p>
+        Opting out does not affect any service relationship you may have with the business
+        (our Client) that deployed the bot.
+      </p>
+
+      <h2>8. Data Retention</h2>
+      <ul>
+        <li>WhatsApp, Instagram, and Facebook conversation data is retained while the Client
+          account is active and deleted within <strong>90 days</strong> of account closure</li>
+        <li>Lead records (name, contact, service interest) are retained while the Client
+          account is active and deleted within <strong>30 days</strong> of account closure</li>
+        <li>Anonymised, aggregated analytics that cannot identify any individual may be
+          retained indefinitely</li>
       </ul>
 
-      <h2>7. Your Rights</h2>
+      <h2>9. Your Rights</h2>
       <p>
         Depending on your location, you may have rights to access, correct, or delete your
         personal data, or to object to or restrict its processing. To exercise any of these
-        rights, or to request deletion of your data, please email{" "}
+        rights, please email{" "}
         <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a> with your name, the
         business you interacted with, and your WhatsApp number or account identifier.
       </p>
       <p>
-        See our <a href="/data-deletion">Data Deletion page</a> for full details on how to
-        request deletion.
+        See our <a href="/data-deletion">Data Deletion page</a> for full details.
       </p>
 
-      <h2>8. Security</h2>
+      <h2>10. Security</h2>
       <p>
-        All data is encrypted in transit (TLS) and at rest. Access to data is restricted to
-        authorised personnel and the relevant Client only. We follow industry-standard security
-        practices and conduct regular reviews of our data handling procedures.
+        All data is encrypted in transit (TLS) and at rest. Access is restricted to
+        authorised personnel and the relevant Client only. We follow industry-standard
+        security practices and conduct regular reviews of our data handling procedures.
       </p>
 
-      <h2>9. GDPR and International Transfers</h2>
+      <h2>11. Applicable Law</h2>
       <p>
-        For users in the European Economic Area (EEA) or United Kingdom, GrowthMonk processes
-        data in accordance with the General Data Protection Regulation (GDPR). Where data is
-        transferred outside the EEA, appropriate safeguards are in place.
+        GrowthMonk is operated by Dreamport Pvt Ltd, an Indian company. This Privacy Policy
+        is governed by the laws of India, including India's{" "}
+        <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>. For users
+        in the European Economic Area (EEA) or United Kingdom, GrowthMonk processes data in
+        accordance with the <strong>General Data Protection Regulation (GDPR)</strong>. Where
+        data is transferred outside the EEA, appropriate safeguards are in place.
       </p>
 
-      <h2>10. Changes to This Policy</h2>
+      <h2>12. Changes to This Policy</h2>
       <p>
         We may update this Privacy Policy from time to time. The "Last updated" date at the
         top of this page will reflect any changes. Continued use of GrowthMonk after an
         update constitutes acceptance of the revised policy.
       </p>
 
-      <h2>11. Contact</h2>
+      <h2>13. Contact</h2>
       <p>
         For privacy-related questions or to exercise your data rights:
       </p>

@@ -1,0 +1,217 @@
+
+
+
+Canvas
+
+GrowthMonk Landing Page
+
+
+
+/privacy-policy
+
+
+
+
+
+
+
+
+
+
+
+Update website's cached build files for improved performance
+
+
+
+Show previous messages
+
+3 messages & 7 actions
+
+Checkpoint made
+2 hours ago
+
+Worked for 1 minute
+Two things to fix:
+
+The fallback message is unnecessarily alarming — "technical issue" sounds broken. It should just be a graceful deflection.
+Conversation history should be capped to prevent context bloat causing this after long conversations.
+how would you do that?
+
+2 hours ago
+
+1 message & 2 actions
+implement
+
+2 hours ago
+
+3 messages & 10 actions
+
+Checkpoint made
+2 hours ago
+
+Worked for 46 seconds
+i want us to enrich the data for growth monk somwhioe - is it doable manually? what aspects should be added in order to make it a pursuasive flow with rich knoledge to get more bookings for us? tell dont code
+
+2 hours ago
+
+3 messages & 5 actions
+
+Worked for 2 minutes
+how can we seed this into production db - tell dont code...
+
+2 hours ago
+
+1 message & 1 action
+ok prepare the script carefully also studying what data is already there and how we can enrish it
+
+2 hours ago
+
+4 messages & 15 actions
+
+Published your app
+2 hours ago
+
+6 messages & 13 actions
+
+Checkpoint made
+2 hours ago
+
+Worked for 4 minutes
+now give me production url pls for twilio webhook pls
+
+2 hours ago
+
+1 message & 5 actions
+
+Worked for 24 seconds
+doesny look like this looks like dev...
+
+2 hours ago
+
+1 message & 4 actions
+
+Worked for 19 seconds
+WhatsApp Sender: +15558085030
+General Information
+Status
+
+Online
+Business display name
+Sidekik
+Quality rating
+Unavailable
+Throughput
+80 messages per second
+Messaging Endpoint Configuration
+Configure WhatsApp to work with your application. All sent and received messages will hit these endpoints.
+
+Messaging service
+You don't have any Messaging Services.
+Create a new Messaging Service
+Webhook URL for incoming messages
+
+Optional
+https://growthmonk.ai/api/webhook/twilio
+Webhook method for incoming messages URL
+HTTP Post
+Fallback URL for incoming messages
+
+Optional
+correct?
+
+Show more
+2 hours ago
+
+1 message & 1 action
+
+Pasted-Phase-1-Prepare-legal-and-brand-basics-Before-creating-_1779205887183.txt
+evaluate and see ...
+
+13 minutes ago
+
+11 messages & 34 actions
+
+Checkpoint made
+9 minutes ago
+
+Worked for 4 minutes
+Republish
+
+Settings
+tnsaruniitr published about 2 hours ago
+Visibility:
+Public
+
+Review security
+
+Republish
+how would you make sure that this is all readab le ckearly to meta? have you also sed crealy dreamport as a name..2 - GrowthMonk
+by AnswerMonk.ai
+
+4 minutes ago
+
+4 messages & 9 actions
+
+Checkpoint made
+2 minutes ago
+
+Worked for 1 minute
+Republish
+
+Settings
+tnsaruniitr published about 2 hours ago
+Visibility:
+Public
+
+Review security
+
+Republish
+also audit if the privacy policy and other details would make sure my meta waba is passed...any flags?
+
+2 minutes ago
+
+Show less
+
+Auditing privacy policy WABA requirements (24 seconds)
+Let me read all the legal pages carefully to do a proper audit against Meta's WABA requirements:
+
+
+3 actions
+Done reading both carefully. Here's the full audit against Meta's WABA approval checklist:
+
+What will pass ✓
+
+Privacy Policy publicly accessible, no login wall
+Dreamport Pvt Ltd named as operator throughout
+WhatsApp Business API usage explicitly mentioned (Section 4)
+Data collection, retention, and deletion all described
+Compliant with Meta Platform Terms stated
+Contact email + data deletion mechanism in place
+Flags that could cause rejection ✗
+
+🔴 HIGH — OpenAI is undisclosed as a third party
+Section 4 says user message data is "Never sold, shared with third parties." But message content IS sent to OpenAI (GPT-4o-mini) to generate responses. Meta's WABA policy requires disclosure of every third party that receives WhatsApp message data. This is technically inaccurate and a red flag if a reviewer spots it.
+
+🔴 HIGH — No opt-out mechanism described
+WhatsApp Business Policy explicitly requires that businesses inform users how they can stop receiving messages. The privacy policy has no mention of this at all — users aren't told they can reply STOP, block the number, or contact you to opt out.
+
+🟡 MEDIUM — India's DPDP Act not in the Privacy Policy
+Dreamport Pvt Ltd is an Indian entity. The Terms reference Indian law but the Privacy Policy only mentions GDPR. Meta's reviewers flag inconsistency between the operator's jurisdiction and the privacy framework cited.
+
+🟡 MEDIUM — Data retention has no specific timeframes
+"Retained while the Client account is active" is too vague for WABA. Meta expects concrete timelines — e.g. "WhatsApp conversation data is deleted within 90 days of account closure." Vague retention clauses are a common rejection reason.
+
+🟡 MEDIUM — Use case not scoped for your specific WABA number
+The policy describes GrowthMonk as a B2B platform for healthcare businesses. But the WhatsApp number Meta is reviewing (+15558085030 or your new number) is Dreamport's own sales bot — it's used to respond to prospective GrowthMonk clients and book demos. This should be explicitly stated so Meta can match the use case to the number.
+
+🟢 LOW — Contact page references Twilio sandbox number
+wa.me/15558085030 is the sandbox. When your production number is live, update this.
+
+🟢 LOW — No Facebook Data Deletion Callback URL
+Required for apps using Facebook Login. Less critical for WABA specifically, but worth implementing if you ever use FB Login.
+
+Bottom line — two fixes are mandatory before submission:
+
+Disclose OpenAI as a sub-processor of message data
+Add opt-out instructions
+The medium issues won't definitely reject you but they increase review friction. Want me to fix all of these in the privacy policy now?
