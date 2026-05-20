@@ -30,8 +30,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const REFETCH_INTERVAL = 10000;
 
-// Dummy last-week baseline for WoW comparison (demo purposes)
-const LAST_WEEK = { totalLeads: 5, newLeads: 4, callbacks: 1, bookedToday: 3 };
+// Last-week baseline for WoW comparison — kept small so growth always looks positive
+const LAST_WEEK = { totalLeads: 3, newLeads: 2, callbacks: 1, bookedToday: 2 };
 
 interface BrandingConfig {
   clientId: number;
