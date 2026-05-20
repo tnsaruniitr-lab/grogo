@@ -24,6 +24,19 @@ import { resolveAsset, type AssetResolverResult } from "./asset-resolver";
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+
+// Module-level singleton — avoids re-initialising the HTTP client on every message.
+// Lazily created on first send so missing credentials only fail at send time, not startup.
+let _twilioClient: ReturnType<typeof twilio> | null = null;
+function getTwilioClient(): ReturnType<typeof twilio> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+    throw new Error("TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN missing — cannot send reply");
+  }
+  if (!_twilioClient) {
+    _twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+  }
+  return _twilioClient;
+}
 const MAX_BOT_TURNS_PER_HOUR = 25;
 
 /**
@@ -188,11 +201,7 @@ async function sendWhatsAppReply(from: string, to: string, body: string): Promis
     return;
   }
 
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    throw new Error("TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN missing — cannot send reply");
-  }
-
-  const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+  const twilioClient = getTwilioClient();
   const attempt = () => twilioClient.messages.create({ from, to, body });
 
   try {
@@ -224,7 +233,7 @@ async function sendWhatsAppMedia(from: string, to: string, mediaUrl: string): Pr
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return;
 
   try {
-    const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+    const twilioClient = getTwilioClient();
     await twilioClient.messages.create({ from, to, mediaUrl: [mediaUrl] });
     logger.info({ from, to, mediaUrl }, "Twilio WhatsApp media sent (inline rendering)");
   } catch (err) {
@@ -546,19 +555,37 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     return;
   }
 
-  // 4. Conversation history (last 20 turns, chronological, excluding current inbound msg)
-  const rawHistory = await db
-    .select({ direction: conversationsTable.direction, body: conversationsTable.body })
-    .from(conversationsTable)
-    .where(
-      and(
-        eq(conversationsTable.leadId, leadId),
-        eq(conversationsTable.clientId, clientRecord.id),
-        isNull(conversationsTable.deletedAt),
-      ),
-    )
-    .orderBy(desc(conversationsTable.createdAt))
-    .limit(21);
+  // 4 + 5 + 5a. Run history fetch, knowledge retrieval, settings, and client profile
+  // in parallel — none depends on the others, so sequential awaits were pure waste.
+  const [rawHistory, knowledgeChunks, settings, activeProfiles] = await Promise.all([
+    // 4. Conversation history (last 14 rows → 12 turns after slice, chronological)
+    db
+      .select({ direction: conversationsTable.direction, body: conversationsTable.body })
+      .from(conversationsTable)
+      .where(
+        and(
+          eq(conversationsTable.leadId, leadId),
+          eq(conversationsTable.clientId, clientRecord.id),
+          isNull(conversationsTable.deletedAt),
+        ),
+      )
+      .orderBy(desc(conversationsTable.createdAt))
+      .limit(14),
+
+    // 5. Knowledge retrieval (may include embedding API call)
+    retrieveKnowledge(clientRecord.id, language, userMessage),
+
+    // 5a. System settings
+    getSettings(),
+
+    // 5b. Active client profile (mustNotClaim)
+    db
+      .select({ profile: clientProfilesTable.profile })
+      .from(clientProfilesTable)
+      .where(and(eq(clientProfilesTable.clientId, clientRecord.id), eq(clientProfilesTable.status, "active")))
+      .orderBy(desc(clientProfilesTable.activatedAt))
+      .limit(1),
+  ]);
 
   const conversationHistory: ConversationMessage[] = rawHistory
     .reverse()
@@ -567,20 +594,6 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       role: h.direction === "inbound" ? ("user" as const) : ("assistant" as const),
       content: h.body,
     }));
-
-  // 5. Knowledge retrieval
-  const knowledgeChunks = await retrieveKnowledge(clientRecord.id, language, userMessage);
-
-  // 5a. Load system settings (live chat model) and active client profile (mustNotClaim)
-  const [settings, activeProfiles] = await Promise.all([
-    getSettings(),
-    db
-      .select({ profile: clientProfilesTable.profile })
-      .from(clientProfilesTable)
-      .where(and(eq(clientProfilesTable.clientId, clientRecord.id), eq(clientProfilesTable.status, "active")))
-      .orderBy(desc(clientProfilesTable.activatedAt))
-      .limit(1),
-  ]);
 
   let mustNotClaim: string[] = [];
   if (activeProfiles.length > 0) {

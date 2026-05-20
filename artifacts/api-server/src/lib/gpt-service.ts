@@ -6,6 +6,8 @@ import type { BotProfile } from "@workspace/db";
 const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? "placeholder",
+  timeout: 25_000,
+  maxRetries: 0,
 });
 
 export const intentEnum = [
@@ -250,7 +252,7 @@ const FALLBACK_REPLIES: Record<string, string> = {
   en: "Would you like me to arrange a callback from our team? We're available Monday–Friday, 8am–6pm.",
 };
 
-const HISTORY_CAP = 20; // keep last 20 messages (~10 exchanges) to prevent context bloat
+const HISTORY_CAP = 12; // keep last 12 messages (~6 exchanges) — balances context vs latency
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile, model, mustNotClaim } =
