@@ -66,6 +66,109 @@ WhatsApp bot that:
 - **Dosteli is always client_id=1** — enforced by seed script via `onConflictDoUpdate` on `id=1`
 - **`ü` and `ö` are NOT in the Turkish char set** for language detection — they appear in German too; only ğ,ş,ı,İ,Ğ,Ş are Turkish-exclusive
 
+## ManyChat Integration
+
+### Endpoint
+`POST /api/webhook/manychat/:slug`
+
+Authentication: `x-api-key` header (per-client key stored in DB).
+
+### ManyChat Flow Setup
+Use a **Send Message → Dynamic Block** node (NOT an External Request action node). The Dynamic Block node calls the webhook URL and automatically renders the response as messages to the user.
+
+- **Instagram**: Send Message → Dynamic Block → paste webhook URL
+- **Facebook Messenger**: Send Message → Dynamic Block → paste webhook URL (same URL, different `channel` value in body)
+
+The External Request (Action) node is the wrong node type — it fires the request but does NOT send the response back to the user.
+
+### Request format (ManyChat → our server)
+
+**Headers:**
+```
+Content-Type: application/json
+x-api-key: <client api key>
+```
+
+**Body:**
+```json
+{
+  "senderId": "{Contact Id}",
+  "message": "{Last Text Input}",
+  "channel": "instagram",
+  "name": "{Full Name}"
+}
+```
+
+`channel` values:
+- `"instagram"` — Instagram DM
+- `"facebook"` — Facebook Messenger
+- `"telegram"` — Telegram
+- `"whatsapp"` — WhatsApp
+
+Note: Use single `{` `}` for the outer JSON braces — double `{{` `}}` breaks JSON parsing in ManyChat's preview.
+
+### Response format (our server → ManyChat)
+
+ManyChat Dynamic Block v2 format. ManyChat renders this and delivers it to the user.
+
+**Text only (all channels):**
+```json
+{
+  "version": "v2",
+  "content": {
+    "type": "instagram",
+    "messages": [
+      { "type": "text", "text": "Your reply here" }
+    ]
+  }
+}
+```
+
+`content.type` is set for Instagram (`"instagram"`), Telegram (`"telegram"`), WhatsApp (`"whatsapp"`). For Facebook Messenger, `content.type` is omitted (not required per ManyChat docs).
+
+**With image asset (Instagram/Telegram only):**
+```json
+{
+  "version": "v2",
+  "content": {
+    "type": "instagram",
+    "messages": [
+      { "type": "text", "text": "Here is our pricing:" },
+      { "type": "image", "url": "https://growthmonk.ai/api/storage/objects/..." }
+    ]
+  }
+}
+```
+
+**With URL button (Facebook/WhatsApp — image blocks not supported):**
+```json
+{
+  "version": "v2",
+  "content": {
+    "messages": [
+      {
+        "type": "text",
+        "text": "Here is our pricing:",
+        "buttons": [
+          { "type": "url", "caption": "View Pricing", "url": "https://growthmonk.ai/api/storage/objects/..." }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Response mapping
+Leave blank — ManyChat automatically renders the v2 dynamic block. No mapping needed.
+
+### Channel behaviour summary
+| Channel | `content.type` | Image blocks | Asset fallback |
+|---------|---------------|--------------|----------------|
+| instagram | `"instagram"` | ✅ supported | inline image |
+| telegram | `"telegram"` | ✅ supported | inline image |
+| whatsapp | `"whatsapp"` | ❌ | URL button |
+| facebook | omitted | ❌ | URL button |
+
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
