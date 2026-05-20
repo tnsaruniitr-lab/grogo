@@ -7,7 +7,7 @@ import manychatRouter from "./manychat";
 import leadsRouter from "./leads";
 import dashboardRouter from "./dashboard";
 import adminRouter from "./admin";
-import storageRouter from "./storage";
+import { storagePublicRouter, storageUploadRouter } from "./storage";
 import crawlRouter from "./crawl";
 import extractBrandingRouter from "./extract-branding";
 import { requireDashboardAuth, requireDemoOrDashboardAuth } from "../lib/dashboard-auth";
@@ -21,6 +21,7 @@ router.use(respondRouter);           // Respond.io: API-key-validated internally
 router.use(respondEventsRouter);     // Respond.io events: API-key-validated internally
 router.use(manychatRouter);          // ManyChat: x-api-key-validated internally
 router.use(adminRouter);             // /clients/* public; /admin/* protected internally
+router.use(storagePublicRouter);     // GET /storage/objects/* and /storage/public-objects/* — public so Twilio can fetch media
 
 // Protected — Basic Auth OR per-client demo token (GET-only for demo access)
 router.use(requireDemoOrDashboardAuth);
@@ -30,7 +31,7 @@ router.use(dashboardRouter);
 // Admin-only — Basic Auth required; demo tokens rejected by second middleware
 router.use(requireDashboardAuth);
 router.use(crawlRouter);
-router.use(storageRouter);
+router.use(storageUploadRouter);     // POST /storage/uploads/request-url — admin only
 router.use(extractBrandingRouter);   // Admin: SSRF-guarded URL fetcher — behind Basic Auth
 
 export default router;
