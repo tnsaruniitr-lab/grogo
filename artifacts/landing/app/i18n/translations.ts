@@ -15,7 +15,7 @@ export interface Translations {
     eyebrow: string; heading: string; sub: string;
     list: { tag: string; title: string; bullets: string[] }[];
   };
-  video: { eyebrow: string; heading: string; sub: string; slideTitle: string; slideDesc: string };
+  video: { eyebrow: string; heading: string; sub: string; slideTitle: string; slideDesc: string; slide2Title: string; slide2Desc: string };
   how: { eyebrow: string; heading: string; sub: string; steps: { title: string; description: string; detail: string }[] };
   testimonials: { eyebrow: string; heading: string };
   industries: { eyebrow: string; heading: string; sub: string; list: { name: string; icon: string; desc: string }[] };
@@ -140,6 +140,8 @@ const en: Translations = {
     sub: "A live walkthrough of how GrowthMonk captures leads, qualifies them in seconds, and books appointments automatically.",
     slideTitle: "GrowthMonk in Action",
     slideDesc: "See how the AI bot captures, qualifies, and books leads automatically — start to finish.",
+    slide2Title: "How GrowthMonk Helps Brands Get Cited by AI",
+    slide2Desc: "A walkthrough of how GrowthMonk structures your brand so AI search engines like ChatGPT and Gemini consistently cite you.",
   },
   how: {
     eyebrow: "How It Works",
@@ -307,6 +309,8 @@ const tr: Translations = {
     sub: "GrowthMonk'un leadleri nasıl yakaladığını, saniyeler içinde nitelendirdiğini ve otomatik olarak randevu oluşturduğunu gösteren canlı bir inceleme.",
     slideTitle: "GrowthMonk Aksiyonda",
     slideDesc: "Yapay zeka botunun leadleri baştan sona nasıl yakaladığını, nitelendirdiğini ve otomatik randevuya dönüştürdüğünü görün.",
+    slide2Title: "GrowthMonk Markaların Yapay Zeka Tarafından Nasıl Atıflanmasına Yardımcı Olur",
+    slide2Desc: "GrowthMonk'un markanızı ChatGPT ve Gemini gibi yapay zeka arama motorlarının sizi tutarlı biçimde nasıl atıfladığını gösterin.",
   },
   how: {
     eyebrow: "Nasıl Çalışır",
@@ -474,6 +478,8 @@ const ar: Translations = {
     sub: "جولة مباشرة توضح كيف يلتقط GrowthMonk العملاء ويؤهّلهم في ثوانٍ ويحجز المواعيد تلقائيًا.",
     slideTitle: "GrowthMonk في العمل",
     slideDesc: "شاهد كيف يلتقط البوت العملاء ويؤهّلهم ويحجز المواعيد تلقائيًا من البداية إلى النهاية.",
+    slide2Title: "كيف تساعد GrowthMonk العلامات التجارية على الظهور في نتائج الذكاء الاصطناعي",
+    slide2Desc: "استعراض لكيفية هيكلة GrowthMonk لعلامتك التجارية لكي تُستشهد بها محركات بحث الذكاء الاصطناعي مثل ChatGPT وGemini باستمرار.",
   },
   how: {
     eyebrow: "كيف يعمل",
