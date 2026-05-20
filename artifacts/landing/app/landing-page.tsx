@@ -231,32 +231,55 @@ function VideoSlider({ t }: { t: Translations }) {
         </div>
 
         {/* Thumbnail playlist */}
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
           {slides.map((s, i) => {
             const isActive = i === current;
             return (
               <button
                 key={s.id}
                 onClick={() => setCurrent(i)}
-                className="text-left rounded-xl overflow-hidden transition-all duration-200 focus:outline-none flex items-center gap-3 px-4 py-3"
-                style={{
-                  border: isActive ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.08)",
-                  background: isActive ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.03)",
-                }}
                 aria-label={`Watch: ${s.title}`}
+                style={{
+                  width: "240px",
+                  flexShrink: 0,
+                  textAlign: "left",
+                  border: isActive ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.1)",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  opacity: isActive ? 1 : 0.6,
+                  transition: "opacity 0.2s, border-color 0.2s",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
               >
-                {/* Play icon */}
-                <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full" style={{ background: isActive ? "#22c55e" : "rgba(255,255,255,0.12)" }}>
-                  <svg viewBox="0 0 16 16" fill="white" className="h-4 w-4 translate-x-0.5">
-                    <path d="M4 2.5l9 5.5-9 5.5V2.5z" />
-                  </svg>
-                </div>
-                {/* Text */}
-                <div className="min-w-0">
+                {/* 16:9 thumbnail area */}
+                <div style={{ position: "relative", paddingBottom: "56.25%", background: "linear-gradient(135deg, #0d1f10 0%, #111827 100%)" }}>
+                  {/* Loom thumbnail — loads on live domain; gradient fallback shown locally */}
+                  <img
+                    src={`https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.gif`}
+                    alt={s.title}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 1 }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  {/* Play button overlay */}
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: isActive ? "#22c55e" : "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg viewBox="0 0 16 16" fill={isActive ? "white" : "#030712"} style={{ width: 14, height: 14, transform: "translateX(1px)" }}>
+                        <path d="M4 2.5l9 5.5-9 5.5V2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Now playing badge */}
                   {isActive && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5 block" style={{ color: "#22c55e" }}>Now playing</span>
+                    <div style={{ position: "absolute", top: 7, left: 7, background: "#22c55e", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "white", zIndex: 3 }}>
+                      Now playing
+                    </div>
                   )}
-                  <p className="text-sm font-semibold leading-snug line-clamp-2" style={{ color: isActive ? "white" : "rgba(255,255,255,0.55)" }}>{s.title}</p>
+                </div>
+                {/* Title */}
+                <div style={{ padding: "8px 10px", background: isActive ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.02)" }}>
+                  <p style={{ margin: 0, fontSize: "12px", fontWeight: 600, color: isActive ? "white" : "rgba(255,255,255,0.5)", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{s.title}</p>
                 </div>
               </button>
             );
