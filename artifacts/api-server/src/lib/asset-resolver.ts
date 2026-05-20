@@ -10,6 +10,42 @@ export interface AssetResolverResult {
 
 const EMPTY_RESULT: AssetResolverResult = { mediaUrls: [], replyAppendText: "" };
 
+/**
+ * Normalise a stored asset URL to the current environment's canonical public domain.
+ *
+ * Assets can be stored as:
+ *   - A relative path:          "/api/storage/objects/uploads/<id>"
+ *   - A full URL from any host: "https://dev.replit.dev/api/storage/…"
+ *                               "https://growthmonk.ai/api/storage/…"
+ *
+ * In all cases we rewrite the host to the first entry in REPLIT_DOMAINS so that
+ * ManyChat / Twilio always receive a stable, publicly reachable URL regardless of
+ * which environment the asset was originally uploaded from.
+ *
+ * External URLs (Calendly, Loom, Google Meet, custom links) are returned as-is.
+ */
+function normalizeAssetUrl(raw: string): string {
+  const canonicalDomain = (process.env["REPLIT_DOMAINS"] ?? "").split(",")[0]?.trim();
+  if (!canonicalDomain) return raw; // no domain configured — return as-is
+
+  // Relative storage path → prepend canonical domain
+  if (raw.startsWith("/api/storage/")) {
+    return `https://${canonicalDomain}${raw}`;
+  }
+
+  // Full URL on a storage path → replace host with canonical domain
+  try {
+    const u = new URL(raw);
+    if (u.pathname.startsWith("/api/storage/")) {
+      return `https://${canonicalDomain}${u.pathname}${u.search}`;
+    }
+  } catch {
+    // not a valid URL — return raw
+  }
+
+  return raw;
+}
+
 const MEDIA_ASSET_TYPES = new Set(["image", "pdf"]);
 const LINK_ASSET_TYPES  = new Set(["calendly", "loom", "gmeet", "custom"]);
 
@@ -121,13 +157,15 @@ export async function resolveAsset(
   const mediaUrls: string[] = [];
   let replyAppendText = "";
 
+  const normalizedUrl = normalizeAssetUrl(parsed.url);
+
   if (MEDIA_ASSET_TYPES.has(parsed.assetType)) {
     // image / pdf → send as WhatsApp media AND append URL for accessibility
-    mediaUrls.push(parsed.url);
-    replyAppendText = parsed.url;
+    mediaUrls.push(normalizedUrl);
+    replyAppendText = normalizedUrl;
   } else if (LINK_ASSET_TYPES.has(parsed.assetType)) {
     // calendly / loom / gmeet / custom → append URL to reply only
-    replyAppendText = parsed.url;
+    replyAppendText = normalizedUrl;
   }
 
   return { mediaUrls, replyAppendText };
