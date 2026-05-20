@@ -17,7 +17,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { de, tr, enUS, arSA } from "date-fns/locale";
 import {
-  Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall, Loader2,
+  Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall,
+  Loader2, TrendingUp, TrendingDown, Minus, Instagram, Facebook,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,9 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const REFETCH_INTERVAL = 10000;
+
+// Dummy last-week baseline for WoW comparison (demo purposes)
+const LAST_WEEK = { totalLeads: 5, newLeads: 4, callbacks: 1, bookedToday: 3 };
 
 interface BrandingConfig {
   clientId: number;
@@ -54,15 +58,12 @@ export default function DemoDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // Read demo token from URL (?t=<token>) and inject into all API calls for this page.
-  // useState initializer runs synchronously so the token is set before the first fetch.
   useState(() => {
     const t = new URLSearchParams(window.location.search).get("t");
     if (t) setDemoToken(t);
   });
   useEffect(() => () => { setDemoToken(null); }, []);
 
-  // Keep demo dashboards out of search indexes (belt-and-suspenders — robots.txt also disallows)
   useEffect(() => {
     const meta = document.createElement("meta");
     meta.name = "robots";
@@ -102,10 +103,21 @@ export default function DemoDashboardPage() {
   return <DemoDashboardContent branding={branding} />;
 }
 
+const ALL_SOURCES = ["all", "instagram", "facebook", "whatsapp", "direct"] as const;
+type SourceFilter = typeof ALL_SOURCES[number];
+
+function sourceIcon(source: string) {
+  if (source === "instagram") return <Instagram className="h-3 w-3" />;
+  if (source === "facebook") return <Facebook className="h-3 w-3" />;
+  return null;
+}
+
 function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
   const clientId = branding.clientId;
   const primary = branding.primaryColor ?? "#A8C334";
+  const secondary = branding.secondaryColor ?? "#1a3a1a";
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const t = getDemoT(branding.demoLanguage);
   const dateLocale = getDateLocale(branding.demoLanguage);
 
@@ -119,112 +131,193 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
     { query: { refetchInterval: REFETCH_INTERVAL, queryKey: getListLeadsQueryKey({ clientId, limit: 50 }) } }
   );
 
+  const allLeads = leadsPage?.data ?? [];
+  const filteredLeads = sourceFilter === "all"
+    ? allLeads
+    : allLeads.filter((l) => l.source === sourceFilter);
+
+  // Collect unique sources present in data for filter pill rendering
+  const presentSources = Array.from(new Set(allLeads.map((l) => l.source).filter(Boolean)));
+
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <DemoNav branding={branding} />
 
       <div className="flex-1 flex overflow-hidden relative">
         <div className="flex-1 flex flex-col h-[calc(100vh-56px)] overflow-y-auto w-full">
-          <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8">
+          <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6">
 
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
               <div>
-                <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: branding.secondaryColor ?? "#1a3a1a" }}>
-                  {branding.companyName} — {t.nav.dashboard}
+                <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: secondary }}>
+                  {branding.companyName}
                 </h1>
-                <p className="text-muted-foreground flex items-center gap-2 mt-2 font-medium">
-                  <span className="relative flex h-3 w-3">
+                <p className="text-muted-foreground flex items-center gap-2 mt-1.5 font-medium text-sm">
+                  <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: primary }} />
-                    <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: primary }} />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: primary }} />
                   </span>
                   {t.liveUpdate}
                 </p>
               </div>
             </div>
 
+            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard title={t.stats.totalLeads} value={stats?.totalLeads} loading={statsLoading} icon={<Users className="h-6 w-6" />} primary={primary} />
-              <StatCard title={t.stats.newLeads} value={stats?.newLeads} loading={statsLoading} icon={<PhoneCall className="h-6 w-6" />} primary={primary} highlight />
-              <StatCard title={t.stats.callbacks} value={stats?.callbackBooked} loading={statsLoading} icon={<Calendar className="h-6 w-6" />} primary={primary} />
-              <StatCard title={t.stats.bookedToday} value={stats?.bookedToday} loading={statsLoading} icon={<MessageSquare className="h-6 w-6" />} primary={primary} />
+              <StatCard
+                title={t.stats.totalLeads}
+                value={stats?.totalLeads}
+                lastWeek={LAST_WEEK.totalLeads}
+                loading={statsLoading}
+                icon={<Users className="h-5 w-5" />}
+                primary={primary}
+                secondary={secondary}
+              />
+              <StatCard
+                title={t.stats.newLeads}
+                value={stats?.newLeads}
+                lastWeek={LAST_WEEK.newLeads}
+                loading={statsLoading}
+                icon={<PhoneCall className="h-5 w-5" />}
+                primary={primary}
+                secondary={secondary}
+                highlight
+              />
+              <StatCard
+                title={t.stats.callbacks}
+                value={stats?.callbackBooked}
+                lastWeek={LAST_WEEK.callbacks}
+                loading={statsLoading}
+                icon={<Calendar className="h-5 w-5" />}
+                primary={primary}
+                secondary={secondary}
+              />
+              <StatCard
+                title={t.stats.bookedToday}
+                value={stats?.bookedToday}
+                lastWeek={LAST_WEEK.bookedToday}
+                loading={statsLoading}
+                icon={<MessageSquare className="h-5 w-5" />}
+                primary={primary}
+                secondary={secondary}
+              />
             </div>
 
-            <Card className="border shadow-sm overflow-hidden rounded-xl">
-              <CardHeader className="border-b bg-card pb-4">
-                <CardTitle className="text-lg font-bold">{t.leads}</CardTitle>
-              </CardHeader>
-              <div className="bg-card">
-                {leadsLoading ? (
-                  <div className="p-8 flex flex-col gap-4">
-                    {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold tracking-wider">
-                        <tr>
-                          <th className="px-6 py-4">{t.table.contact}</th>
-                          <th className="px-6 py-4">{t.table.language}</th>
-                          <th className="px-6 py-4">{t.table.status}</th>
-                          <th className="px-6 py-4">{t.table.source}</th>
-                          <th className="px-6 py-4">{t.table.lastActivity}</th>
-                          <th className="px-6 py-4 text-right">{t.table.details}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y border-t">
-                        {leadsPage?.data.map((lead) => (
-                          <tr
-                            key={lead.id}
-                            className={cn(
-                              "hover:bg-muted/50 transition-colors cursor-pointer group",
-                              selectedLeadId === lead.id && "bg-primary/5"
-                            )}
-                            onClick={() => setSelectedLeadId(lead.id)}
-                          >
-                            <td className="px-6 py-4">
-                              <div className="font-bold text-base" style={{ color: branding.secondaryColor ?? "#1a3a1a" }}>
-                                {lead.name || t.detail.unknownContact}
+            {/* Leads section */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-lg font-bold" style={{ color: secondary }}>{t.leads}</h2>
+
+                {/* Source filter pills */}
+                <div className="flex flex-wrap gap-2">
+                  {(["all", ...presentSources] as SourceFilter[]).map((src) => {
+                    const active = sourceFilter === src;
+                    return (
+                      <button
+                        key={src}
+                        onClick={() => setSourceFilter(src)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all",
+                          active
+                            ? "text-white border-transparent shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                        )}
+                        style={active ? { backgroundColor: primary, borderColor: primary } : {}}
+                      >
+                        {sourceIcon(src)}
+                        {src === "all" ? "All" : src.charAt(0).toUpperCase() + src.slice(1)}
+                        {src !== "all" && (
+                          <span className={cn(
+                            "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px]",
+                            active ? "bg-white/20" : "bg-slate-100"
+                          )}>
+                            {allLeads.filter((l) => l.source === src).length}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Lead cards grid */}
+              {leadsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-36 w-full rounded-2xl" />)}
+                </div>
+              ) : filteredLeads.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+                  <Users className="h-12 w-12 opacity-20" />
+                  <span className="text-lg font-medium">{t.noLeads.title}</span>
+                  <p className="text-sm max-w-xs text-center">{t.noLeads.desc}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredLeads.map((lead) => (
+                    <motion.div
+                      key={lead.id}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Card
+                        className={cn(
+                          "cursor-pointer border bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden",
+                          selectedLeadId === lead.id && "ring-2"
+                        )}
+                        style={selectedLeadId === lead.id ? { outline: `2px solid ${primary}`, outlineOffset: "0px" } : {}}
+                        onClick={() => setSelectedLeadId(lead.id)}
+                      >
+                        {/* Accent bar */}
+                        <div className="h-1 w-full" style={{ backgroundColor: primary + "80" }} />
+                        <CardContent className="p-4 space-y-3">
+                          {/* Name + flag + status */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold" style={{ backgroundColor: primary + "20", color: primary }}>
+                                {(lead.name || "?").charAt(0).toUpperCase()}
                               </div>
-                              <div className="text-muted-foreground font-medium mt-1">{maskPhone(lead.phone)}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-2xl">{getLanguageFlag(lead.language)}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <StatusBadge status={lead.status} labels={t.statusLabels} />
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge variant="outline" className="font-semibold text-xs bg-white">{lead.source}</Badge>
-                            </td>
-                            <td className="px-6 py-4 text-muted-foreground font-medium text-xs">
+                              <div className="min-w-0">
+                                <div className="font-bold text-sm truncate" style={{ color: secondary }}>
+                                  {lead.name || t.detail.unknownContact}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">{maskPhone(lead.phone)}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-lg">{getLanguageFlag(lead.language)}</span>
+                            </div>
+                          </div>
+
+                          {/* Status + source */}
+                          <div className="flex items-center justify-between">
+                            <StatusBadge status={lead.status} labels={t.statusLabels} />
+                            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                              {sourceIcon(lead.source ?? "")}
+                              {lead.source ?? "—"}
+                            </span>
+                          </div>
+
+                          {/* Last activity + chevron */}
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-50">
+                            <span className="text-[11px] text-muted-foreground font-medium">
                               {lead.lastContactAt
                                 ? formatDistanceToNow(new Date(lead.lastContactAt), { addSuffix: true, locale: dateLocale })
                                 : t.table.never}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{ color: primary }}>
-                                <ChevronRight className="h-5 w-5" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                        {(!leadsPage?.data || leadsPage.data.length === 0) && (
-                          <tr>
-                            <td colSpan={6} className="px-6 py-16 text-center">
-                              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <Users className="h-12 w-12 opacity-20 mb-4" />
-                                <span className="text-lg font-medium">{t.noLeads.title}</span>
-                                <p className="text-sm mt-2 max-w-xs">{t.noLeads.desc}</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </Card>
+                            </span>
+                            <ChevronRight className="h-4 w-4" style={{ color: primary }} />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -434,26 +527,60 @@ function LeadDetailPanel({
 interface StatCardProps {
   title: string;
   value: number | undefined;
+  lastWeek: number;
   loading: boolean;
   icon?: React.ReactNode;
   primary: string;
+  secondary: string;
   highlight?: boolean;
 }
 
-function StatCard({ title, value, loading, icon, primary, highlight }: StatCardProps) {
+function StatCard({ title, value, lastWeek, loading, icon, primary, secondary, highlight }: StatCardProps) {
+  const current = value ?? 0;
+  const delta = current - lastWeek;
+  const pct = lastWeek === 0 ? 100 : Math.round((delta / lastWeek) * 100);
+
   return (
-    <Card className="bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow"
-      style={highlight ? { borderColor: primary + "80" } : {}}>
-      <CardContent className="p-5 flex flex-col gap-2">
-        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{title}</p>
-        <div className="flex items-end justify-between mt-1">
-          {loading ? (
-            <Skeleton className="h-10 w-16" />
-          ) : (
-            <span className="text-3xl font-extrabold tracking-tight" style={{ color: "#1a3a1a" }}>{value ?? 0}</span>
-          )}
-          {icon && <div style={{ color: primary + "50" }}>{icon}</div>}
+    <Card
+      className="bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden"
+      style={highlight ? { borderColor: primary + "60" } : {}}
+    >
+      {highlight && <div className="h-0.5 w-full" style={{ backgroundColor: primary }} />}
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{title}</p>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: primary + "18", color: primary }}>
+            {icon}
+          </div>
         </div>
+
+        {loading ? (
+          <Skeleton className="h-10 w-16 mb-2" />
+        ) : (
+          <div className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: secondary }}>
+            {current}
+          </div>
+        )}
+
+        {/* WoW comparison */}
+        {!loading && (
+          <div className="flex items-center gap-1.5">
+            {delta > 0 ? (
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+            ) : delta < 0 ? (
+              <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+            ) : (
+              <Minus className="h-3.5 w-3.5 text-slate-400" />
+            )}
+            <span className={cn(
+              "text-xs font-bold",
+              delta > 0 ? "text-emerald-600" : delta < 0 ? "text-red-500" : "text-slate-400"
+            )}>
+              {delta > 0 ? "+" : ""}{pct}%
+            </span>
+            <span className="text-xs text-muted-foreground font-medium">vs last week</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -473,7 +600,7 @@ function StatusBadge({ status, labels }: { status: string; labels: Record<string
   const color = colors[status] ?? "bg-gray-100 text-gray-800";
   const label = labels[status] ?? status;
   return (
-    <span className={cn("px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold border", color)}>
+    <span className={cn("px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold border", color)}>
       {label}
     </span>
   );
