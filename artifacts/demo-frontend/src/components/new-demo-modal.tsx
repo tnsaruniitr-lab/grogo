@@ -249,7 +249,6 @@ export function NewDemoModal({ open, onClose }: Props) {
                         <path d="M8 2l1.76 3.57L14 6.36l-3 2.93.71 4.14L8 11.32l-3.71 2.11.71-4.14L2 6.36l4.24-.79L8 2z" />
                       </svg>
                     </div>
-                    <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>New Demo</span>
                     {phase === "scanning" && (
                       <motion.span
                         initial={{ opacity: 0, scale: 0.8 }}
