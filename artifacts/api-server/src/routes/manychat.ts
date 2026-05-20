@@ -112,32 +112,55 @@ type ManychatMessage =
   | { type: "video"; url: string };
 
 /**
+ * Map ManyChat channel string to the content type field required by the
+ * External Request API v2.  Instagram and Telegram support image blocks;
+ * WhatsApp only supports text.  Facebook Messenger uses no type field.
+ * https://manychat.github.io/dynamic_block_docs/channels/
+ */
+function toManychatContentType(channel: string): string | null {
+  switch (channel.toLowerCase()) {
+    case "instagram": return "instagram";
+    case "telegram":  return "telegram";
+    case "whatsapp":  return "whatsapp";
+    default:          return null; // Facebook Messenger — no type field
+  }
+}
+
+/**
  * Build a ManyChat External Request API v2 response.
- * Asset delivery mirrors the WhatsApp pipeline:
- *   - mediaUrls (image/pdf)  → inline image message block per URL
+ * Asset delivery:
+ *   - Instagram/Telegram: mediaUrls → inline image message blocks
+ *   - WhatsApp/Facebook: images not supported via dynamic blocks → send URL button instead
  *   - link assets (calendly/loom/gmeet/custom) → URL button on the reply text
  */
-function buildManychatResponse(reply: string, action: string, asset?: AssetResolverResult) {
+function buildManychatResponse(reply: string, action: string, channel: string, asset?: AssetResolverResult) {
   const messages: ManychatMessage[] = [];
   const actions: Array<{ action: string; tag_name: string }> = [];
 
-  // Attach URL button to the reply text when a link asset was resolved
-  // but no media URL was produced (e.g. Calendly, Loom, Google Meet, custom link).
-  const hasMedia = (asset?.mediaUrls.length ?? 0) > 0;
-  const linkOnly = asset?.replyAppendText && !hasMedia;
+  const contentType = toManychatContentType(channel);
 
-  if (linkOnly) {
+  // Instagram and Telegram support image blocks; WhatsApp/Facebook do not.
+  const supportsImageBlock = channel === "instagram" || channel === "telegram";
+
+  const hasMedia = (asset?.mediaUrls.length ?? 0) > 0;
+  // Link-only: asset resolved to a URL (Calendly/Loom/etc) but no uploadable media.
+  const linkOnly = asset?.replyAppendText && !hasMedia;
+  // Image asset on a channel that can't render image blocks → send as URL button.
+  const mediaAsLink = hasMedia && !supportsImageBlock;
+
+  if (linkOnly || mediaAsLink) {
+    const linkUrl = mediaAsLink ? asset!.mediaUrls[0]! : asset!.replyAppendText;
     messages.push({
       type: "text",
       text: reply,
-      buttons: [{ type: "url", caption: "Open Link", url: asset!.replyAppendText }],
+      buttons: [{ type: "url", caption: "View", url: linkUrl }],
     });
   } else {
     messages.push({ type: "text", text: reply });
   }
 
-  // Append an inline image block for each media URL (image / PDF preview)
-  if (asset?.mediaUrls) {
+  // Append inline image blocks (only for channels that support them)
+  if (supportsImageBlock && hasMedia && asset?.mediaUrls) {
     for (const url of asset.mediaUrls) {
       messages.push({ type: "image", url });
     }
@@ -147,9 +170,12 @@ function buildManychatResponse(reply: string, action: string, asset?: AssetResol
     actions.push({ action: "add_tag", tag_name: "human_needed" });
   }
 
+  const content: Record<string, unknown> = { messages };
+  if (contentType) content["type"] = contentType;
+
   return {
     version: "v2",
-    content: { messages },
+    content,
     ...(actions.length > 0 ? { actions } : {}),
   };
 }
@@ -165,6 +191,7 @@ const ManychatPayloadSchema = z.object({
 
 router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
   let language = "en";
+  let channel = (typeof req.body?.channel === "string" ? req.body.channel : null) ?? "instagram";
   const slug = req.params["slug"] as string;
   let step = "auth";
 
@@ -184,7 +211,8 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       return;
     }
 
-    const { senderId, message, channel, name, phone: contactPhone, email } = parsed.data;
+    const { senderId, message, channel: parsedChannel, name, phone: contactPhone, email } = parsed.data;
+    channel = parsedChannel;
 
     logger.info(
       { slug, channel, senderId, messageLength: message.length, hasName: !!name, hasPhone: !!contactPhone },
@@ -349,7 +377,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       intentDetected: botResponse.intent,
     });
 
-    const responseBody = buildManychatResponse(botResponse.reply, botResponse.action, assetResult);
+    const responseBody = buildManychatResponse(botResponse.reply, botResponse.action, channel, assetResult);
 
     logger.info(
       {
@@ -371,7 +399,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
         : language === "tr"
           ? "Mesajınız için teşekkür ederiz. Sizi ekibimizle buluşturacağız."
           : "Thank you for your message. Let me connect you with our team right away.";
-    res.json(buildManychatResponse(fallback, "escalate_human"));
+    res.json(buildManychatResponse(fallback, "escalate_human", channel));
   }
 });
 
