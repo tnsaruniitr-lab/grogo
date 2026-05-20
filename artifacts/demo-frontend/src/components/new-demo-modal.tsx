@@ -201,26 +201,33 @@ export function NewDemoModal({ open, onClose }: Props) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Full-screen overlay — handles backdrop click + scrolling */}
           <motion.div
-            key="backdrop"
+            key="overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
             className="fixed inset-0 z-50"
-            style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
-          />
-
-          {/* Card */}
+            style={{
+              background: "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              overflowY: "auto",
+              padding: "20px 16px 40px",
+            }}
+          >
+          {/* Card — stop overlay click from closing when clicking the card */}
           <motion.div
             key="card"
+            onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className="fixed z-50"
-            style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "min(460px, calc(100vw - 32px))", maxHeight: "calc(100vh - 40px)", display: "flex", flexDirection: "column" }}
+            style={{ width: "min(460px, 100%)", marginTop: "auto", marginBottom: "auto", flexShrink: 0 }}
           >
             <div style={{
               borderRadius: 20,
@@ -229,9 +236,6 @@ export function NewDemoModal({ open, onClose }: Props) {
               boxShadow: "0 30px 90px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,197,94,0.07), inset 0 1px 0 rgba(255,255,255,0.05)",
               overflow: "hidden",
               position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              maxHeight: "calc(100vh - 40px)",
             }}>
               {/* Top accent line */}
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #22c55e 40%, #16a34a 60%, transparent)" }} />
@@ -272,7 +276,7 @@ export function NewDemoModal({ open, onClose }: Props) {
               </div>
 
               {/* Body */}
-              <div style={{ padding: "20px 24px 24px", overflowY: "auto", flex: 1 }}>
+              <div style={{ padding: "20px 24px 24px" }}>
                 <AnimatePresence mode="wait">
                   {phase === "setup" ? (
                     <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -346,6 +350,7 @@ export function NewDemoModal({ open, onClose }: Props) {
                 </AnimatePresence>
               </div>
             </div>
+          </motion.div>
           </motion.div>
         </>
       )}
