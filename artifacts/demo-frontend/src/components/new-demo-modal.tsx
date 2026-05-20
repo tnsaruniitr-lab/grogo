@@ -293,7 +293,7 @@ export function NewDemoModal({ open, onClose }: Props) {
                         transition: "border-color 0.3s",
                       }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>Sample Case</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>carecompass.me</div>
                           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Pre-fill with sample client data</div>
                         </div>
                         <Toggle on={demoCase} onChange={setDemoCase} />
