@@ -382,7 +382,7 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
     logger.info(
       {
         slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent, language,
-        assetType: rawAssetType ?? null, mediaUrls: assetResult.mediaUrls,
+        assetType: rawAssetType ?? null, mediaUrls: assetResult.mediaUrls, responseBody,
       },
       "ManyChat pipeline complete",
     );
