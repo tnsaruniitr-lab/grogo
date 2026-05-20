@@ -202,9 +202,6 @@ function VideoSlider({ t }: { t: Translations }) {
     { id: "abf566f8383340358b39003375ef166f", title: t.video.slideTitle, description: t.video.slideDesc },
     { id: "e0a4ef9ca97b4472ac93c2404dfad0c9", title: t.video.slide2Title, description: t.video.slide2Desc },
   ];
-  const total = slides.length;
-  const prev = () => setCurrent((c) => (c - 1 + total) % total);
-  const next = () => setCurrent((c) => (c + 1) % total);
   const slide = slides[current];
   return (
     <section className="px-6 py-24" style={{ backgroundColor: "#030712" }}>
@@ -213,31 +210,74 @@ function VideoSlider({ t }: { t: Translations }) {
           <span className="text-sm font-semibold uppercase tracking-widest text-green-500">{t.video.eyebrow}</span>
         </div>
         <h2 className="mb-4 text-center text-4xl font-extrabold text-white">{t.video.heading}</h2>
-        <p className="mx-auto mb-12 max-w-xl text-center text-gray-400">{t.video.sub}</p>
-        <div className="relative rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(34,197,94,0.2)", background: "linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(3,7,18,0) 60%)" }}>
+        <p className="mx-auto mb-10 max-w-xl text-center text-gray-400">{t.video.sub}</p>
+
+        {/* Active video player */}
+        <div className="rounded-2xl overflow-hidden mb-5" style={{ border: "1px solid rgba(34,197,94,0.25)", background: "linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(3,7,18,0) 60%)" }}>
           <div style={{ position: "relative", paddingBottom: "52.6%", height: 0 }}>
             <iframe
               key={slide.id}
               src={`https://www.loom.com/embed/${slide.id}`}
               frameBorder="0"
               allowFullScreen
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: "16px" }}
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: "16px 16px 0 0" }}
               title={slide.title}
             />
           </div>
-          <div className="flex items-center justify-between gap-4 px-6 py-4">
-            <div className="min-w-0">
-              <p className="font-semibold text-white truncate">{slide.title}</p>
-              <p className="text-sm text-gray-400 truncate">{slide.description}</p>
-            </div>
-            {total > 1 && (
-              <div className="flex items-center gap-3 shrink-0">
-                <button onClick={prev} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-green-500/40 hover:bg-green-500/10 hover:text-green-400" aria-label="Previous video"><ChevronLeft className="h-4 w-4" /></button>
-                <div className="flex gap-1.5">{slides.map((_, i) => <button key={i} onClick={() => setCurrent(i)} className={`h-1.5 rounded-full transition-all ${i === current ? "w-5 bg-green-500" : "w-1.5 bg-white/20 hover:bg-white/40"}`} aria-label={`Go to video ${i + 1}`} />)}</div>
-                <button onClick={next} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-green-500/40 hover:bg-green-500/10 hover:text-green-400" aria-label="Next video"><ChevronRight className="h-4 w-4" /></button>
-              </div>
-            )}
+          <div className="px-5 py-4">
+            <p className="font-bold text-white text-base">{slide.title}</p>
+            <p className="text-sm text-gray-400 mt-0.5">{slide.description}</p>
           </div>
+        </div>
+
+        {/* Thumbnail playlist */}
+        <div className="grid grid-cols-2 gap-4">
+          {slides.map((s, i) => {
+            const isActive = i === current;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setCurrent(i)}
+                className="text-left rounded-xl overflow-hidden transition-all duration-200 focus:outline-none"
+                style={{
+                  border: isActive ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.08)",
+                  background: isActive ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.03)",
+                  opacity: isActive ? 1 : 0.65,
+                }}
+                aria-label={`Watch: ${s.title}`}
+              >
+                {/* Thumbnail image */}
+                <div className="relative w-full" style={{ paddingBottom: "52.6%" }}>
+                  <img
+                    src={`https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.gif`}
+                    alt={s.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ borderRadius: "10px 10px 0 0" }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.jpg`;
+                    }}
+                  />
+                  {/* Play overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.35)", borderRadius: "10px 10px 0 0" }}>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isActive ? "#22c55e" : "rgba(255,255,255,0.85)" }}>
+                      <svg viewBox="0 0 16 16" fill={isActive ? "white" : "#030712"} className="h-4 w-4 translate-x-0.5">
+                        <path d="M4 2.5l9 5.5-9 5.5V2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {isActive && (
+                    <div className="absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: "#22c55e", color: "white" }}>
+                      Now playing
+                    </div>
+                  )}
+                </div>
+                {/* Card footer */}
+                <div className="px-3 py-3">
+                  <p className="text-xs font-bold text-white leading-snug line-clamp-2">{s.title}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>
