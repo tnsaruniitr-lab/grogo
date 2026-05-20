@@ -146,7 +146,7 @@ function StepRow({ step, status, isLast }: { step: StepDef; status: StepStatus; 
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", marginTop: 2 }}>{step.sub}</div>
         {status === "done" && (
           <div style={{ fontSize: 10, color: step.color, marginTop: 3, fontWeight: 600, opacity: 0.85 }}>
-            ✓ Connection request sent · access granted
+            ✓ Connection request sent
           </div>
         )}
       </div>
