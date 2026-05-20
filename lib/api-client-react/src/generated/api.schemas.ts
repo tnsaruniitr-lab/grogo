@@ -389,6 +389,11 @@ export interface ActivateKnowledgeResult {
   profileId?: number | null;
 }
 
+export interface ResetLeadResult {
+  conversationsDeleted: number;
+  appointmentsDeleted: number;
+}
+
 export interface UploadUrlInput {
   name: string;
   size: number;
@@ -418,6 +423,10 @@ export type GetLeadParams = {
 };
 
 export type UpdateLeadParams = {
+  clientId: number;
+};
+
+export type ResetLeadParams = {
   clientId: number;
 };
 

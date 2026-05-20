@@ -159,6 +159,24 @@ export const UpdateLeadResponse = zod.object({
 });
 
 /**
+ * Clears conversation history (soft-delete), removes appointments, and resets lead status to "new" so the next inbound message starts a fresh session. Useful for testing and re-qualifying a returning contact.
+
+ * @summary Reset a lead conversation
+ */
+export const ResetLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ResetLeadQueryParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const ResetLeadResponse = zod.object({
+  conversationsDeleted: zod.number(),
+  appointmentsDeleted: zod.number(),
+});
+
+/**
  * Fetches the given URL server-side and extracts brand signals: company name, primary color, logo URL, tagline. Returns suggested branding that the admin can review and override before creating a demo.
 
  * @summary Extract brand from a website URL

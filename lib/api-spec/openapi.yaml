@@ -190,6 +190,36 @@ paths:
         "404":
           description: Lead not found
 
+  /leads/{id}/reset:
+    post:
+      operationId: resetLead
+      tags: [leads]
+      summary: Reset a lead conversation
+      description: >
+        Clears conversation history (soft-delete), removes appointments, and
+        resets lead status to "new" so the next inbound message starts a fresh
+        session. Useful for testing and re-qualifying a returning contact.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: clientId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reset confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetLeadResult"
+        "404":
+          description: Lead not found
+
   /admin/extract-branding:
     post:
       operationId: extractBranding
@@ -1244,6 +1274,15 @@ components:
           type: integer
         profileId:
           type: ["integer", "null"]
+
+    ResetLeadResult:
+      type: object
+      required: [conversationsDeleted, appointmentsDeleted]
+      properties:
+        conversationsDeleted:
+          type: integer
+        appointmentsDeleted:
+          type: integer
 
     UploadUrlInput:
       type: object

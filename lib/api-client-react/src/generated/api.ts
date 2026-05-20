@@ -43,6 +43,8 @@ import type {
   LeadUpdate,
   LeadsPage,
   ListLeadsParams,
+  ResetLeadParams,
+  ResetLeadResult,
   SystemSettings,
   TwilioWebhookPayload,
   UpdateKnowledgeEntryBody,
@@ -629,6 +631,105 @@ export const useUpdateLead = <
   TContext
 > => {
   return useMutation(getUpdateLeadMutationOptions(options));
+};
+
+/**
+ * Clears conversation history (soft-delete), removes appointments, and resets lead status to "new" so the next inbound message starts a fresh session. Useful for testing and re-qualifying a returning contact.
+
+ * @summary Reset a lead conversation
+ */
+export const getResetLeadUrl = (id: number, params: ResetLeadParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/leads/${id}/reset?${stringifiedParams}`
+    : `/api/leads/${id}/reset`;
+};
+
+export const resetLead = async (
+  id: number,
+  params: ResetLeadParams,
+  options?: RequestInit,
+): Promise<ResetLeadResult> => {
+  return customFetch<ResetLeadResult>(getResetLeadUrl(id, params), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getResetLeadMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetLead>>,
+    TError,
+    { id: number; params: ResetLeadParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetLead>>,
+  TError,
+  { id: number; params: ResetLeadParams },
+  TContext
+> => {
+  const mutationKey = ["resetLead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetLead>>,
+    { id: number; params: ResetLeadParams }
+  > = (props) => {
+    const { id, params } = props ?? {};
+
+    return resetLead(id, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetLeadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resetLead>>
+>;
+
+export type ResetLeadMutationError = ErrorType<void>;
+
+/**
+ * @summary Reset a lead conversation
+ */
+export const useResetLead = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetLead>>,
+    TError,
+    { id: number; params: ResetLeadParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof resetLead>>,
+  TError,
+  { id: number; params: ResetLeadParams },
+  TContext
+> => {
+  return useMutation(getResetLeadMutationOptions(options));
 };
 
 /**

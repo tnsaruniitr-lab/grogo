@@ -11,6 +11,7 @@ import {
   useGetLead,
   getGetLeadQueryKey,
   useUpdateLead,
+  useResetLead,
 } from "@workspace/api-client-react";
 import type { LeadDetail } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,7 +19,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { de, tr, enUS, arSA } from "date-fns/locale";
 import {
   Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall,
-  Loader2, TrendingUp, TrendingDown, Minus, Instagram, Facebook,
+  Loader2, TrendingUp, TrendingDown, Minus, Instagram, Facebook, RotateCcw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -387,6 +388,16 @@ function LeadDetailPanel({
     },
   });
 
+  const resetLead = useResetLead({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetLeadQueryKey(leadId, { clientId }) });
+        queryClient.invalidateQueries({ queryKey: getListLeadsQueryKey({ clientId, limit: 50 }) });
+        queryClient.invalidateQueries({ queryKey: getGetDashboardStatsQueryKey({ clientId }) });
+      },
+    },
+  });
+
   if (isLoading || !detail) {
     return (
       <div className="p-6 flex flex-col h-full space-y-8">
@@ -441,6 +452,23 @@ function LeadDetailPanel({
               </Select>
             </div>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs font-bold gap-2 border-dashed text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors"
+            disabled={resetLead.isPending}
+            onClick={() => {
+              if (confirm("Reset this conversation? This clears all messages, appointments and resets status to New.")) {
+                resetLead.mutate({ id: leadId, params: { clientId } });
+              }
+            }}
+          >
+            {resetLead.isPending
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              : <RotateCcw className="h-3.5 w-3.5" />}
+            Reset conversation
+          </Button>
 
           {appointments.length > 0 && (
             <div className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: primaryColor + "15", borderColor: primaryColor + "40", borderWidth: 1 }}>

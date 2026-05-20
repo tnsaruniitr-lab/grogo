@@ -13,6 +13,8 @@ import {
   UpdateLeadParams,
   UpdateLeadQueryParams,
   UpdateLeadBody,
+  ResetLeadParams,
+  ResetLeadQueryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -177,6 +179,66 @@ router.patch("/leads/:id", async (req: Request, res: Response) => {
     .returning();
 
   res.json(updated[0]);
+});
+
+router.post("/leads/:id/reset", async (req: Request, res: Response) => {
+  const params = ResetLeadParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid lead id" });
+    return;
+  }
+
+  const query = ResetLeadQueryParams.safeParse(req.query);
+  if (!query.success) {
+    res.status(400).json({ error: "clientId query parameter is required" });
+    return;
+  }
+
+  const { id } = params.data;
+  const { clientId } = query.data;
+
+  const existing = await db
+    .select({ id: leadsTable.id })
+    .from(leadsTable)
+    .where(and(eq(leadsTable.id, id), eq(leadsTable.clientId, clientId), isNull(leadsTable.deletedAt)))
+    .limit(1);
+
+  if (existing.length === 0) {
+    res.status(404).json({ error: "Lead not found" });
+    return;
+  }
+
+  const now = new Date();
+
+  // Soft-delete all conversation messages, hard-delete appointments, reset lead state
+  const [deletedConversations, deletedAppointments] = await Promise.all([
+    db
+      .update(conversationsTable)
+      .set({ deletedAt: now })
+      .where(and(eq(conversationsTable.leadId, id), eq(conversationsTable.clientId, clientId), isNull(conversationsTable.deletedAt)))
+      .returning({ id: conversationsTable.id }),
+    db
+      .delete(appointmentsTable)
+      .where(and(eq(appointmentsTable.leadId, id), eq(appointmentsTable.clientId, clientId)))
+      .returning({ id: appointmentsTable.id }),
+  ]);
+
+  await db
+    .update(leadsTable)
+    .set({
+      status: "new",
+      language: null,
+      conversationSummary: null,
+      botTurnsThisHour: 0,
+      turnsResetAt: now,
+      updatedAt: now,
+    })
+    .where(and(eq(leadsTable.id, id), eq(leadsTable.clientId, clientId)));
+
+  res.json({
+    conversationsDeleted: deletedConversations.length,
+    appointmentsDeleted: deletedAppointments.length,
+  });
 });
 
 export default router;

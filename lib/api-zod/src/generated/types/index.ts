@@ -41,6 +41,8 @@ export * from "./leadDetail";
 export * from "./leadsPage";
 export * from "./leadUpdate";
 export * from "./listLeadsParams";
+export * from "./resetLeadParams";
+export * from "./resetLeadResult";
 export * from "./systemSettings";
 export * from "./systemSettingsExtractorVersion";
 export * from "./twilioWebhookPayload";
