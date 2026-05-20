@@ -12,6 +12,7 @@ import {
 import { eq, and, desc } from "drizzle-orm";
 import { callGpt } from "../lib/gpt-service";
 import { retrieveKnowledge } from "../lib/knowledge";
+import { resolveAsset, type AssetResolverResult } from "../lib/asset-resolver";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -105,13 +106,42 @@ function detectLanguage(text: string, clientPrimary: string, clientSecondary?: s
   return clientPrimary;
 }
 
-function manychatTextMessage(text: string) {
-  return { type: "text" as const, text };
-}
+type ManychatMessage =
+  | { type: "text"; text: string; buttons?: Array<{ type: "url"; caption: string; url: string }> }
+  | { type: "image"; url: string }
+  | { type: "video"; url: string };
 
-function buildManychatResponse(reply: string, action: string) {
-  const messages = [manychatTextMessage(reply)];
+/**
+ * Build a ManyChat External Request API v2 response.
+ * Asset delivery mirrors the WhatsApp pipeline:
+ *   - mediaUrls (image/pdf)  → inline image message block per URL
+ *   - link assets (calendly/loom/gmeet/custom) → URL button on the reply text
+ */
+function buildManychatResponse(reply: string, action: string, asset?: AssetResolverResult) {
+  const messages: ManychatMessage[] = [];
   const actions: Array<{ action: string; tag_name: string }> = [];
+
+  // Attach URL button to the reply text when a link asset was resolved
+  // but no media URL was produced (e.g. Calendly, Loom, Google Meet, custom link).
+  const hasMedia = (asset?.mediaUrls.length ?? 0) > 0;
+  const linkOnly = asset?.replyAppendText && !hasMedia;
+
+  if (linkOnly) {
+    messages.push({
+      type: "text",
+      text: reply,
+      buttons: [{ type: "url", caption: "Open Link", url: asset!.replyAppendText }],
+    });
+  } else {
+    messages.push({ type: "text", text: reply });
+  }
+
+  // Append an inline image block for each media URL (image / PDF preview)
+  if (asset?.mediaUrls) {
+    for (const url of asset.mediaUrls) {
+      messages.push({ type: "image", url });
+    }
+  }
 
   if (action === "escalate_human") {
     actions.push({ action: "add_tag", tag_name: "human_needed" });
@@ -284,6 +314,15 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       profile,
     });
 
+    step = "asset_resolve";
+    const rawAssetType = botResponse.data?.["requestedAssetType"];
+    const serviceReq = typeof botResponse.data?.["serviceRequested"] === "string"
+      ? botResponse.data["serviceRequested"] as string
+      : null;
+    const assetResult: AssetResolverResult = typeof rawAssetType === "string" && rawAssetType
+      ? await resolveAsset(clientRecord.id, rawAssetType, serviceReq)
+      : { mediaUrls: [], replyAppendText: "" };
+
     step = "build_response";
     const requestedSwitch = botResponse.data?.["switchToLanguage"];
     if (
@@ -310,10 +349,13 @@ router.post("/webhook/manychat/:slug", async (req: Request, res: Response) => {
       intentDetected: botResponse.intent,
     });
 
-    const responseBody = buildManychatResponse(botResponse.reply, botResponse.action);
+    const responseBody = buildManychatResponse(botResponse.reply, botResponse.action, assetResult);
 
     logger.info(
-      { slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent, language, responseBody },
+      {
+        slug, leadId: lead.id, channel, action: botResponse.action, intent: botResponse.intent, language,
+        assetType: rawAssetType ?? null, mediaUrls: assetResult.mediaUrls,
+      },
       "ManyChat pipeline complete",
     );
 
