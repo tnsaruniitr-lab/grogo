@@ -199,7 +199,7 @@ function Features({ t }: { t: Translations }) {
 function VideoSlider({ t }: { t: Translations }) {
   const [current, setCurrent] = useState(0);
   const slides = [
-    { id: "abf566f8383340358b39003375ef166f", title: t.video.slideTitle, description: t.video.slideDesc, thumbnail: null },
+    { id: "abf566f8383340358b39003375ef166f", title: t.video.slideTitle, description: t.video.slideDesc, thumbnail: "/images/video1-thumbnail.png" },
     { id: "e0a4ef9ca97b4472ac93c2404dfad0c9", title: t.video.slide2Title, description: t.video.slide2Desc, thumbnail: "/images/video2-thumbnail.png" },
   ];
   const slide = slides[current];
