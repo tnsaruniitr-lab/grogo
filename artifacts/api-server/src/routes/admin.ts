@@ -3,7 +3,7 @@ import { randomBytes, createHash, timingSafeEqual } from "crypto";
 import { requireDashboardAuth } from "../lib/dashboard-auth";
 import { isPrivateHost } from "../lib/ssrf-guard";
 import { db } from "@workspace/db";
-import { clientsTable, companyKnowledgeTable, clientProfilesTable } from "@workspace/db";
+import { clientsTable, companyKnowledgeTable, clientProfilesTable, leadsTable, appointmentsTable } from "@workspace/db";
 import { eq, isNull, and, inArray, asc, desc, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import { extractBrand } from "../lib/brand-extractor";
@@ -1135,6 +1135,89 @@ router.post("/admin/clients/:id/regen-demo-token", async (req: Request, res: Res
   if (!updated) { res.status(404).json({ error: "Client not found" }); return; }
   res.json({ id: updated.id, demoToken: updated.demoToken });
 });
+
+// ─── Temporary: seed carecompass demo data ───────────────────────────────────
+router.post("/admin/seed-carecompass-stats", async (req: Request, res: Response) => {
+  const CLIENT_ID = 15;
+
+  type LeadRow = { phone: string; name: string; language: string; source: string; status: string; notes: string; createdAt: Date };
+  const leads: LeadRow[] = [
+    { phone: "instagram:448291034", name: "Fatima Al Mansoori", language: "en", source: "instagram", status: "appointment_booked", notes: "Service: home nursing, City: Dubai Marina, For: mother post-surgery", createdAt: new Date("2026-05-01T09:15:00Z") },
+    { phone: "instagram:993847201", name: "Mohammed Al Rashidi", language: "en", source: "instagram", status: "appointment_booked", notes: "Service: elderly care, City: Jumeirah, For: father, Action: book_callback", createdAt: new Date("2026-05-02T11:30:00Z") },
+    { phone: "+971501234567", name: "Priya Nair", language: "en", source: "direct", status: "callback_booked", notes: "Service: physiotherapy, City: Al Barsha, For: self, Mode: at-home", createdAt: new Date("2026-05-02T14:00:00Z") },
+    { phone: "facebook:558291047382", name: "Omar Khalid", language: "en", source: "facebook", status: "appointment_booked", notes: "Service: post-surgery care, City: Business Bay, Action: book_callback", createdAt: new Date("2026-05-03T08:45:00Z") },
+    { phone: "+971552345678", name: "Sunita Sharma", language: "en", source: "direct", status: "qualified", notes: "Service: home nursing, City: Deira, For: husband, Mode: daily visits", createdAt: new Date("2026-05-03T16:20:00Z") },
+    { phone: "instagram:771029384", name: "Layla Hassan", language: "en", source: "instagram", status: "appointment_booked", notes: "Service: pediatric care, City: Mirdif, For: child, Action: book_callback", createdAt: new Date("2026-05-05T10:00:00Z") },
+    { phone: "+971563456789", name: "Rajan Pillai", language: "en", source: "direct", status: "appointment_booked", notes: "Service: elderly care, City: Sharjah, For: mother, Mode: live-in", createdAt: new Date("2026-05-05T13:30:00Z") },
+    { phone: "facebook:881920374658", name: "Aisha Bint Khalid", language: "en", source: "facebook", status: "callback_booked", notes: "Service: home nursing, City: Abu Dhabi, Action: book_callback", createdAt: new Date("2026-05-06T09:00:00Z") },
+    { phone: "instagram:334829102", name: "Deepa Menon", language: "en", source: "instagram", status: "appointment_booked", notes: "Service: physiotherapy, City: JLT, For: self, post-op recovery", createdAt: new Date("2026-05-07T11:15:00Z") },
+    { phone: "+971571234890", name: "Ahmed Al Suwaidi", language: "en", source: "direct", status: "appointment_booked", notes: "Service: home care, City: Al Ain, For: father, Mode: part-time", createdAt: new Date("2026-05-08T15:00:00Z") },
+    { phone: "instagram:220938471", name: "Noura Al Mazrouei", language: "en", source: "instagram", status: "qualified", notes: "Service: palliative care, City: Dubai Hills, For: grandmother", createdAt: new Date("2026-05-09T10:30:00Z") },
+    { phone: "+971581234567", name: "Vikram Iyer", language: "en", source: "direct", status: "appointment_booked", notes: "Service: post-surgery nursing, City: Silicon Oasis, For: wife", createdAt: new Date("2026-05-10T08:00:00Z") },
+    { phone: "facebook:773829104857", name: "Sara Al Hammadi", language: "en", source: "facebook", status: "appointment_booked", notes: "Service: maternity care, City: Oud Metha, Action: book_callback", createdAt: new Date("2026-05-11T12:00:00Z") },
+    { phone: "instagram:661829340", name: "Anjali Krishnan", language: "en", source: "instagram", status: "callback_booked", notes: "Service: home nursing, City: Discovery Gardens, For: father-in-law", createdAt: new Date("2026-05-12T14:30:00Z") },
+    { phone: "+971591234678", name: "Khalid Al Blooshi", language: "en", source: "direct", status: "appointment_booked", notes: "Service: wound care, City: Karama, For: father, Mode: twice-weekly", createdAt: new Date("2026-05-13T09:30:00Z") },
+    { phone: "instagram:882039471", name: "Maryam Al Ketbi", language: "en", source: "instagram", status: "appointment_booked", notes: "Service: elderly care, City: Meadows, For: mother, live-in carer", createdAt: new Date("2026-05-14T11:00:00Z") },
+    { phone: "+971501239876", name: "Suresh Kumar", language: "en", source: "direct", status: "new", notes: "Service: physiotherapy, City: International City, For: self", createdAt: new Date("2026-05-15T16:45:00Z") },
+    { phone: "facebook:994820374651", name: "Hessa Al Qubaisi", language: "en", source: "facebook", status: "appointment_booked", notes: "Service: home nursing, City: Jumeirah Park, Action: book_callback", createdAt: new Date("2026-05-16T10:15:00Z") },
+    { phone: "instagram:553829401", name: "Meera Pillai", language: "en", source: "instagram", status: "appointment_booked", notes: "Service: post-op care, City: Sports City, For: husband", createdAt: new Date("2026-05-17T13:00:00Z") },
+    { phone: "+971561237654", name: "Abdulla Al Nuaimi", language: "en", source: "direct", status: "appointment_booked", notes: "Service: elderly care, City: Al Nahda, For: parents, Mode: daily", createdAt: new Date("2026-05-18T09:00:00Z") },
+  ];
+
+  const insertedLeads = await db.insert(leadsTable).values(
+    leads.map((l) => ({
+      clientId: CLIENT_ID,
+      phone: l.phone,
+      name: l.name,
+      language: l.language,
+      source: l.source,
+      status: l.status,
+      notes: l.notes,
+      createdAt: l.createdAt,
+    }))
+  ).returning({ id: leadsTable.id, status: leadsTable.status, createdAt: leadsTable.createdAt });
+
+  type ApptRow = { type: string; serviceRequested: string; preferredTime: string; outcome: string; confirmedAt: Date | null };
+  const bookableLeads = insertedLeads.filter((l) =>
+    ["appointment_booked", "callback_booked"].includes(l.status)
+  );
+
+  const apptTemplates: ApptRow[] = [
+    { type: "service_booking", serviceRequested: "Home nursing — daily visits", preferredTime: "Morning (8–10am)", outcome: "completed", confirmedAt: new Date("2026-05-02T08:00:00Z") },
+    { type: "service_booking", serviceRequested: "Elderly care — live-in", preferredTime: "Flexible", outcome: "completed", confirmedAt: new Date("2026-05-03T09:00:00Z") },
+    { type: "callback", serviceRequested: "Physiotherapy — post-op", preferredTime: "Afternoon (2–4pm)", outcome: "completed", confirmedAt: new Date("2026-05-03T14:00:00Z") },
+    { type: "service_booking", serviceRequested: "Post-surgery care", preferredTime: "Morning", outcome: "completed", confirmedAt: new Date("2026-05-04T10:00:00Z") },
+    { type: "service_booking", serviceRequested: "Pediatric care — weekly", preferredTime: "Weekend", outcome: "pending", confirmedAt: new Date("2026-05-05T11:00:00Z") },
+    { type: "service_booking", serviceRequested: "Elderly care — live-in", preferredTime: "ASAP", outcome: "completed", confirmedAt: new Date("2026-05-06T09:00:00Z") },
+    { type: "callback", serviceRequested: "Home nursing enquiry", preferredTime: "Morning", outcome: "completed", confirmedAt: new Date("2026-05-07T08:30:00Z") },
+    { type: "service_booking", serviceRequested: "Physiotherapy — home visits", preferredTime: "Evenings (6–8pm)", outcome: "pending", confirmedAt: new Date("2026-05-08T18:00:00Z") },
+    { type: "service_booking", serviceRequested: "Home care — part-time", preferredTime: "Morning", outcome: "completed", confirmedAt: new Date("2026-05-09T10:00:00Z") },
+    { type: "service_booking", serviceRequested: "Post-surgery nursing", preferredTime: "Flexible", outcome: "completed", confirmedAt: new Date("2026-05-11T09:00:00Z") },
+    { type: "service_booking", serviceRequested: "Maternity care — postnatal", preferredTime: "Morning", outcome: "pending", confirmedAt: new Date("2026-05-12T08:00:00Z") },
+    { type: "callback", serviceRequested: "Home nursing — enquiry", preferredTime: "Afternoon", outcome: "completed", confirmedAt: new Date("2026-05-13T14:00:00Z") },
+    { type: "service_booking", serviceRequested: "Wound care — twice-weekly", preferredTime: "Morning (9am)", outcome: "completed", confirmedAt: new Date("2026-05-14T09:00:00Z") },
+    { type: "service_booking", serviceRequested: "Elderly care — live-in carer", preferredTime: "ASAP", outcome: "pending", confirmedAt: new Date("2026-05-15T10:00:00Z") },
+    { type: "callback", serviceRequested: "Home nursing", preferredTime: "Morning", outcome: "completed", confirmedAt: new Date("2026-05-17T09:00:00Z") },
+    { type: "service_booking", serviceRequested: "Post-op care — daily", preferredTime: "Flexible", outcome: "pending", confirmedAt: new Date("2026-05-18T11:00:00Z") },
+    { type: "service_booking", serviceRequested: "Elderly care — daily visits", preferredTime: "Morning", outcome: "pending", confirmedAt: new Date("2026-05-19T09:30:00Z") },
+  ];
+
+  const apptValues = bookableLeads.slice(0, apptTemplates.length).map((lead, i) => ({
+    clientId: CLIENT_ID,
+    leadId: lead.id,
+    type: apptTemplates[i]!.type,
+    serviceRequested: apptTemplates[i]!.serviceRequested,
+    preferredTime: apptTemplates[i]!.preferredTime,
+    outcome: apptTemplates[i]!.outcome,
+    confirmedAt: apptTemplates[i]!.confirmedAt,
+    createdAt: lead.createdAt,
+  }));
+
+  const insertedAppts = await db.insert(appointmentsTable).values(apptValues).returning({ id: appointmentsTable.id });
+
+  res.json({ leads: insertedLeads.length, appointments: insertedAppts.length });
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 function toClientResponse(client: typeof clientsTable.$inferSelect) {
   return {
