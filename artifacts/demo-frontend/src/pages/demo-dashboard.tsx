@@ -21,6 +21,7 @@ import {
   Users, User, Calendar, MessageSquare, ChevronRight, X, Bot, FileText, PhoneCall,
   Loader2, TrendingUp, TrendingDown, Minus, Instagram, Facebook, RotateCcw, Check,
 } from "lucide-react";
+import { NewDemoModal } from "@/components/new-demo-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,6 +157,7 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
   const secondary = branding.secondaryColor ?? "#1a3a1a";
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
+  const [showNewDemo, setShowNewDemo] = useState(false);
   const t = getDemoT(branding.demoLanguage);
   const dateLocale = getDateLocale(branding.demoLanguage);
 
@@ -199,7 +201,17 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                   {t.liveUpdate}
                 </p>
               </div>
+              <button
+                onClick={() => setShowNewDemo(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-lg transition-all hover:opacity-90 active:scale-95"
+                style={{ background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)", boxShadow: "0 4px 16px rgba(34,197,94,0.3)" }}
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M8 2l1.76 3.57L14 6.36l-3 2.93.71 4.14L8 11.32l-3.71 2.11.71-4.14L2 6.36l4.24-.79L8 2z"/></svg>
+                New Demo
+              </button>
             </div>
+
+            <NewDemoModal open={showNewDemo} onClose={() => setShowNewDemo(false)} />
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
