@@ -231,49 +231,32 @@ function VideoSlider({ t }: { t: Translations }) {
         </div>
 
         {/* Thumbnail playlist */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {slides.map((s, i) => {
             const isActive = i === current;
             return (
               <button
                 key={s.id}
                 onClick={() => setCurrent(i)}
-                className="text-left rounded-xl overflow-hidden transition-all duration-200 focus:outline-none"
+                className="text-left rounded-xl overflow-hidden transition-all duration-200 focus:outline-none flex items-center gap-3 px-4 py-3"
                 style={{
                   border: isActive ? "2px solid #22c55e" : "2px solid rgba(255,255,255,0.08)",
-                  background: isActive ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.03)",
-                  opacity: isActive ? 1 : 0.65,
+                  background: isActive ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.03)",
                 }}
                 aria-label={`Watch: ${s.title}`}
               >
-                {/* Thumbnail image */}
-                <div className="relative w-full" style={{ paddingBottom: "52.6%" }}>
-                  <img
-                    src={`https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.gif`}
-                    alt={s.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{ borderRadius: "10px 10px 0 0" }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.jpg`;
-                    }}
-                  />
-                  {/* Play overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.35)", borderRadius: "10px 10px 0 0" }}>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: isActive ? "#22c55e" : "rgba(255,255,255,0.85)" }}>
-                      <svg viewBox="0 0 16 16" fill={isActive ? "white" : "#030712"} className="h-4 w-4 translate-x-0.5">
-                        <path d="M4 2.5l9 5.5-9 5.5V2.5z" />
-                      </svg>
-                    </div>
-                  </div>
-                  {isActive && (
-                    <div className="absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: "#22c55e", color: "white" }}>
-                      Now playing
-                    </div>
-                  )}
+                {/* Play icon */}
+                <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full" style={{ background: isActive ? "#22c55e" : "rgba(255,255,255,0.12)" }}>
+                  <svg viewBox="0 0 16 16" fill="white" className="h-4 w-4 translate-x-0.5">
+                    <path d="M4 2.5l9 5.5-9 5.5V2.5z" />
+                  </svg>
                 </div>
-                {/* Card footer */}
-                <div className="px-3 py-3">
-                  <p className="text-xs font-bold text-white leading-snug line-clamp-2">{s.title}</p>
+                {/* Text */}
+                <div className="min-w-0">
+                  {isActive && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5 block" style={{ color: "#22c55e" }}>Now playing</span>
+                  )}
+                  <p className="text-sm font-semibold leading-snug line-clamp-2" style={{ color: isActive ? "white" : "rgba(255,255,255,0.55)" }}>{s.title}</p>
                 </div>
               </button>
             );
