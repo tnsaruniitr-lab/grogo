@@ -199,8 +199,8 @@ function Features({ t }: { t: Translations }) {
 function VideoSlider({ t }: { t: Translations }) {
   const [current, setCurrent] = useState(0);
   const slides = [
-    { id: "abf566f8383340358b39003375ef166f", title: t.video.slideTitle, description: t.video.slideDesc },
-    { id: "e0a4ef9ca97b4472ac93c2404dfad0c9", title: t.video.slide2Title, description: t.video.slide2Desc },
+    { id: "abf566f8383340358b39003375ef166f", title: t.video.slideTitle, description: t.video.slideDesc, thumbnail: null },
+    { id: "e0a4ef9ca97b4472ac93c2404dfad0c9", title: t.video.slide2Title, description: t.video.slide2Desc, thumbnail: "/images/video2-thumbnail.png" },
   ];
   const slide = slides[current];
   return (
@@ -255,9 +255,9 @@ function VideoSlider({ t }: { t: Translations }) {
               >
                 {/* 16:9 thumbnail area */}
                 <div style={{ position: "relative", paddingBottom: "56.25%", background: "linear-gradient(135deg, #0d1f10 0%, #111827 100%)" }}>
-                  {/* Loom thumbnail — loads on live domain; gradient fallback shown locally */}
+                  {/* Thumbnail — local file if provided, otherwise Loom CDN (loads on live domain) */}
                   <img
-                    src={`https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.gif`}
+                    src={s.thumbnail ?? `https://cdn.loom.com/sessions/thumbnails/${s.id}/thumbnail.gif`}
                     alt={s.title}
                     style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 1 }}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
