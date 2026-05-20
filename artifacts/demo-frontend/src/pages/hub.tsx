@@ -788,7 +788,12 @@ function PreviewModal({
 }) {
   const demoUrl = `${import.meta.env.BASE_URL}demo/${client.slug}`;
   const siteUrl = client.branding.websiteUrl ?? null;
-  const proxiedSiteUrl = siteUrl ? `/api/admin/site-proxy?url=${encodeURIComponent(siteUrl)}` : null;
+  // Embed the Basic Auth token in the URL so the browser's iframe src navigation
+  // can authenticate — iframe loads cannot attach Authorization headers.
+  const authToken = getBasicAuthHeader()?.replace(/^Basic /, "") ?? "";
+  const proxiedSiteUrl = siteUrl
+    ? `/api/admin/site-proxy?token=${encodeURIComponent(authToken)}&url=${encodeURIComponent(siteUrl)}`
+    : null;
   const activeUrl = mode === "demo" ? demoUrl : proxiedSiteUrl;
   const tabUrl = mode === "demo" ? demoUrl : siteUrl;
   const hasWebsite = !!siteUrl;

@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash, timingSafeEqual } from "crypto";
 import { requireDashboardAuth } from "../lib/dashboard-auth";
 import { isPrivateHost } from "../lib/ssrf-guard";
 import { db } from "@workspace/db";
@@ -100,6 +100,87 @@ async function seedManualKnowledge(
 }
 
 const router: IRouter = Router();
+
+// ─── Site proxy (auth via header OR ?token= query param) ─────────────────────
+// Registered BEFORE the blanket /admin requireDashboardAuth so that browser
+// iframe loads — which cannot attach Authorization headers — can authenticate
+// via the ?token= query param (same base64 credentials, embedded in the URL).
+function checkSiteProxyAuth(req: Request, res: Response, next: () => void): void {
+  const expectedUser = (process.env["DASH_USER"] ?? process.env["DASHBOARD_USER"])?.trim();
+  const expectedPass = (process.env["DASH_PASS"] ?? process.env["DASHBOARD_PASS"])?.trim();
+  if (!expectedUser || !expectedPass) { res.status(503).send("Auth not configured"); return; }
+
+  // Accept credentials from Authorization header (fetch calls) OR ?token= (iframe src).
+  // Browser iframe src navigations cannot attach headers, so the hub embeds the same
+  // base64(user:pass) string that Basic Auth would send as a ?token= query param.
+  const authHeader = req.headers["authorization"] ?? "";
+  const tokenParam = req.query["token"] as string | undefined;
+  const raw = authHeader.startsWith("Basic ") ? authHeader.slice(6) : (tokenParam ?? "");
+
+  if (!raw) { res.status(401).send("Authentication required"); return; }
+
+  try {
+    const decoded = Buffer.from(raw, "base64").toString("utf8");
+    const colonIdx = decoded.indexOf(":");
+    if (colonIdx === -1) { res.status(401).send("Invalid credentials format"); return; }
+    const user = decoded.slice(0, colonIdx).trim();
+    const pass = decoded.slice(colonIdx + 1).trim();
+    const ha = createHash("sha256").update(user).digest();
+    const hb = createHash("sha256").update(expectedUser).digest();
+    const hc = createHash("sha256").update(pass).digest();
+    const hd = createHash("sha256").update(expectedPass).digest();
+    if (ha.length === hb.length && timingSafeEqual(ha, hb) && hc.length === hd.length && timingSafeEqual(hc, hd)) {
+      return next();
+    }
+  } catch { /* fall through to 401 */ }
+  res.status(401).send("Invalid credentials");
+}
+
+// Site proxy registered here, before the blanket auth middleware, with its own
+// dual-mode auth (Authorization header OR ?token= query param for iframe loads).
+router.get("/admin/site-proxy", checkSiteProxyAuth, async (req: Request, res: Response) => {
+  const raw = req.query.url as string | undefined;
+  if (!raw) { res.status(400).send("Missing url"); return; }
+
+  let target: URL;
+  try { target = new URL(raw); } catch { res.status(400).send("Invalid url"); return; }
+  if (!["http:", "https:"].includes(target.protocol)) { res.status(400).send("Only http/https"); return; }
+  if (isPrivateHost(target.hostname)) { res.status(400).send("Private/internal URLs are not allowed"); return; }
+
+  try {
+    const upstream = await fetch(target.href, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "de,en;q=0.9",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(12_000),
+    });
+
+    const ct = upstream.headers.get("content-type") ?? "text/html";
+    if (!ct.includes("html")) { res.status(400).send("Not an HTML page"); return; }
+
+    let html = await upstream.text();
+    const baseTag = `<base href="${target.origin}${target.pathname}">`;
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, `$1${baseTag}`);
+    } else {
+      html = baseTag + html;
+    }
+    html = html.replace(/<meta[^>]+http-equiv=["']refresh["'][^>]*>/gi, "");
+
+    res
+      .status(upstream.status)
+      .setHeader("Content-Type", "text/html; charset=utf-8")
+      .setHeader("X-Frame-Options", "SAMEORIGIN")
+      .setHeader("Cache-Control", "no-store")
+      .send(html);
+  } catch (err) {
+    req.log.warn({ err, url: target.href }, "site-proxy fetch failed");
+    res.status(502).send("Could not fetch the site");
+  }
+});
 
 // All /admin/* routes require Basic Auth — public /clients/* routes below are unaffected
 router.use("/admin", requireDashboardAuth);
@@ -843,58 +924,6 @@ router.get("/admin/install-config", (_req: Request, res: Response) => {
   });
 });
 
-// Site proxy — strips X-Frame-Options/CSP so external sites can be embedded in the hub iframe
-router.get("/admin/site-proxy", async (req: Request, res: Response) => {
-  const raw = req.query.url as string | undefined;
-  if (!raw) { res.status(400).send("Missing url"); return; }
-
-  let target: URL;
-  try { target = new URL(raw); } catch { res.status(400).send("Invalid url"); return; }
-  if (!["http:", "https:"].includes(target.protocol)) { res.status(400).send("Only http/https"); return; }
-  if (isPrivateHost(target.hostname)) { res.status(400).send("Private/internal URLs are not allowed"); return; }
-
-  try {
-    const upstream = await fetch(target.href, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "de,en;q=0.9",
-      },
-      redirect: "follow",
-      signal: AbortSignal.timeout(12_000),
-    });
-
-    const ct = upstream.headers.get("content-type") ?? "text/html";
-    if (!ct.includes("html")) {
-      res.status(400).send("Not an HTML page");
-      return;
-    }
-
-    let html = await upstream.text();
-
-    // Inject <base> tag so all relative paths resolve against the original origin
-    const baseTag = `<base href="${target.origin}${target.pathname}">`;
-    if (/<head[^>]*>/i.test(html)) {
-      html = html.replace(/(<head[^>]*>)/i, `$1${baseTag}`);
-    } else {
-      html = baseTag + html;
-    }
-
-    // Strip meta refresh redirects that could escape the iframe
-    html = html.replace(/<meta[^>]+http-equiv=["']refresh["'][^>]*>/gi, "");
-
-    res
-      .status(upstream.status)
-      .setHeader("Content-Type", "text/html; charset=utf-8")
-      // Critical: do NOT forward X-Frame-Options or CSP from upstream
-      .setHeader("X-Frame-Options", "SAMEORIGIN")
-      .setHeader("Cache-Control", "no-store")
-      .send(html);
-  } catch (err) {
-    req.log.warn({ err, url: target.href }, "site-proxy fetch failed");
-    res.status(502).send("Could not fetch the site");
-  }
-});
 
 // ─── System Settings ─────────────────────────────────────────────────────────
 
