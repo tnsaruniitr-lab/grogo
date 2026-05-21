@@ -25,7 +25,7 @@ export default function ContactPage() {
           <a href="mailto:hello@growthmonk.ai">hello@growthmonk.ai</a>
         </li>
         <li><strong>WhatsApp / Phone:</strong>{" "}
-          <a href="https://wa.me/919461049307">+91 94610 49307</a>
+          <a href="https://wa.me/15558085030">+1 555 808 5030</a>
         </li>
         <li><strong>Website:</strong>{" "}
           <a href="https://growthmonk.ai">https://growthmonk.ai</a>
