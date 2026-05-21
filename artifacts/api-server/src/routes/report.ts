@@ -6,6 +6,22 @@ import { eq, and, gte, or } from "drizzle-orm";
 const router: IRouter = Router();
 
 /**
+ * Extracts the last occurrence of a key from the accumulated notes string.
+ * e.g. extractLastValue("Service: home nursing, City: Dubai\nService: physiotherapy", "Service")
+ *      → "physiotherapy"
+ */
+function extractLastValue(notes: string | null, key: string): string | null {
+  if (!notes) return null;
+  const regex = new RegExp(`${key}:\\s*([^,\\n]+)`, "gi");
+  let last: string | null = null;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(notes)) !== null) {
+    last = match[1]!.trim();
+  }
+  return last;
+}
+
+/**
  * GET /api/report/:slug/leads
  *
  * Cursor-managed leads report for external cron integrations (e.g. Alcude).
@@ -185,6 +201,8 @@ router.get("/report/:slug/leads", async (req: Request, res: Response) => {
       channel: l.source,
       status: l.status,
       language: l.language ?? null,
+      service_requested: extractLastValue(l.notes, "Service"),
+      city: extractLastValue(l.notes, "City"),
       notes: l.notes ?? null,
       summary: l.conversationSummary ?? null,
       lastContactAt: l.lastContactAt?.toISOString() ?? null,
