@@ -11,6 +11,7 @@ import { storagePublicRouter, storageUploadRouter } from "./storage";
 import crawlRouter from "./crawl";
 import extractBrandingRouter from "./extract-branding";
 import { requireDashboardAuth, requireDemoOrDashboardAuth } from "../lib/dashboard-auth";
+import reportRouter from "./report";
 
 const router: IRouter = Router();
 
@@ -20,6 +21,7 @@ router.use(webhookRouter);           // Twilio: signature-validated internally
 router.use(respondRouter);           // Respond.io: API-key-validated internally
 router.use(respondEventsRouter);     // Respond.io events: API-key-validated internally
 router.use(manychatRouter);          // ManyChat: x-api-key-validated internally
+router.use(reportRouter);            // /report/:slug/leads — x-api-key auth (demoToken)
 router.use(adminRouter);             // /clients/* public; /admin/* protected internally
 router.use(storagePublicRouter);     // GET /storage/objects/* and /storage/public-objects/* — public so Twilio can fetch media
 

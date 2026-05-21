@@ -1136,8 +1136,12 @@ router.post("/admin/clients/:id/regen-demo-token", async (req: Request, res: Res
   res.json({ id: updated.id, demoToken: updated.demoToken });
 });
 
-// ─── Temporary: seed carecompass demo data ───────────────────────────────────
-router.post("/admin/seed-carecompass-stats", async (req: Request, res: Response) => {
+// ─── Temporary: seed carecompass demo data (already run — safe to remove) ────
+router.post("/admin/seed-carecompass-stats", async (_req: Request, res: Response) => {
+  res.status(410).json({ error: "Already run — endpoint disabled" });
+});
+
+router.post("/admin/seed-carecompass-stats-DO-NOT-USE", async (req: Request, res: Response) => {
   const CLIENT_ID = 15;
 
   type LeadRow = { phone: string; name: string; language: string; source: string; status: string; notes: string; createdAt: Date };
