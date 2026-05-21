@@ -173,7 +173,7 @@ router.post("/webhook/twilio", async (req: Request, res: Response) => {
           clientId: clientRecord.id,
           phone: normalizedPhone,
           name: ProfileName ?? null,
-          source: "direct",
+          source: "whatsapp",
           status: "new",
           lastContactAt: new Date(),
         })
