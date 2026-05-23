@@ -907,6 +907,8 @@ components:
           type: ["string", "null"]
         defaultMessage:
           type: ["string", "null"]
+        demoPassword:
+          type: ["string", "null"]
 
     DemoClient:
       type: object

@@ -39,4 +39,6 @@ export interface BrandingConfig {
   twilioSender?: string | null;
   /** @nullable */
   defaultMessage?: string | null;
+  /** @nullable */
+  demoPassword?: string | null;
 }

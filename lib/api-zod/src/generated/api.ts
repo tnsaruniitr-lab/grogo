@@ -205,6 +205,7 @@ export const ExtractBrandingResponse = zod.object({
   heroImageUrl: zod.string().nullish(),
   twilioSender: zod.string().nullish(),
   defaultMessage: zod.string().nullish(),
+  demoPassword: zod.string().nullish(),
 });
 
 /**
@@ -237,6 +238,7 @@ export const ListDemoClientsResponseItem = zod.object({
     heroImageUrl: zod.string().nullish(),
     twilioSender: zod.string().nullish(),
     defaultMessage: zod.string().nullish(),
+    demoPassword: zod.string().nullish(),
   }),
 });
 export const ListDemoClientsResponse = zod.array(ListDemoClientsResponseItem);
@@ -267,6 +269,7 @@ export const CreateDemoClientBody = zod.object({
       heroImageUrl: zod.string().nullish(),
       twilioSender: zod.string().nullish(),
       defaultMessage: zod.string().nullish(),
+      demoPassword: zod.string().nullish(),
     })
     .optional(),
 });
@@ -301,6 +304,7 @@ export const UpdateDemoClientBody = zod.object({
       heroImageUrl: zod.string().nullish(),
       twilioSender: zod.string().nullish(),
       defaultMessage: zod.string().nullish(),
+      demoPassword: zod.string().nullish(),
     })
     .optional(),
 });
@@ -331,6 +335,7 @@ export const UpdateDemoClientResponse = zod.object({
     heroImageUrl: zod.string().nullish(),
     twilioSender: zod.string().nullish(),
     defaultMessage: zod.string().nullish(),
+    demoPassword: zod.string().nullish(),
   }),
 });
 
@@ -716,6 +721,7 @@ export const GetClientBrandingResponse = zod.object({
   heroImageUrl: zod.string().nullish(),
   twilioSender: zod.string().nullish(),
   defaultMessage: zod.string().nullish(),
+  demoPassword: zod.string().nullish(),
 });
 
 /**

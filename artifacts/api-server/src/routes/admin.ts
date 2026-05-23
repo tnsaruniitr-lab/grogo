@@ -290,18 +290,14 @@ router.patch("/admin/clients/:id", async (req: Request, res: Response) => {
   if (body.data.branding !== undefined) {
     const existingCfg = (existing.config ?? {}) as Record<string, unknown>;
     const newCfg = body.data.branding as Record<string, unknown>;
-    // Preserve fields not managed by the branding schema (demoPassword, mode)
-    // so a branding PATCH never silently wipes them.
-    const preserved: Record<string, unknown> = {};
-    if (existingCfg.demoPassword !== undefined) preserved.demoPassword = existingCfg.demoPassword;
-    if (existingCfg.mode !== undefined) preserved.mode = existingCfg.mode;
-    // If industryLocked is true in the existing config, protect the industry field
-    // regardless of what the incoming PATCH sends. The only way to change industry
-    // for a locked client is to explicitly send industryLocked: false first.
+    // Base the merge on existingCfg so a partial PATCH never wipes fields that
+    // weren't included in the request body. newCfg only contains keys explicitly
+    // sent (Zod strips absent optional fields), so this is a safe shallow merge.
+    // If industryLocked is true in the existing config, protect the industry field.
     if (existingCfg.industryLocked === true) {
-      updates.config = { ...preserved, ...newCfg, industryLocked: true, industry: existingCfg.industry };
+      updates.config = { ...existingCfg, ...newCfg, industryLocked: true, industry: existingCfg.industry };
     } else {
-      updates.config = { ...preserved, ...newCfg };
+      updates.config = { ...existingCfg, ...newCfg };
     }
     // Sync languagePrimary / languageSecondary columns from demoLanguages so
     // bot-pipeline language detection always reflects the current language config.
@@ -1292,6 +1288,33 @@ router.post("/admin/trim-dosteli1-bookings", async (_req: Request, res: Response
   const ids = toDelete.map((r) => r.id);
   await db.delete(appointmentsTable).where(inArray(appointmentsTable.id, ids));
   res.json({ deleted: ids.length, remaining: TARGET });
+});
+
+router.post("/admin/restore-dosteli1-branding", async (_req: Request, res: Response) => {
+  // Restores dosteli1 config after accidental PATCH wipe, clears demoPassword
+  const restoredConfig = {
+    city: "",
+    slug: "dosteli1",
+    phone: "",
+    logoUrl: "https://cdn.prod.website-files.com/61ea6c649fd65481a48a4584/61eacf37e31ddb4c60e24879_logo_dark.svg",
+    tagline: "Holistic support for those in need.",
+    industry: "care",
+    websiteUrl: "https://dosteli.de",
+    companyName: "Dosteli",
+    demoLanguage: "de",
+    demoPassword: "",
+    heroHeadline: "Culturally Sensitive Care Solutions",
+    heroImageUrl: "https://cdn.prod.website-files.com/61ea6c649fd65481a48a4584/63becf6c54f0813fb92ef78f_%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202023-01-11%20220132.png",
+    primaryColor: "#4A7C59",
+    demoLanguages: ["de", "tr"],
+    secondaryColor: "#2E86AB",
+  };
+  const [updated] = await db
+    .update(clientsTable)
+    .set({ config: restoredConfig, languagePrimary: "de", languageSecondary: "tr" })
+    .where(eq(clientsTable.id, 17))
+    .returning({ id: clientsTable.id, slug: clientsTable.slug, languagePrimary: clientsTable.languagePrimary, languageSecondary: clientsTable.languageSecondary });
+  res.json(updated ?? { error: "Client not found" });
 });
 
 router.post("/admin/fix-dosteli1-languages", async (_req: Request, res: Response) => {
