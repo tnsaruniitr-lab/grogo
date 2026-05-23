@@ -150,7 +150,8 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
   const fetchAssets = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/clients/${slug}/assets`);
+      const auth = getBasicAuthHeader();
+      const res = await fetch(`/api/admin/clients/${slug}/assets`, { headers: auth ? { Authorization: auth } : {} });
       if (!res.ok) throw new Error("Failed to fetch assets");
       const data = await res.json() as { assets: Asset[] };
       setAssets(data.assets);
@@ -262,9 +263,10 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
     }
     setSaving(true);
     try {
+      const auth = getBasicAuthHeader();
       const res = await fetch(`/api/admin/clients/${slug}/assets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(auth ? { Authorization: auth } : {}) },
         body: JSON.stringify({
           type: selectedType,
           label: form.label.trim(),
@@ -292,7 +294,8 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
     if (!confirm("Remove this asset? The bot will no longer be able to send it.")) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/clients/${slug}/assets/${id}`, { method: "DELETE" });
+      const auth = getBasicAuthHeader();
+      const res = await fetch(`/api/admin/clients/${slug}/assets/${id}`, { method: "DELETE", headers: auth ? { Authorization: auth } : {} });
       if (!res.ok) throw new Error("Delete failed");
       toast({ title: "Asset removed" });
       setAssets((prev) => prev.filter((a) => a.id !== id));
