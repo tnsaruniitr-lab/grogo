@@ -196,8 +196,8 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
     });
     if (!uploadRes.ok) throw new Error("File upload failed");
 
-    // Step 3: return relative serving path — the server normalises to the canonical domain at send time
-    return `/api/storage${objectPath}`;
+    // Step 3: return absolute serving URL (Zod requires a full URL on save)
+    return `${window.location.origin}/api/storage${objectPath}`;
   };
 
   const handleFileSelected = async (file: File) => {
