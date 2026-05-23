@@ -290,17 +290,18 @@ router.patch("/admin/clients/:id", async (req: Request, res: Response) => {
   if (body.data.branding !== undefined) {
     const existingCfg = (existing.config ?? {}) as Record<string, unknown>;
     const newCfg = body.data.branding as Record<string, unknown>;
+    // Preserve fields not managed by the branding schema (demoPassword, mode)
+    // so a branding PATCH never silently wipes them.
+    const preserved: Record<string, unknown> = {};
+    if (existingCfg.demoPassword !== undefined) preserved.demoPassword = existingCfg.demoPassword;
+    if (existingCfg.mode !== undefined) preserved.mode = existingCfg.mode;
     // If industryLocked is true in the existing config, protect the industry field
     // regardless of what the incoming PATCH sends. The only way to change industry
     // for a locked client is to explicitly send industryLocked: false first.
     if (existingCfg.industryLocked === true) {
-      updates.config = {
-        ...newCfg,
-        industryLocked: true,
-        industry: existingCfg.industry,
-      };
+      updates.config = { ...preserved, ...newCfg, industryLocked: true, industry: existingCfg.industry };
     } else {
-      updates.config = newCfg;
+      updates.config = { ...preserved, ...newCfg };
     }
   }
 
@@ -1121,6 +1122,27 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     requiresPassword: !!(cfg.demoPassword as string | null | undefined),
   };
 }
+
+router.post("/admin/clients/:id/set-demo-password", async (req: Request, res: Response) => {
+  const id = parseInt(req.params["id"] as string, 10);
+  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid id" }); return; }
+  const { password } = req.body as { password?: string };
+
+  const [client] = await db.select().from(clientsTable).where(eq(clientsTable.id, id)).limit(1);
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Not found" }); return; }
+
+  const cfg = (client.config ?? {}) as Record<string, unknown>;
+  let newCfg: Record<string, unknown>;
+  if (password) {
+    newCfg = { ...cfg, demoPassword: password };
+  } else {
+    const { demoPassword: _removed, ...rest } = cfg;
+    newCfg = rest;
+  }
+
+  await db.update(clientsTable).set({ config: newCfg }).where(eq(clientsTable.id, id));
+  res.json({ ok: true, hasPassword: !!password });
+});
 
 router.post("/clients/:slug/verify-demo-password", async (req: Request, res: Response) => {
   const slug = req.params["slug"] as string;
