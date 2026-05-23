@@ -1118,8 +1118,29 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     heroImageUrl: (cfg.heroImageUrl as string | null | undefined) ?? null,
     twilioSender: client.twilioSender ?? null,
     defaultMessage: (cfg.defaultMessage as string | null | undefined) ?? null,
+    requiresPassword: !!(cfg.demoPassword as string | null | undefined),
   };
 }
+
+router.post("/clients/:slug/verify-demo-password", async (req: Request, res: Response) => {
+  const slug = req.params["slug"] as string;
+  const { password } = req.body as { password?: string };
+  if (!password) { res.status(400).json({ error: "Missing password" }); return; }
+
+  const [client] = await db
+    .select()
+    .from(clientsTable)
+    .where(eq(clientsTable.slug, slug))
+    .limit(1);
+
+  if (!client || client.deletedAt) { res.status(404).json({ error: "Not found" }); return; }
+
+  const cfg = (client.config ?? {}) as Record<string, unknown>;
+  const stored = cfg.demoPassword as string | null | undefined;
+  if (!stored) { res.json({ ok: true }); return; }
+  if (stored !== password) { res.status(401).json({ error: "Wrong password" }); return; }
+  res.json({ ok: true });
+});
 
 router.post("/admin/clients/:id/regen-demo-token", async (req: Request, res: Response) => {
   const id = parseInt(req.params["id"] as string, 10);

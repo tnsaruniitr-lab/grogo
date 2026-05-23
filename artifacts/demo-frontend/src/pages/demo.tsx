@@ -90,6 +90,7 @@ interface BrandingConfig {
   vertical?: string | null;
   heroImageUrl?: string | null;
   twilioSender?: string | null;
+  requiresPassword?: boolean;
 }
 
 function resolveColors(branding: BrandingConfig): { primary: string; secondary: string } {
@@ -153,6 +154,11 @@ export default function DemoPage() {
   const [visibleMessages, setVisibleMessages] = useState(0);
   const [activeLang, setActiveLang] = useState<string>("en");
 
+  const [gateOpen, setGateOpen] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+
   useEffect(() => {
     if (!slug) return;
     Promise.all([
@@ -194,6 +200,41 @@ export default function DemoPage() {
         : (branding.demoLanguage ?? "en");
     setActiveLang(defaultLang);
   }, [branding?.slug]);
+
+  // ── Password gate: open if required and not yet unlocked this session ────
+  useEffect(() => {
+    if (!branding) return;
+    if (branding.requiresPassword) {
+      const unlocked = sessionStorage.getItem(`demo_access_${slug}`);
+      if (!unlocked) setGateOpen(true);
+    }
+  }, [branding?.slug]);
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pwInput.trim() || pwLoading) return;
+    setPwLoading(true);
+    try {
+      const res = await fetch(`/api/clients/${slug}/verify-demo-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pwInput.trim() }),
+      });
+      if (res.ok) {
+        sessionStorage.setItem(`demo_access_${slug}`, "1");
+        setGateOpen(false);
+      } else {
+        setPwError(true);
+        setPwInput("");
+        setTimeout(() => setPwError(false), 700);
+      }
+    } catch {
+      setPwError(true);
+      setTimeout(() => setPwError(false), 700);
+    } finally {
+      setPwLoading(false);
+    }
+  }
 
   // ── Client-side SEO: update <head> after React hydrates ──────────────────
   useEffect(() => {
@@ -282,6 +323,115 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-background">
+
+      {/* ── Password gate overlay ─────────────────────────────────────────────── */}
+      {gateOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 99999,
+            backdropFilter: "blur(18px) brightness(0.45)",
+            WebkitBackdropFilter: "blur(18px) brightness(0.45)",
+            background: "rgba(10,20,14,0.72)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "24px",
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.13)",
+              borderRadius: "20px",
+              boxShadow: "0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(74,124,89,0.18)",
+              padding: "40px 36px 36px",
+              width: "100%", maxWidth: "380px",
+              textAlign: "center",
+            }}
+          >
+            {/* Logo */}
+            {branding?.logoUrl && (
+              <img
+                src={branding.logoUrl}
+                alt={branding?.companyName}
+                style={{ height: "40px", objectFit: "contain", margin: "0 auto 24px", display: "block", filter: "brightness(0) invert(1)" }}
+              />
+            )}
+            {!branding?.logoUrl && (
+              <div style={{ fontSize: "22px", fontWeight: 700, color: "#fff", marginBottom: "24px", letterSpacing: "0.04em" }}>
+                {branding?.companyName}
+              </div>
+            )}
+
+            {/* Heading */}
+            <p style={{ color: "rgba(255,255,255,0.92)", fontSize: "16px", fontWeight: 600, marginBottom: "6px" }}>
+              Geschützte Demo
+            </p>
+            <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", marginBottom: "28px", lineHeight: 1.5 }}>
+              Bitte geben Sie das Passwort ein, um fortzufahren.
+            </p>
+
+            {/* Form */}
+            <form onSubmit={handlePasswordSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <input
+                type="password"
+                value={pwInput}
+                onChange={(e) => setPwInput(e.target.value)}
+                placeholder="Passwort"
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  border: pwError
+                    ? "1.5px solid #f87171"
+                    : "1.5px solid rgba(255,255,255,0.15)",
+                  background: "rgba(255,255,255,0.07)",
+                  color: "#fff",
+                  fontSize: "15px",
+                  outline: "none",
+                  transition: "border-color 0.2s",
+                  boxShadow: pwError ? "0 0 0 3px rgba(248,113,113,0.18)" : "none",
+                  animation: pwError ? "shake 0.35s ease" : "none",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={pwLoading || !pwInput.trim()}
+                style={{
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  background: primary,
+                  color: "#fff",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  cursor: pwLoading || !pwInput.trim() ? "not-allowed" : "pointer",
+                  opacity: pwLoading || !pwInput.trim() ? 0.6 : 1,
+                  transition: "opacity 0.15s",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {pwLoading ? "…" : "Weiter"}
+              </button>
+              {pwError && (
+                <p style={{ color: "#f87171", fontSize: "13px", margin: 0 }}>
+                  Falsches Passwort. Bitte erneut versuchen.
+                </p>
+              )}
+            </form>
+          </div>
+
+          <style>{`
+            @keyframes shake {
+              0%,100%{transform:translateX(0)}
+              20%{transform:translateX(-8px)}
+              40%{transform:translateX(8px)}
+              60%{transform:translateX(-5px)}
+              80%{transform:translateX(5px)}
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* ── Language switcher — fixed pill, only shown when 2+ languages are configured ── */}
       {(() => {
         const langs = Array.isArray(branding.demoLanguages) && branding.demoLanguages.length > 1
