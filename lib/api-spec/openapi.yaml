@@ -832,7 +832,7 @@ components:
 
     DashboardStats:
       type: object
-      required: [totalLeads, newLeads, qualifiedLeads, callbackBooked, escalated, needsHuman, bookedToday, newToday, contactedToday]
+      required: [totalLeads, newLeads, qualifiedLeads, callbackBooked, bookingCount, escalated, needsHuman, bookedToday, newToday, contactedToday]
       properties:
         totalLeads:
           type: integer
@@ -841,6 +841,8 @@ components:
         qualifiedLeads:
           type: integer
         callbackBooked:
+          type: integer
+        bookingCount:
           type: integer
         escalated:
           type: integer

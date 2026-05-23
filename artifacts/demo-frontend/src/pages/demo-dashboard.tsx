@@ -33,13 +33,13 @@ import { motion, AnimatePresence } from "framer-motion";
 const REFETCH_INTERVAL = 10000;
 
 // Last-week baseline for WoW comparison — kept small so growth always looks positive
-const LAST_WEEK = { totalLeads: 3, newLeads: 2, callbacks: 1, bookedToday: 2 };
+const LAST_WEEK = { totalLeads: 3, callbacks: 2, bookings: 1, bookedToday: 2 };
 
 // Demo floor: all stats always look active even on a fresh demo account
 const DEMO_FLOOR: Record<string, number> = {
   totalLeads: 12,
-  newLeads: 5,
   callbacks: 5,
+  bookings: 5,
   bookedToday: 5,
 };
 function demoStat(key: keyof typeof DEMO_FLOOR, value: number | undefined | null): number | undefined {
@@ -237,9 +237,9 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                 secondary={secondary}
               />
               <StatCard
-                title={t.stats.newLeads}
-                value={demoStat("newLeads", stats?.newLeads)}
-                lastWeek={LAST_WEEK.newLeads}
+                title={t.stats.callbacks}
+                value={demoStat("callbacks", stats?.callbackBooked)}
+                lastWeek={LAST_WEEK.callbacks}
                 loading={statsLoading}
                 icon={<PhoneCall className="h-5 w-5" />}
                 primary={primary}
@@ -247,9 +247,9 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
                 highlight
               />
               <StatCard
-                title={t.stats.callbacks}
-                value={demoStat("callbacks", stats?.callbackBooked)}
-                lastWeek={LAST_WEEK.callbacks}
+                title={t.stats.bookings}
+                value={demoStat("bookings", stats?.bookingCount)}
+                lastWeek={LAST_WEEK.bookings}
                 loading={statsLoading}
                 icon={<Calendar className="h-5 w-5" />}
                 primary={primary}

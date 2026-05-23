@@ -17,8 +17,8 @@ router.get("/dashboard/stats", async (req: Request, res: Response) => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const [statusRows, bookedTodayRows, newTodayRows, contactedTodayRows] = await Promise.all([
-    // Per-status counts
+  const [statusRows, apptTypeRows, bookedTodayRows, newTodayRows, contactedTodayRows] = await Promise.all([
+    // Per-status counts on leads
     db
       .select({
         status: leadsTable.status,
@@ -28,7 +28,17 @@ router.get("/dashboard/stats", async (req: Request, res: Response) => {
       .where(and(eq(leadsTable.clientId, clientId), isNull(leadsTable.deletedAt)))
       .groupBy(leadsTable.status),
 
-    // Appointments booked today
+    // Appointment counts by type — source of truth for callbacks & bookings
+    db
+      .select({
+        type: appointmentsTable.type,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(appointmentsTable)
+      .where(eq(appointmentsTable.clientId, clientId))
+      .groupBy(appointmentsTable.type),
+
+    // Appointments created today
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(appointmentsTable)
@@ -64,17 +74,21 @@ router.get("/dashboard/stats", async (req: Request, res: Response) => {
       ),
   ]);
 
-  const byStatus = Object.fromEntries(
-    statusRows.map((r) => [r.status, r.count]),
-  );
-
+  const byStatus = Object.fromEntries(statusRows.map((r) => [r.status, r.count]));
+  const byApptType = Object.fromEntries(apptTypeRows.map((r) => [r.type, r.count]));
   const totalLeads = statusRows.reduce((sum, r) => sum + r.count, 0);
+
+  // callbackBooked = actual callback appointments in the appointments table
+  const callbackBooked = byApptType["callback"] ?? 0;
+  // bookingCount = service booking appointments in the appointments table
+  const bookingCount = (byApptType["service_booking"] ?? 0) + (byApptType["online_consultation"] ?? 0) + (byApptType["walkin_consultation"] ?? 0);
 
   res.json({
     totalLeads,
     newLeads: byStatus["new"] ?? 0,
     qualifiedLeads: byStatus["qualified"] ?? 0,
-    callbackBooked: (byStatus["callback_booked"] ?? 0) + (byStatus["appointment_booked"] ?? 0),
+    callbackBooked,
+    bookingCount,
     escalated: byStatus["escalated"] ?? 0,
     needsHuman: byStatus["needs_human"] ?? 0,
     bookedToday: bookedTodayRows[0]?.count ?? 0,

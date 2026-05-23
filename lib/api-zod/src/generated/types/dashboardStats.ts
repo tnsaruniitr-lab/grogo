@@ -11,6 +11,7 @@ export interface DashboardStats {
   newLeads: number;
   qualifiedLeads: number;
   callbackBooked: number;
+  bookingCount: number;
   escalated: number;
   needsHuman: number;
   bookedToday: number;

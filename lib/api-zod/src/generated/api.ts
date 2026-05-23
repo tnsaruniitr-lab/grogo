@@ -28,6 +28,7 @@ export const GetDashboardStatsResponse = zod.object({
   newLeads: zod.number(),
   qualifiedLeads: zod.number(),
   callbackBooked: zod.number(),
+  bookingCount: zod.number(),
   escalated: zod.number(),
   needsHuman: zod.number(),
   bookedToday: zod.number(),

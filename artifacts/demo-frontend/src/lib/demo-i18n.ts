@@ -39,7 +39,7 @@ export interface DemoT {
   botMessages: Array<{ from: "bot" | "user"; text: string }>;
   // dashboard
   liveUpdate: string;
-  stats: { totalLeads: string; newLeads: string; callbacks: string; bookedToday: string };
+  stats: { totalLeads: string; callbacks: string; bookings: string; bookedToday: string };
   table: {
     contact: string; language: string; status: string; source: string;
     lastActivity: string; details: string; never: string;
@@ -101,7 +101,7 @@ const de: DemoT = {
     { from: "bot", text: "Wunderbar! Ich kann gerne einen kostenlosen Beratungstermin für Sie vereinbaren. Wann passt es Ihnen?" },
   ],
   liveUpdate: "Live-Aktualisierung alle 10 Sek.",
-  stats: { totalLeads: "Gesamt-Leads", newLeads: "Neu", callbacks: "Rückrufe", bookedToday: "Heute gebucht" },
+  stats: { totalLeads: "Gesamt-Leads", callbacks: "Rückrufe", bookings: "Buchungen", bookedToday: "Heute gebucht" },
   table: { contact: "Kontakt", language: "Sprache", status: "Status", source: "Quelle", lastActivity: "Letzte Aktivität", details: "Details", never: "Nie" },
   noLeads: { title: "Noch keine Leads vorhanden", desc: "Sobald der Bot aktiviert ist und WhatsApp-Nachrichten eingehen, erscheinen die Leads hier." },
   leads: "Aktuelle Leads",
@@ -160,7 +160,7 @@ const tr: DemoT = {
     { from: "bot", text: "Harika! Ücretsiz bir danışma randevusu ayarlayabilirim. Size ne zaman uygun?" },
   ],
   liveUpdate: "Her 10 saniyede canlı güncelleme",
-  stats: { totalLeads: "Toplam Kayıtlar", newLeads: "Yeni", callbacks: "Geri Aramalar", bookedToday: "Bugün Alınan" },
+  stats: { totalLeads: "Toplam Kayıtlar", callbacks: "Geri Aramalar", bookings: "Randevular", bookedToday: "Bugün Alınan" },
   table: { contact: "Kişi", language: "Dil", status: "Durum", source: "Kaynak", lastActivity: "Son Aktivite", details: "Detaylar", never: "Hiçbir zaman" },
   noLeads: { title: "Henüz kayıt yok", desc: "Bot etkinleştirilip WhatsApp mesajları gelmeye başladığında kayıtlar burada görünecek." },
   leads: "Güncel Kayıtlar",
@@ -219,7 +219,7 @@ const en: DemoT = {
     { from: "bot", text: "Great! I can arrange a free consultation for you. When would be a good time?" },
   ],
   liveUpdate: "Live updates every 10 seconds",
-  stats: { totalLeads: "Total Leads", newLeads: "New", callbacks: "Callbacks", bookedToday: "Booked Today" },
+  stats: { totalLeads: "Total Leads", callbacks: "Callbacks", bookings: "Bookings", bookedToday: "Booked Today" },
   table: { contact: "Contact", language: "Language", status: "Status", source: "Source", lastActivity: "Last Activity", details: "Details", never: "Never" },
   noLeads: { title: "No leads yet", desc: "Once the bot is active and WhatsApp messages start coming in, leads will appear here." },
   leads: "Recent Leads",
@@ -278,7 +278,7 @@ const ar: DemoT = {
     { from: "bot", text: "رائع! يمكنني ترتيب استشارة مجانية لك. متى يناسبك الوقت؟" },
   ],
   liveUpdate: "تحديثات مباشرة كل 10 ثوانٍ",
-  stats: { totalLeads: "إجمالي العملاء", newLeads: "جديد", callbacks: "معاودة الاتصال", bookedToday: "محجوز اليوم" },
+  stats: { totalLeads: "إجمالي العملاء", callbacks: "معاودة الاتصال", bookings: "الحجوزات", bookedToday: "محجوز اليوم" },
   table: { contact: "جهة الاتصال", language: "اللغة", status: "الحالة", source: "المصدر", lastActivity: "آخر نشاط", details: "التفاصيل", never: "أبداً" },
   noLeads: { title: "لا يوجد عملاء بعد", desc: "بمجرد تفعيل الروبوت وبدء وصول رسائل واتساب، ستظهر العملاء هنا." },
   leads: "العملاء الأخيرون",
