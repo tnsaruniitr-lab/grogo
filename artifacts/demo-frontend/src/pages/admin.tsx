@@ -78,6 +78,8 @@ interface BrandingConfig {
   city?: string | null;
   phone?: string | null;
   websiteUrl?: string | null;
+  demoLanguages?: string[];
+  demoLanguage?: string | null;
 }
 
 interface DemoClient {
@@ -109,6 +111,7 @@ export default function AdminPage() {
   const [knowledgeSlug, setKnowledgeSlug] = useState<string | null>(null);
   const [reviewSlug, setReviewSlug] = useState<string | null>(null);
   const [whatsappClient, setWhatsappClient] = useState<DemoClient | null>(null);
+  const [languagesClient, setLanguagesClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -289,6 +292,14 @@ export default function AdminPage() {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="gap-1.5 text-xs"
+                            onClick={() => setLanguagesClient(client)}
+                          >
+                            <Globe className="h-3 w-3" /> Languages
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="gap-1.5 text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
                             onClick={() => setWhatsappClient(client)}
                           >
@@ -337,6 +348,17 @@ export default function AdminPage() {
         <KnowledgeDialog
           slug={knowledgeSlug}
           onClose={() => setKnowledgeSlug(null)}
+        />
+      )}
+
+      {languagesClient && (
+        <LanguagesDialog
+          client={languagesClient}
+          onClose={() => setLanguagesClient(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+            setLanguagesClient(null);
+          }}
         />
       )}
 
@@ -811,6 +833,113 @@ function CreateDemoDialog({
           </Button>
         </div>
 
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LanguagesDialog({
+  client,
+  onClose,
+  onSaved,
+}: {
+  client: DemoClient;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const existing = client.branding.demoLanguages ?? (client.branding.demoLanguage ? [client.branding.demoLanguage] : ["en"]);
+  const [selected, setSelected] = useState<string[]>(existing);
+
+  const toggle = (code: string) => {
+    setSelected((prev) => {
+      if (prev.includes(code)) {
+        const next = prev.filter((l) => l !== code);
+        return next.length === 0 ? prev : next;
+      }
+      return [...prev, code];
+    });
+  };
+
+  const updateMutation = useUpdateDemoClient({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+        toast({ title: "Languages saved", description: "Bot detection updated." });
+        onSaved();
+      },
+      onError: () => {
+        toast({ title: "Error saving languages", variant: "destructive" });
+      },
+    },
+  });
+
+  const handleSave = () => {
+    const existingBranding = client.branding as unknown as Record<string, unknown>;
+    updateMutation.mutate({
+      id: client.id,
+      data: {
+        branding: {
+          ...existingBranding,
+          demoLanguages: selected,
+          demoLanguage: selected[0] ?? "en",
+        } as Parameters<typeof updateMutation.mutate>[0]["data"]["branding"],
+      },
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Languages — {client.branding.companyName}
+          </DialogTitle>
+          <DialogDescription>
+            Select all languages the bot should detect and respond in. The first selected becomes the default.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-2">
+          <div className="flex gap-2 flex-wrap">
+            {LANG_OPTIONS.map(({ value, label, flag }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => toggle(value)}
+                className={[
+                  "flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
+                  selected.includes(value)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/60",
+                ].join(" ")}
+              >
+                {flag} {label}
+              </button>
+            ))}
+          </div>
+          {selected.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Default: {LANG_OPTIONS.find((o) => o.value === selected[0])?.flag}{" "}
+              {LANG_OPTIONS.find((o) => o.value === selected[0])?.label}
+            </p>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={handleSave}
+            disabled={updateMutation.isPending || selected.length === 0}
+            className="gap-2"
+          >
+            {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
