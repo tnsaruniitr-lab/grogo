@@ -111,9 +111,9 @@ const CONFIGS: Record<string, HeroConfig> = {
     accent: "#E8A84C",
     bg: "#1A0E06",
     overlayH:
-      "linear-gradient(to right, rgba(26,14,6,0.55) 0%, rgba(42,24,8,0.22) 50%, rgba(26,14,6,0.05) 100%)",
+      "linear-gradient(to right, rgba(26,14,6,0.38) 0%, rgba(42,24,8,0.12) 50%, rgba(26,14,6,0.02) 100%)",
     overlayV:
-      "linear-gradient(to top, rgba(26,14,6,0.40) 0%, transparent 50%, rgba(26,14,6,0.12) 100%)",
+      "linear-gradient(to top, rgba(26,14,6,0.25) 0%, transparent 50%, rgba(26,14,6,0.06) 100%)",
     serif: "'Cormorant', serif",
     seriffontImport:
       "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap",
@@ -288,9 +288,9 @@ const CONFIGS: Record<string, HeroConfig> = {
     accent: "#3A9BBF",
     bg: "#040D12",
     overlayH:
-      "linear-gradient(to right, rgba(4,13,18,0.55) 0%, rgba(4,13,18,0.25) 50%, rgba(4,13,18,0.06) 100%)",
+      "linear-gradient(to right, rgba(4,13,18,0.38) 0%, rgba(4,13,18,0.12) 50%, rgba(4,13,18,0.02) 100%)",
     overlayV:
-      "linear-gradient(to top, rgba(4,13,18,0.40) 0%, transparent 50%, rgba(4,13,18,0.12) 100%)",
+      "linear-gradient(to top, rgba(4,13,18,0.25) 0%, transparent 50%, rgba(4,13,18,0.06) 100%)",
     serif: "'Cormorant', serif",
     seriffontImport:
       "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap",
@@ -307,9 +307,9 @@ const CONFIGS: Record<string, HeroConfig> = {
     accent: "#3A9BBF",
     bg: "#040D12",
     overlayH:
-      "linear-gradient(to right, rgba(4,13,18,0.55) 0%, rgba(4,13,18,0.25) 50%, rgba(4,13,18,0.06) 100%)",
+      "linear-gradient(to right, rgba(4,13,18,0.38) 0%, rgba(4,13,18,0.12) 50%, rgba(4,13,18,0.02) 100%)",
     overlayV:
-      "linear-gradient(to top, rgba(4,13,18,0.40) 0%, transparent 50%, rgba(4,13,18,0.12) 100%)",
+      "linear-gradient(to top, rgba(4,13,18,0.25) 0%, transparent 50%, rgba(4,13,18,0.06) 100%)",
     serif: "'Cormorant', serif",
     seriffontImport:
       "https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500&display=swap",
