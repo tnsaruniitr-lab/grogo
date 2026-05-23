@@ -1275,6 +1275,25 @@ router.post("/admin/seed-carecompass-stats-DO-NOT-USE", async (req: Request, res
 
   res.json({ leads: insertedLeads.length, appointments: insertedAppts.length });
 });
+router.post("/admin/trim-dosteli1-bookings", async (_req: Request, res: Response) => {
+  const CLIENT_ID = 17;
+  const TARGET = 5;
+  // Find IDs of all service_booking rows ordered oldest first
+  const rows = await db
+    .select({ id: appointmentsTable.id })
+    .from(appointmentsTable)
+    .where(and(eq(appointmentsTable.clientId, CLIENT_ID), eq(appointmentsTable.type, "service_booking")))
+    .orderBy(appointmentsTable.createdAt);
+  const toDelete = rows.slice(0, Math.max(0, rows.length - TARGET));
+  if (toDelete.length === 0) {
+    res.json({ deleted: 0, remaining: rows.length });
+    return;
+  }
+  const ids = toDelete.map((r) => r.id);
+  await db.delete(appointmentsTable).where(inArray(appointmentsTable.id, ids));
+  res.json({ deleted: ids.length, remaining: TARGET });
+});
+
 router.post("/admin/fix-dosteli1-languages", async (_req: Request, res: Response) => {
   const [updated] = await db
     .update(clientsTable)
