@@ -64,6 +64,11 @@ export interface IndustryTheme {
 // ─────────────────────────────────────────────────────────
 
 const aestheticsTheme: IndustryTheme = {
+  heroHeadlineI18n: {
+    de: "Ästhetische Perfektion, neu definiert",
+    en: "Aesthetic Perfection, Redefined",
+    tr: "Estetik Mükemmellik, Yeniden Tanımlandı",
+  },
   serviceIconNames: ["Sparkles", "Gem", "Star"],
   trustBadges: ["Certified Practitioners", "Personalised Treatments", "Discreet & Confidential", "Instant 24/7 Response"],
   cardStyle: "premium",
@@ -156,6 +161,11 @@ const aestheticsTheme: IndustryTheme = {
 };
 
 const medicalTheme: IndustryTheme = {
+  heroHeadlineI18n: {
+    de: "Medizinische Spitzenversorgung, nah bei Ihnen",
+    en: "Expert Medical Care, Right Here for You",
+    tr: "Uzman Tıbbi Bakım, Size Yakın",
+  },
   serviceIconNames: ["Stethoscope", "Activity", "Heart"],
   trustBadges: ["Licensed Medical Practice", "Registered Practitioners", "GDPR Compliant", "24/7 Patient Support"],
   cardStyle: "premium",
@@ -248,6 +258,11 @@ const medicalTheme: IndustryTheme = {
 };
 
 const dentalTheme: IndustryTheme = {
+  heroHeadlineI18n: {
+    de: "Ihr strahlendes Lächeln, unsere Leidenschaft",
+    en: "Your Perfect Smile, Our Passion",
+    tr: "Mükemmel Gülüşünüz, Tutkumuz",
+  },
   serviceIconNames: ["Smile", "Shield", "Sparkles"],
   trustBadges: ["GDC Registered", "Cosmetic & General Dentistry", "Emergency Appointments", "Gentle Patient Care"],
   cardStyle: "premium",
@@ -340,6 +355,11 @@ const dentalTheme: IndustryTheme = {
 };
 
 const wellnessTheme: IndustryTheme = {
+  heroHeadlineI18n: {
+    de: "Ihr Wohlbefinden, unser Antrieb",
+    en: "Your Wellbeing, Our Purpose",
+    tr: "İyiliğiniz, Amacımız",
+  },
   serviceIconNames: ["Leaf", "Heart", "Wind"],
   trustBadges: ["Certified Therapists", "Holistic Approach", "Personalised Programmes", "Science-Backed Methods"],
   cardStyle: "premium",
@@ -537,6 +557,11 @@ const careTheme: IndustryTheme = {
 };
 
 const defaultTheme: IndustryTheme = {
+  heroHeadlineI18n: {
+    de: "Professionelle Leistungen für Sie",
+    en: "Professional Services, Here for You",
+    tr: "Sizin İçin Profesyonel Hizmetler",
+  },
   serviceIconNames: ["Star", "Shield", "Users"],
   trustBadges: ["Professional Team", "Fast Response", "GDPR Compliant", "Fully Insured"],
   cardStyle: "standard",
@@ -640,6 +665,7 @@ const THEME_MAP: Record<string, IndustryTheme> = {
   dental: dentalTheme,
   wellness: wellnessTheme,
   care: careTheme,
+  healthcare: careTheme,
   hair: aestheticsTheme,
   "iv-therapy": aestheticsTheme,
   physiotherapy: medicalTheme,
