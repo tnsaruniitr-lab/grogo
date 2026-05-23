@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getBasicAuthHeader } from "@workspace/api-client-react";
 
 type AssetType = "calendly" | "loom" | "gmeet" | "pdf" | "image" | "custom";
 
@@ -177,9 +178,10 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
   // Upload a file: get presigned URL → PUT to GCS → return serving URL
   const uploadFile = async (file: File): Promise<string> => {
     // Step 1: request presigned URL
+    const auth = getBasicAuthHeader();
     const urlRes = await fetch("/api/storage/uploads/request-url", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(auth ? { Authorization: auth } : {}) },
       body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
     });
     if (!urlRes.ok) throw new Error("Failed to get upload URL");
