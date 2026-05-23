@@ -275,8 +275,9 @@ export function AssetsDialog({ slug, onClose }: { slug: string; onClose: () => v
         }),
       });
       if (!res.ok) {
-        const err = await res.json() as { error?: string };
-        throw new Error(err.error ?? "Create failed");
+        const err = await res.json() as { error?: unknown };
+        const msg = typeof err.error === "string" ? err.error : "Save failed";
+        throw new Error(msg);
       }
       toast({ title: "Asset saved", description: "The bot will now be able to send this on request" });
       setAdding(false);

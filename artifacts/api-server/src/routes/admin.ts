@@ -868,7 +868,7 @@ router.post("/admin/clients/:slug/assets", async (req: Request, res: Response) =
   if (!client || client.deletedAt) { res.status(404).json({ error: "Client not found" }); return; }
 
   const parsed = CreateAssetBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.issues.map((i) => i.message).join(", ") }); return; }
 
   const { type, label, url, serviceContext } = parsed.data;
   const { question, answer } = buildAssetEntry(type, label, url, serviceContext);
