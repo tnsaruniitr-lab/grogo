@@ -147,7 +147,12 @@ function buildSystemPrompt(
     })
     .join(",\n");
 
+  const todayStr = new Date().toISOString().slice(0, 10); // e.g. 2026-05-23
+
   return `You are a warm, professional ${profile.personaRole} for ${clientName}, ${profile.companyContext}.
+
+## Today's Date
+Today is ${todayStr}. Use this as the reference point for all appointment and callback dates. Never suggest or confirm a date that is in the past.
 
 ## Language Rule
 Always respond in ${langLabel(language)}. The conversation language is LOCKED.
