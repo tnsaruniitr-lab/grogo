@@ -35,6 +35,13 @@ const REFETCH_INTERVAL = 10000;
 // Last-week baseline for WoW comparison — kept small so growth always looks positive
 const LAST_WEEK = { totalLeads: 3, newLeads: 2, callbacks: 1, bookedToday: 2 };
 
+// Demo floor: bookings always look active even on a fresh demo account
+const DEMO_BOOKINGS_FLOOR = 5;
+function demoBookings(value: number | undefined | null): number | undefined {
+  if (value == null) return undefined;
+  return Math.max(DEMO_BOOKINGS_FLOOR, value);
+}
+
 interface BrandingConfig {
   clientId: number;
   companyName: string;
@@ -236,7 +243,7 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
               />
               <StatCard
                 title={t.stats.callbacks}
-                value={stats?.callbackBooked}
+                value={demoBookings(stats?.callbackBooked)}
                 lastWeek={LAST_WEEK.callbacks}
                 loading={statsLoading}
                 icon={<Calendar className="h-5 w-5" />}
@@ -245,7 +252,7 @@ function DemoDashboardContent({ branding }: { branding: BrandingConfig }) {
               />
               <StatCard
                 title={t.stats.bookedToday}
-                value={stats?.bookedToday}
+                value={demoBookings(stats?.bookedToday)}
                 lastWeek={LAST_WEEK.bookedToday}
                 loading={statsLoading}
                 icon={<MessageSquare className="h-5 w-5" />}
