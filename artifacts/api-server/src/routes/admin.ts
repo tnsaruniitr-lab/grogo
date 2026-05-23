@@ -1264,6 +1264,86 @@ router.post("/admin/seed-carecompass-stats-DO-NOT-USE", async (req: Request, res
 
   res.json({ leads: insertedLeads.length, appointments: insertedAppts.length });
 });
+router.post("/admin/seed-dosteli1-demo", async (_req: Request, res: Response) => {
+  const CLIENT_ID = 17;
+
+  type LeadRow = { phone: string; name: string; language: string; source: string; status: string; notes: string; createdAt: Date };
+  const leads: LeadRow[] = [
+    { phone: "+4917612345001", name: "Mehmet Yılmaz", language: "tr", source: "whatsapp_ad", status: "appointment_booked", notes: "Hizmet: Demans WG, Şehir: Köln, Kişi: annesi için", createdAt: new Date("2026-04-28T08:30:00Z") },
+    { phone: "+4917612345002", name: "Fatma Kaya", language: "tr", source: "instagram_ad", status: "callback_booked", notes: "Hizmet: Evde bakım, Şehir: Berlin, Kişi: babası", createdAt: new Date("2026-04-29T10:00:00Z") },
+    { phone: "+4917612345003", name: "Ingrid Müller", language: "de", source: "whatsapp_ad", status: "appointment_booked", notes: "Dienst: Ambulante Pflege, Stadt: Frankfurt, Person: Mutter", createdAt: new Date("2026-04-30T09:15:00Z") },
+    { phone: "+4917612345004", name: "Hüseyin Demir", language: "tr", source: "direct", status: "callback_booked", notes: "Hizmet: 24 saat bakım, Şehir: Stuttgart, Kişi: eşi", createdAt: new Date("2026-05-01T11:30:00Z") },
+    { phone: "+4917612345005", name: "Klaus Schneider", language: "de", source: "whatsapp_ad", status: "appointment_booked", notes: "Dienst: Demenz-WG, Stadt: München, Person: Vater mit Demenz", createdAt: new Date("2026-05-02T08:45:00Z") },
+    { phone: "+4917612345006", name: "Ayşe Çelik", language: "tr", source: "instagram_ad", status: "appointment_booked", notes: "Hizmet: Ambulant bakım, Şehir: Hamburg, Kişi: kayınvalidesi", createdAt: new Date("2026-05-03T13:00:00Z") },
+    { phone: "+4917612345007", name: "Thomas Becker", language: "de", source: "direct", status: "callback_booked", notes: "Dienst: 24h-Betreuung, Stadt: Düsseldorf, Person: Mutter, Pflegegrad 4", createdAt: new Date("2026-05-04T10:30:00Z") },
+    { phone: "+4917612345008", name: "Emine Arslan", language: "tr", source: "whatsapp_ad", status: "appointment_booked", notes: "Hizmet: Demans WG, Şehir: Köln, Kişi: annesi, Yer var mı?", createdAt: new Date("2026-05-05T09:00:00Z") },
+    { phone: "+4917612345009", name: "Hans-Peter Wagner", language: "de", source: "whatsapp_ad", status: "qualified", notes: "Dienst: Ambulante Pflege, Stadt: Bonn, Person: Ehefrau nach OP", createdAt: new Date("2026-05-06T14:00:00Z") },
+    { phone: "+4917612345010", name: "Zeynep Öztürk", language: "tr", source: "instagram_ad", status: "callback_booked", notes: "Hizmet: Evde bakım, Şehir: Frankfurt, Kişi: babası, Sabah uygun", createdAt: new Date("2026-05-07T08:00:00Z") },
+    { phone: "+4917612345011", name: "Ursula Hoffmann", language: "de", source: "direct", status: "appointment_booked", notes: "Dienst: Demenz-WG, Stadt: Köln, Person: Bruder mit Alzheimer", createdAt: new Date("2026-05-08T11:00:00Z") },
+    { phone: "+4917612345012", name: "Ali Şahin", language: "tr", source: "whatsapp_ad", status: "qualified", notes: "Hizmet: 24 saat bakım, Şehir: Berlin, Kişi: annesi Pflegegrad 3", createdAt: new Date("2026-05-09T15:30:00Z") },
+    { phone: "+4917612345013", name: "Brigitte Fischer", language: "de", source: "instagram_ad", status: "new", notes: "Dienst: Ambulante Pflege, Stadt: Hamburg, Person: Mutter", createdAt: new Date("2026-05-10T09:45:00Z") },
+    { phone: "+4917612345014", name: "Mustafa Polat", language: "tr", source: "whatsapp_ad", status: "appointment_booked", notes: "Hizmet: Demans WG, Şehir: Stuttgart, Kişi: babası demans teşhisi var", createdAt: new Date("2026-05-11T10:15:00Z") },
+    { phone: "+4917612345015", name: "Gisela Koch", language: "de", source: "direct", status: "callback_booked", notes: "Dienst: 24h-Pflege, Stadt: München, Person: Mann, Pflegegrad 5", createdAt: new Date("2026-05-12T13:00:00Z") },
+    { phone: "+4917612345016", name: "Hatice Yıldız", language: "tr", source: "instagram_ad", status: "new", notes: "Hizmet: Ambulant bakım, Şehir: Düsseldorf, Kişi: annesi", createdAt: new Date("2026-05-13T10:00:00Z") },
+    { phone: "+4917612345017", name: "Werner Richter", language: "de", source: "whatsapp_ad", status: "appointment_booked", notes: "Dienst: Ambulante Pflege, Stadt: Frankfurt, Person: Mutter nach Schlaganfall", createdAt: new Date("2026-05-14T08:30:00Z") },
+    { phone: "+4917612345018", name: "Elif Kılıç", language: "tr", source: "direct", status: "qualified", notes: "Hizmet: 24 saat bakım, Şehir: Köln, Kişi: kayınbabası", createdAt: new Date("2026-05-15T11:45:00Z") },
+    { phone: "+4917612345019", name: "Helga Braun", language: "de", source: "instagram_ad", status: "new", notes: "Dienst: Demenz-WG, Stadt: Berlin, Person: Vater, Warteliste möglich?", createdAt: new Date("2026-05-16T09:00:00Z") },
+    { phone: "+4917612345020", name: "İbrahim Güneş", language: "tr", source: "whatsapp_ad", status: "callback_booked", notes: "Hizmet: Evde bakım, Şehir: Hamburg, Kişi: annesi Pflegegrad 2", createdAt: new Date("2026-05-17T10:30:00Z") },
+    { phone: "+4917612345021", name: "Renate Weber", language: "de", source: "direct", status: "appointment_booked", notes: "Dienst: Ambulante Pflege, Stadt: Köln, Person: Schwiegermutter", createdAt: new Date("2026-05-19T08:00:00Z") },
+    { phone: "+4917612345022", name: "Selma Doğan", language: "tr", source: "instagram_ad", status: "new", notes: "Hizmet: Demans WG, Şehir: Frankfurt, Kişi: annesi, Fiyat bilgisi istedi", createdAt: new Date("2026-05-21T12:00:00Z") },
+  ];
+
+  const insertedLeads = await db.insert(leadsTable).values(
+    leads.map((l) => ({
+      clientId: CLIENT_ID,
+      phone: l.phone,
+      name: l.name,
+      language: l.language,
+      source: l.source,
+      status: l.status,
+      notes: l.notes,
+      createdAt: l.createdAt,
+    }))
+  ).returning({ id: leadsTable.id, status: leadsTable.status, createdAt: leadsTable.createdAt });
+
+  type ApptRow = { type: string; serviceRequested: string; preferredTime: string; outcome: string; confirmedAt: Date | null };
+  const apptTemplates: ApptRow[] = [
+    { type: "callback",         serviceRequested: "Demenz-WG — Anfrage Platz",              preferredTime: "Vormittags (9–11 Uhr)",     outcome: "completed", confirmedAt: new Date("2026-04-28T09:00:00Z") },
+    { type: "callback",         serviceRequested: "Evde bakım — genel bilgi",                preferredTime: "Sabah (9–11)",              outcome: "completed", confirmedAt: new Date("2026-04-29T09:30:00Z") },
+    { type: "service_booking",  serviceRequested: "Ambulante Pflege — täglich",              preferredTime: "Flexibel",                  outcome: "completed", confirmedAt: new Date("2026-04-30T10:00:00Z") },
+    { type: "callback",         serviceRequested: "24 saat bakım — başlangıç bilgisi",       preferredTime: "Öğleden sonra (14–16)",     outcome: "completed", confirmedAt: new Date("2026-05-01T14:00:00Z") },
+    { type: "service_booking",  serviceRequested: "Demenz-WG — Aufnahme Pflegegrad 4",       preferredTime: "So bald wie möglich",       outcome: "completed", confirmedAt: new Date("2026-05-02T09:00:00Z") },
+    { type: "service_booking",  serviceRequested: "Ambulant bakım — haftada 3 gün",          preferredTime: "Esnek",                     outcome: "completed", confirmedAt: new Date("2026-05-03T11:00:00Z") },
+    { type: "callback",         serviceRequested: "24h-Betreuung — Kostenübersicht",         preferredTime: "Vormittags",                outcome: "completed", confirmedAt: new Date("2026-05-04T10:00:00Z") },
+    { type: "service_booking",  serviceRequested: "Demenz-WG — Aufnahme Mutter",             preferredTime: "So bald wie möglich",       outcome: "pending",   confirmedAt: new Date("2026-05-05T09:30:00Z") },
+    { type: "callback",         serviceRequested: "Evde bakım — fiyat ve koşullar",          preferredTime: "Sabah",                     outcome: "completed", confirmedAt: new Date("2026-05-07T08:30:00Z") },
+    { type: "service_booking",  serviceRequested: "Demenz-WG — Bruder mit Alzheimer",        preferredTime: "Nachmittags (14–16 Uhr)",   outcome: "completed", confirmedAt: new Date("2026-05-08T14:00:00Z") },
+    { type: "service_booking",  serviceRequested: "Demenz WG — baba için yer",               preferredTime: "Mümkün olan en kısa süre", outcome: "pending",   confirmedAt: new Date("2026-05-11T10:00:00Z") },
+    { type: "callback",         serviceRequested: "24h-Pflege — Pflegegrad 5 Erstberatung",  preferredTime: "Nachmittags",               outcome: "completed", confirmedAt: new Date("2026-05-12T14:00:00Z") },
+    { type: "service_booking",  serviceRequested: "Ambulante Pflege — Mutter nach Schlaganfall", preferredTime: "Flexibel",             outcome: "pending",   confirmedAt: new Date("2026-05-14T09:00:00Z") },
+    { type: "callback",         serviceRequested: "Evde bakım — Pflegegrad 2 bilgisi",       preferredTime: "Öğleden sonra",            outcome: "pending",   confirmedAt: new Date("2026-05-17T11:00:00Z") },
+    { type: "service_booking",  serviceRequested: "Ambulante Pflege — Schwiegermutter",       preferredTime: "Vormittags (8–10 Uhr)",    outcome: "pending",   confirmedAt: new Date("2026-05-19T09:00:00Z") },
+  ];
+
+  const bookableLeads = insertedLeads.filter((l) =>
+    ["appointment_booked", "callback_booked"].includes(l.status)
+  );
+
+  const apptValues = bookableLeads.slice(0, apptTemplates.length).map((lead, i) => ({
+    clientId: CLIENT_ID,
+    leadId: lead.id,
+    type: apptTemplates[i]!.type,
+    serviceRequested: apptTemplates[i]!.serviceRequested,
+    preferredTime: apptTemplates[i]!.preferredTime,
+    outcome: apptTemplates[i]!.outcome,
+    confirmedAt: apptTemplates[i]!.confirmedAt,
+    createdAt: lead.createdAt,
+  }));
+
+  const insertedAppts = await db.insert(appointmentsTable).values(apptValues).returning({ id: appointmentsTable.id });
+
+  res.json({ leads: insertedLeads.length, appointments: insertedAppts.length });
+});
 // ─────────────────────────────────────────────────────────────────────────────
 
 function toClientResponse(client: typeof clientsTable.$inferSelect) {
