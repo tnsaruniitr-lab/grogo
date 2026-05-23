@@ -303,6 +303,17 @@ router.patch("/admin/clients/:id", async (req: Request, res: Response) => {
     } else {
       updates.config = { ...preserved, ...newCfg };
     }
+    // Sync languagePrimary / languageSecondary columns from demoLanguages so
+    // bot-pipeline language detection always reflects the current language config.
+    const demoLangs: string[] = Array.isArray(newCfg.demoLanguages)
+      ? (newCfg.demoLanguages as string[])
+      : typeof newCfg.demoLanguage === "string"
+        ? [newCfg.demoLanguage]
+        : [];
+    if (demoLangs.length > 0) {
+      updates.languagePrimary = demoLangs[0] ?? existing.languagePrimary;
+      updates.languageSecondary = demoLangs[1] ?? null;
+    }
   }
 
   const [updated] = await db
@@ -1264,6 +1275,15 @@ router.post("/admin/seed-carecompass-stats-DO-NOT-USE", async (req: Request, res
 
   res.json({ leads: insertedLeads.length, appointments: insertedAppts.length });
 });
+router.post("/admin/fix-dosteli1-languages", async (_req: Request, res: Response) => {
+  const [updated] = await db
+    .update(clientsTable)
+    .set({ languagePrimary: "de", languageSecondary: "tr" })
+    .where(eq(clientsTable.slug, "dosteli1"))
+    .returning({ id: clientsTable.id, languagePrimary: clientsTable.languagePrimary, languageSecondary: clientsTable.languageSecondary });
+  res.json(updated ?? { error: "Client not found" });
+});
+
 router.post("/admin/seed-dosteli1-demo", async (_req: Request, res: Response) => {
   const CLIENT_ID = 17;
 
