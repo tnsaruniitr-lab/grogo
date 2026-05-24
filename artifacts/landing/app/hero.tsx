@@ -101,6 +101,13 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
   const [wordVisible, setWordVisible] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+
+  // iOS Safari won't autoplay even with muted+playsInline without an explicit .play() call
+  useEffect(() => {
+    const videos = videoContainerRef.current?.querySelectorAll("video");
+    videos?.forEach((v) => { v.play().catch(() => {}); });
+  }, []);
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
@@ -174,6 +181,12 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
         .vh-in4 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.55s both; }
         .vh-in5 { animation: riseVH 0.9s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
         .vh-glow { animation: glowPulseVH 2s ease-in-out infinite; }
+        video::-webkit-media-controls,
+        video::-webkit-media-controls-panel,
+        video::-webkit-media-controls-play-button,
+        video::-webkit-media-controls-start-playback-button,
+        video::-webkit-media-controls-overlay-play-button,
+        video::-webkit-media-controls-enclosure { display: none !important; -webkit-appearance: none; }
         .gm-menu-dropdown {
           position: absolute;
           top: 100%;
@@ -211,21 +224,21 @@ export function VideoHero({ t, lang }: { t: Translations; lang: Lang }) {
         }
       ` }} />
 
-      {/* Video backgrounds */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-        <video autoPlay muted loop playsInline className="vh-vid1" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}>
+      {/* Video backgrounds — pointer-events:none prevents touch-drag jank on iOS */}
+      <div ref={videoContainerRef} style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}>
+        <video autoPlay muted loop playsInline className="vh-vid1" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}>
           <source src="/videos/care-compassion.mp4" type="video/mp4" />
         </video>
-        <video autoPlay muted loop playsInline className="vh-vid2" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
+        <video autoPlay muted loop playsInline className="vh-vid2" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, pointerEvents: "none" }}>
           <source src="/videos/wellness-meditation.mp4" type="video/mp4" />
         </video>
-        <video autoPlay muted loop playsInline className="vh-vid3" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
+        <video autoPlay muted loop playsInline className="vh-vid3" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, pointerEvents: "none" }}>
           <source src="/videos/medspa-treatment.mp4" type="video/mp4" />
         </video>
-        <video autoPlay muted loop playsInline className="vh-vid4" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
+        <video autoPlay muted loop playsInline className="vh-vid4" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, pointerEvents: "none" }}>
           <source src="/videos/dental-smile.mp4" type="video/mp4" />
         </video>
-        <video autoPlay muted loop playsInline className="vh-vid5" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 }}>
+        <video autoPlay muted loop playsInline className="vh-vid5" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, pointerEvents: "none" }}>
           <source src="/videos/physio-rehab.mp4" type="video/mp4" />
         </video>
       </div>
