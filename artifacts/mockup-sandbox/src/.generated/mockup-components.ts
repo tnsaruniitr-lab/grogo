@@ -36,6 +36,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-heroes/CosmeticSurgeryV3.tsx": () => import("../components/mockups/landing-heroes/CosmeticSurgeryV3.tsx"),
   "./components/mockups/landing-heroes/DentalV3.tsx": () => import("../components/mockups/landing-heroes/DentalV3.tsx"),
   "./components/mockups/landing-heroes/FertilityV3.tsx": () => import("../components/mockups/landing-heroes/FertilityV3.tsx"),
+  "./components/mockups/landing-heroes/GroceryD2CV3.tsx": () => import("../components/mockups/landing-heroes/GroceryD2CV3.tsx"),
   "./components/mockups/landing-heroes/GrowthMonkMultiV2.tsx": () => import("../components/mockups/landing-heroes/GrowthMonkMultiV2.tsx"),
   "./components/mockups/landing-heroes/HairClinicV3.tsx": () => import("../components/mockups/landing-heroes/HairClinicV3.tsx"),
   "./components/mockups/landing-heroes/HealthcareZoomOut.tsx": () => import("../components/mockups/landing-heroes/HealthcareZoomOut.tsx"),
