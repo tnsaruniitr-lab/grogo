@@ -765,13 +765,16 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     intentDetected?: string;
   }[] = [];
 
+  // Appointment DB ops collected here — run in parallel with Twilio send later.
+  const appointmentOps: Promise<unknown>[] = [];
+
   // ── Action handler blocks ──────────────────────────────────────────────────
 
   if (resolvedAction === "book_service") {
     const timeParts = [appointmentDate, appointmentTime].filter(Boolean);
     const timing = timeParts.length > 0 ? timeParts.join(" ") : preferredTime;
 
-    await db.insert(appointmentsTable).values({
+    appointmentOps.push(db.insert(appointmentsTable).values({
       clientId: clientRecord.id,
       leadId,
       type: "service_booking",
@@ -784,7 +787,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       ]
         .filter(Boolean)
         .join(" · "),
-    });
+    }));
 
     const notifBody =
       language === "tr"
@@ -806,7 +809,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     const timeParts = [appointmentDate, appointmentTime].filter(Boolean);
     const timing = timeParts.length > 0 ? timeParts.join(" ") : preferredTime;
 
-    await db.insert(appointmentsTable).values({
+    appointmentOps.push(db.insert(appointmentsTable).values({
       clientId: clientRecord.id,
       leadId,
       type: "online_consultation",
@@ -814,7 +817,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       preferredTime: timing ?? undefined,
       outcome: "pending",
       notes: `Online consultation via bot (${language})`,
-    });
+    }));
 
     const notifBody =
       language === "tr"
@@ -836,7 +839,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     const timeParts = [appointmentDate, appointmentTime].filter(Boolean);
     const timing = timeParts.length > 0 ? timeParts.join(" ") : preferredTime;
 
-    await db.insert(appointmentsTable).values({
+    appointmentOps.push(db.insert(appointmentsTable).values({
       clientId: clientRecord.id,
       leadId,
       type: "walkin_consultation",
@@ -844,7 +847,7 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
       preferredTime: timing ?? undefined,
       outcome: "pending",
       notes: `Walk-in consultation via bot (${language})`,
-    });
+    }));
 
     const notifBody =
       language === "tr"
@@ -863,14 +866,14 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
   }
 
   if (resolvedAction === "book_callback") {
-    await db.insert(appointmentsTable).values({
+    appointmentOps.push(db.insert(appointmentsTable).values({
       clientId: clientRecord.id,
       leadId,
       type: "callback",
       preferredTime: preferredTime ?? undefined,
       outcome: "pending",
       notes: `Callback via WhatsApp bot (${language}, ${industry ?? "generic"})`,
-    });
+    }));
 
     const notifBody =
       language === "tr"
@@ -938,24 +941,29 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
 
   leadUpdates.conversationSummary = buildSummary(lead, botResponse, language, preferredTime);
 
-  // All DB side-effects before Twilio send
-  await db.update(leadsTable).set(leadUpdates).where(eq(leadsTable.id, leadId));
-
-  // 9. Conversation entries
-  for (const entry of notificationInserts) {
-    await db.insert(conversationsTable).values(entry);
-  }
-
-  await db.insert(conversationsTable).values({
-    clientId: clientRecord.id,
-    leadId,
-    direction: "outbound",
-    body: botResponse.reply,
-    intentDetected: botResponse.intent,
-  });
-
-  // 10. Twilio reply (text — always sent first)
-  await sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply);
+  // 9-10. DB writes + Twilio send run in parallel — the reply no longer sits
+  // behind sequential DB round-trips, saving ~300ms per message.
+  // DB branch: lead update first (status/notes), then all inserts in parallel.
+  // Twilio branch: fires immediately alongside the DB branch.
+  await Promise.all([
+    (async () => {
+      await Promise.all([
+        db.update(leadsTable).set(leadUpdates).where(eq(leadsTable.id, leadId)),
+        ...appointmentOps,
+      ]);
+      await Promise.all([
+        ...notificationInserts.map((entry) => db.insert(conversationsTable).values(entry)),
+        db.insert(conversationsTable).values({
+          clientId: clientRecord.id,
+          leadId,
+          direction: "outbound",
+          body: botResponse.reply,
+          intentDetected: botResponse.intent,
+        }),
+      ]);
+    })(),
+    sendWhatsAppReply(twilioSender, `whatsapp:${userPhone}`, botResponse.reply),
+  ]);
 
   // 10a. Send media assets resolved by the asset resolver (image / PDF).
   // assetResult is populated in step 6c when GPT signals requestedAssetType.

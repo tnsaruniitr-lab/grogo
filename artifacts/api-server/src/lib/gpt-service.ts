@@ -258,7 +258,7 @@ const FALLBACK_REPLIES: Record<string, string> = {
   en: "Would you like me to arrange a callback from our team? We're available Monday–Friday, 8am–6pm.",
 };
 
-const HISTORY_CAP = 12; // keep last 12 messages (~6 exchanges) — balances context vs latency
+const HISTORY_CAP = 8; // keep last 8 messages (~4 exchanges) — balances context vs latency
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile, model, mustNotClaim } =
@@ -277,7 +277,7 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   try {
     const completion = await openai.chat.completions.create({
       model: model ?? "gpt-4o-mini",
-      max_completion_tokens: 1024,
+      max_completion_tokens: 600,
       messages,
       response_format: { type: "json_object" },
     });
