@@ -8,17 +8,22 @@ export function LaserPrecision() {
     const ctx = canvas.getContext("2d")!;
     let animationId: number;
     let time = 0;
+    let cw = 0;
+    let ch = 0;
 
-    const resize = () => {
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    const setSize = (w: number, h: number) => {
+      cw = w;
+      ch = h;
+      canvas.width = w * window.devicePixelRatio;
+      canvas.height = h * window.devicePixelRatio;
+      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
     };
-    resize();
-    window.addEventListener("resize", resize);
 
-    const W = () => canvas.offsetWidth;
-    const H = () => canvas.offsetHeight;
+    const ro = new ResizeObserver((entries) => {
+      const e = entries[0].contentRect;
+      setSize(e.width, e.height);
+    });
+    ro.observe(canvas);
 
     const particles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number; color: string }[] = [];
     const COLORS = ["#a8d8ff", "#c8eaff", "#e0f4ff", "#b0ccff", "#80b8f0"];
@@ -34,20 +39,16 @@ export function LaserPrecision() {
       });
     }
 
-    const scanLines: { y: number; speed: number; width: number; alpha: number }[] = [];
-    for (let i = 0; i < 3; i++) {
-      scanLines.push({
-        y: Math.random() * 800,
-        speed: Math.random() * 0.3 + 0.15,
-        width: Math.random() * 2 + 1,
-        alpha: Math.random() * 0.3 + 0.15,
-      });
-    }
+    const scanLines = [
+      { y: 200, speed: 0.25, alpha: 0.22 },
+      { y: 500, speed: 0.18, alpha: 0.16 },
+      { y: 350, speed: 0.32, alpha: 0.18 },
+    ];
 
     const draw = () => {
       time += 0.008;
-      const w = W();
-      const h = H();
+      const w = cw || window.innerWidth;
+      const h = ch || window.innerHeight;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -73,15 +74,12 @@ export function LaserPrecision() {
       }
 
       for (let ring = 1; ring <= 5; ring++) {
-        const phase = (time * 0.5 + ring * 0.4) % (Math.PI * 2);
-        const r = 30 + ring * 60 + Math.sin(phase) * 10;
-        const cx = w * 0.5;
-        const cy = h * 0.5;
+        const r = 30 + ring * 60 + Math.sin(time + ring) * 10;
         const alpha = Math.max(0, 0.18 - ring * 0.025) * (0.6 + 0.4 * Math.sin(time + ring));
         ctx.strokeStyle = `rgba(80,160,240,${alpha})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.arc(w * 0.5, h * 0.5, r, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -97,8 +95,7 @@ export function LaserPrecision() {
       }
 
       for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx; p.y += p.vy;
         if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
         if (p.x < -10) p.x = w + 10;
         if (p.x > w + 10) p.x = -10;
@@ -110,25 +107,21 @@ export function LaserPrecision() {
       }
       ctx.globalAlpha = 1;
 
-      const lines = [
-        { x1: w * 0.05, y1: h * 0.5, x2: w * 0.95, y2: h * 0.5 },
-        { x1: w * 0.5, y1: h * 0.05, x2: w * 0.5, y2: h * 0.95 },
-      ];
-      for (const l of lines) {
-        const g = ctx.createLinearGradient(l.x1, l.y1, l.x2, l.y2);
+      ctx.setLineDash([6, 14]);
+      for (const [x1, y1, x2, y2] of [[w * 0.05, h * 0.5, w * 0.95, h * 0.5], [w * 0.5, h * 0.05, w * 0.5, h * 0.95]]) {
+        const g = ctx.createLinearGradient(x1, y1, x2, y2);
         const pulse = 0.04 + 0.03 * Math.sin(time * 1.2);
         g.addColorStop(0, "rgba(80,160,240,0)");
         g.addColorStop(0.5, `rgba(80,160,240,${pulse})`);
         g.addColorStop(1, "rgba(80,160,240,0)");
         ctx.strokeStyle = g;
         ctx.lineWidth = 1;
-        ctx.setLineDash([6, 14]);
         ctx.beginPath();
-        ctx.moveTo(l.x1, l.y1);
-        ctx.lineTo(l.x2, l.y2);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
-        ctx.setLineDash([]);
       }
+      ctx.setLineDash([]);
 
       animationId = requestAnimationFrame(draw);
     };
@@ -136,61 +129,30 @@ export function LaserPrecision() {
     draw();
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", resize);
+      ro.disconnect();
     };
   }, []);
 
   return (
     <div className="relative w-full h-screen overflow-hidden" style={{ background: "#f0f8ff" }}>
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
-        <p
-          className="text-xs font-semibold uppercase tracking-[0.3em] mb-5"
-          style={{ color: "#5a9fd4", fontFamily: "Montserrat, sans-serif" }}
-        >
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] mb-5" style={{ color: "#5a9fd4", fontFamily: "Montserrat, sans-serif" }}>
           BellaDerma · Berlin Charlottenburg
         </p>
-        <h1
-          className="text-6xl font-bold leading-tight mb-6"
-          style={{
-            color: "#1a3a5c",
-            fontFamily: "Playfair Display, serif",
-            textShadow: "0 2px 20px rgba(100,180,255,0.3)",
-          }}
-        >
-          Laser Hair
-          <br />
+        <h1 className="text-6xl font-bold leading-tight mb-6" style={{ color: "#1a3a5c", fontFamily: "Playfair Display, serif", textShadow: "0 2px 20px rgba(100,180,255,0.3)" }}>
+          Laser Hair<br />
           <span style={{ color: "#3a8fd0" }}>Removal Berlin</span>
         </h1>
-        <p
-          className="text-lg max-w-md mb-8"
-          style={{ color: "#4a6a88", fontFamily: "Montserrat, sans-serif", lineHeight: 1.7 }}
-        >
-          Permanent results. Medical precision.
-          <br />
+        <p className="text-lg max-w-md mb-8" style={{ color: "#4a6a88", fontFamily: "Montserrat, sans-serif", lineHeight: 1.7 }}>
+          Permanent results. Medical precision.<br />
           Since 2006 — over 19 years of expertise.
         </p>
-        <button
-          className="px-8 py-3 rounded-full text-sm font-semibold tracking-widest uppercase"
-          style={{
-            background: "linear-gradient(135deg, #3a8fd0, #5ab4f0)",
-            color: "#fff",
-            fontFamily: "Montserrat, sans-serif",
-            boxShadow: "0 4px 24px rgba(58,143,208,0.4)",
-            border: "none",
-          }}
-        >
+        <button className="px-8 py-3 rounded-full text-sm font-semibold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #3a8fd0, #5ab4f0)", color: "#fff", fontFamily: "Montserrat, sans-serif", boxShadow: "0 4px 24px rgba(58,143,208,0.4)", border: "none" }}>
           Book Appointment
         </button>
       </div>
-
-      <div
-        className="absolute bottom-0 left-0 right-0 h-24"
-        style={{
-          background: "linear-gradient(to top, rgba(248,251,255,0.9), transparent)",
-        }}
-      />
+      <div className="absolute bottom-0 left-0 right-0 h-24" style={{ background: "linear-gradient(to top, rgba(248,251,255,0.9), transparent)" }} />
     </div>
   );
 }
