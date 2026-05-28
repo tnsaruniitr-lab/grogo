@@ -4,7 +4,7 @@ import { requireDashboardAuth } from "../lib/dashboard-auth";
 import { isPrivateHost } from "../lib/ssrf-guard";
 import { db } from "@workspace/db";
 import { clientsTable, companyKnowledgeTable, clientProfilesTable, leadsTable, appointmentsTable } from "@workspace/db";
-import { eq, isNull, and, inArray, asc, desc, ne } from "drizzle-orm";
+import { eq, isNull, isNotNull, and, inArray, asc, desc, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import { extractBrand } from "../lib/brand-extractor";
 import {
@@ -216,6 +216,9 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
     res.status(400).json({ error: `Slug "${slug}" is already in use` });
     return;
   }
+
+  // Purge any soft-deleted tombstone with the same slug so the DB UNIQUE constraint allows reuse
+  await db.delete(clientsTable).where(and(eq(clientsTable.slug, slug), isNotNull(clientsTable.deletedAt)));
 
   // Raw body branding preserves fields Zod strips (mode, businessDescription, etc.)
   const rawBranding = (req.body?.branding ?? {}) as Record<string, unknown>;
@@ -1446,6 +1449,9 @@ router.post("/admin/clients/:id/duplicate", async (req: Request, res: Response) 
     if (!free) { res.status(409).json({ error: "Could not auto-generate a free slug — please provide one" }); return; }
     newSlug = free;
   }
+
+  // Purge any soft-deleted tombstone with the same slug so the DB UNIQUE constraint allows reuse
+  await db.delete(clientsTable).where(and(eq(clientsTable.slug, newSlug), isNotNull(clientsTable.deletedAt)));
 
   // Copy config, update slug + force manual mode so KB shows as ready without a crawl job
   const srcCfg = (source.config ?? {}) as Record<string, unknown>;
