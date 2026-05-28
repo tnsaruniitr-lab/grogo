@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { IndustryPicker } from "@/components/heroes/IndustryPicker";
 import { V3Hero } from "@/components/heroes/V3Hero";
+import { BellaDermaHero } from "@/components/heroes/BellaDermaHero";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Home: HomeIcon, Heart, Users, Sparkles, Gem, Star,
@@ -470,23 +471,37 @@ export default function DemoPage() {
         {/* transparent — nav is inside V3Hero itself */}
       </div>
 
-      {/* ── V3 VIDEO HERO ── */}
-      <V3Hero
-        industry={branding.industry}
-        companyName={branding.companyName}
-        logoUrl={branding.logoUrl}
-        headline={headline}
-        subtext={subtext}
-        phone={branding.phone}
-        city={branding.city}
-        onCtaClick={() =>
-          document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
-        }
-        preview={isPreview}
-        previewImageUrl={getIndustryImage(branding.industry)}
-        lang={lang}
-        brandColor={branding.primaryColor}
-      />
+      {/* ── HERO ── BellaDerma gets its own multi-video crossfade hero */}
+      {branding.slug === "belladerma" ? (
+        <BellaDermaHero
+          companyName={branding.companyName}
+          logoUrl={branding.logoUrl}
+          headline={headline}
+          subtext={subtext}
+          phone={branding.phone}
+          city={branding.city}
+          onCtaClick={() =>
+            document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
+          }
+        />
+      ) : (
+        <V3Hero
+          industry={branding.industry}
+          companyName={branding.companyName}
+          logoUrl={branding.logoUrl}
+          headline={headline}
+          subtext={subtext}
+          phone={branding.phone}
+          city={branding.city}
+          onCtaClick={() =>
+            document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
+          }
+          preview={isPreview}
+          previewImageUrl={getIndustryImage(branding.industry)}
+          lang={lang}
+          brandColor={branding.primaryColor}
+        />
+      )}
 
       {/* Thin accent line between hero and body */}
       <div className="h-1 w-full" style={{ backgroundColor: primary }} />
