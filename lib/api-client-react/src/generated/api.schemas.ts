@@ -131,6 +131,8 @@ export interface BrandingConfig {
   defaultMessage?: string | null;
   /** @nullable */
   demoPassword?: string | null;
+  /** @nullable */
+  liveChatModel?: string | null;
 }
 
 export interface DemoClient {

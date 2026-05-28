@@ -206,6 +206,7 @@ export const ExtractBrandingResponse = zod.object({
   twilioSender: zod.string().nullish(),
   defaultMessage: zod.string().nullish(),
   demoPassword: zod.string().nullish(),
+  liveChatModel: zod.string().nullish(),
 });
 
 /**
@@ -239,6 +240,7 @@ export const ListDemoClientsResponseItem = zod.object({
     twilioSender: zod.string().nullish(),
     defaultMessage: zod.string().nullish(),
     demoPassword: zod.string().nullish(),
+    liveChatModel: zod.string().nullish(),
   }),
 });
 export const ListDemoClientsResponse = zod.array(ListDemoClientsResponseItem);
@@ -270,6 +272,7 @@ export const CreateDemoClientBody = zod.object({
       twilioSender: zod.string().nullish(),
       defaultMessage: zod.string().nullish(),
       demoPassword: zod.string().nullish(),
+      liveChatModel: zod.string().nullish(),
     })
     .optional(),
 });
@@ -305,6 +308,7 @@ export const UpdateDemoClientBody = zod.object({
       twilioSender: zod.string().nullish(),
       defaultMessage: zod.string().nullish(),
       demoPassword: zod.string().nullish(),
+      liveChatModel: zod.string().nullish(),
     })
     .optional(),
 });
@@ -336,6 +340,7 @@ export const UpdateDemoClientResponse = zod.object({
     twilioSender: zod.string().nullish(),
     defaultMessage: zod.string().nullish(),
     demoPassword: zod.string().nullish(),
+    liveChatModel: zod.string().nullish(),
   }),
 });
 
@@ -722,6 +727,7 @@ export const GetClientBrandingResponse = zod.object({
   twilioSender: zod.string().nullish(),
   defaultMessage: zod.string().nullish(),
   demoPassword: zod.string().nullish(),
+  liveChatModel: zod.string().nullish(),
 });
 
 /**

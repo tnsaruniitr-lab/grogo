@@ -61,6 +61,7 @@ import {
   ChevronDown,
   ChevronUp,
   Settings2,
+  Cpu,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
@@ -80,6 +81,7 @@ interface BrandingConfig {
   websiteUrl?: string | null;
   demoLanguages?: string[];
   demoLanguage?: string | null;
+  liveChatModel?: string | null;
 }
 
 interface DemoClient {
@@ -112,6 +114,7 @@ export default function AdminPage() {
   const [reviewSlug, setReviewSlug] = useState<string | null>(null);
   const [whatsappClient, setWhatsappClient] = useState<DemoClient | null>(null);
   const [languagesClient, setLanguagesClient] = useState<DemoClient | null>(null);
+  const [modelClient, setModelClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -300,6 +303,17 @@ export default function AdminPage() {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="gap-1.5 text-xs"
+                            onClick={() => setModelClient(client)}
+                          >
+                            <Cpu className="h-3 w-3" />
+                            {client.branding.liveChatModel
+                              ? client.branding.liveChatModel.replace("gpt-", "").replace("o-mini", "o mini")
+                              : "Model"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="gap-1.5 text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
                             onClick={() => setWhatsappClient(client)}
                           >
@@ -369,6 +383,17 @@ export default function AdminPage() {
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
             setWhatsappClient(null);
+          }}
+        />
+      )}
+
+      {modelClient && (
+        <ModelDialog
+          client={modelClient}
+          onClose={() => setModelClient(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+            setModelClient(null);
           }}
         />
       )}
@@ -946,6 +971,107 @@ function LanguagesDialog({
 }
 
 /* KnowledgeDialog is now in @/components/knowledge-dialog */
+
+const MODEL_OPTIONS: { value: string; label: string; description: string }[] = [
+  { value: "", label: "Global default", description: "Uses the platform-wide model setting" },
+  { value: "gpt-4o-mini", label: "GPT-4o mini", description: "Balanced speed & quality — current default" },
+  { value: "gpt-4.1-nano", label: "GPT-4.1 nano", description: "Fastest & cheapest — great for high volume" },
+  { value: "gpt-4.1-mini", label: "GPT-4.1 mini", description: "Fast with stronger reasoning" },
+  { value: "gpt-4.1", label: "GPT-4.1", description: "Highest quality — slower & more expensive" },
+];
+
+function ModelDialog({
+  client,
+  onClose,
+  onSaved,
+}: {
+  client: DemoClient;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<string>(client.branding.liveChatModel ?? "");
+
+  const updateMutation = useUpdateDemoClient({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+        toast({ title: "Model saved", description: "Bot will use the selected model from the next message." });
+        onSaved();
+      },
+      onError: () => {
+        toast({ title: "Error saving model", variant: "destructive" });
+      },
+    },
+  });
+
+  const handleSave = () => {
+    const existingBranding = client.branding as unknown as Record<string, unknown>;
+    updateMutation.mutate({
+      id: client.id,
+      data: {
+        branding: {
+          ...existingBranding,
+          liveChatModel: selected || null,
+        } as Parameters<typeof updateMutation.mutate>[0]["data"]["branding"],
+      },
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Cpu className="h-5 w-5 text-primary" />
+            AI Model — {client.branding.companyName}
+          </DialogTitle>
+          <DialogDescription>
+            Pick the AI model for this brand's bot replies. "Global default" follows the platform-wide setting.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2 mt-2">
+          {MODEL_OPTIONS.map(({ value, label, description }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSelected(value)}
+              className={[
+                "w-full flex items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all",
+                selected === value
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-transparent hover:border-muted-foreground/40",
+              ].join(" ")}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium">{label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
+              </div>
+              {selected === value && (
+                <div className="h-4 w-4 rounded-full bg-primary mt-0.5 flex-shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={handleSave}
+            disabled={updateMutation.isPending}
+            className="gap-2"
+          >
+            {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function buildWaLink(twilioSender: string, slug: string, message: string): string {
   const number = twilioSender.replace(/^whatsapp:/i, "").replace(/[^0-9+]/g, "");

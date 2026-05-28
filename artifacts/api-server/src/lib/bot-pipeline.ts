@@ -617,7 +617,9 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
     conversationHistory,
     userMessage,
     profile,
-    model: settings.liveChatModel,
+    model: (typeof clientConfig["liveChatModel"] === "string" && clientConfig["liveChatModel"]
+      ? clientConfig["liveChatModel"]
+      : settings.liveChatModel),
     mustNotClaim,
   });
 
