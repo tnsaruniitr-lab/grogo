@@ -88,11 +88,11 @@ export function BellaDermaHero({ companyName, logoUrl, onCtaClick, instagramUrl 
             ))}
             {instagramUrl && (
               <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram"
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: "50%", background: "rgba(192,112,48,0.10)", border: "1px solid rgba(192,112,48,0.25)", color: "#c07030", textDecoration: "none" }}>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)", border: "none", color: "#fff", textDecoration: "none", boxShadow: "0 2px 8px rgba(220,39,67,0.35)" }}>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <circle cx="12" cy="12" r="4"/>
-                  <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
+                  <circle cx="17.5" cy="6.5" r="0.9" fill="currentColor" stroke="none"/>
                 </svg>
               </a>
             )}
