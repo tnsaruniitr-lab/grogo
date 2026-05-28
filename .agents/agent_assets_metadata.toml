@@ -239,3 +239,9 @@ id = "8om-2A5IX8GGK_JK8Ar63"
 uri = "file://exports/carecompass-knowledge-brief.md"
 type = "text"
 title = "CareCompass Knowledge Base Brief"
+
+[[outputs]]
+id = "3JAqpjPjeKrj9n5l0HF9j"
+uri = "file://docs/video-generation-guide.md"
+type = "text"
+title = "Video Generation Guide"
