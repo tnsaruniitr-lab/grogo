@@ -53,5 +53,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-heroes/WeightManagementV3.tsx": () => import("../components/mockups/landing-heroes/WeightManagementV3.tsx"),
   "./components/mockups/landing-heroes/Wellness.tsx": () => import("../components/mockups/landing-heroes/Wellness.tsx"),
   "./components/mockups/landing-heroes/WellnessV2.tsx": () => import("../components/mockups/landing-heroes/WellnessV2.tsx"),
-  "./components/mockups/landing-heroes/WellnessV3.tsx": () => import("../components/mockups/landing-heroes/WellnessV3.tsx")
+  "./components/mockups/landing-heroes/WellnessV3.tsx": () => import("../components/mockups/landing-heroes/WellnessV3.tsx"),
+  "./components/mockups/laser-heroes/LaserPrecision.tsx": () => import("../components/mockups/laser-heroes/LaserPrecision.tsx"),
+  "./components/mockups/laser-heroes/LuminousSilk.tsx": () => import("../components/mockups/laser-heroes/LuminousSilk.tsx")
 };
