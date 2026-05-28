@@ -56,6 +56,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-heroes/WellnessV3.tsx": () => import("../components/mockups/landing-heroes/WellnessV3.tsx"),
   "./components/mockups/laser-heroes/BellaDermaA.tsx": () => import("../components/mockups/laser-heroes/BellaDermaA.tsx"),
   "./components/mockups/laser-heroes/BellaDermaB.tsx": () => import("../components/mockups/laser-heroes/BellaDermaB.tsx"),
+  "./components/mockups/laser-heroes/BellaDermaCombined.tsx": () => import("../components/mockups/laser-heroes/BellaDermaCombined.tsx"),
   "./components/mockups/laser-heroes/FacialAesthetic.tsx": () => import("../components/mockups/laser-heroes/FacialAesthetic.tsx"),
   "./components/mockups/laser-heroes/LaserPrecision.tsx": () => import("../components/mockups/laser-heroes/LaserPrecision.tsx"),
   "./components/mockups/laser-heroes/LaserTreatment.tsx": () => import("../components/mockups/laser-heroes/LaserTreatment.tsx"),
