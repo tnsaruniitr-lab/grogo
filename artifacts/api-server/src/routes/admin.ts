@@ -217,8 +217,11 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
     return;
   }
 
-  // Purge any soft-deleted tombstone with the same slug so the DB UNIQUE constraint allows reuse
-  await db.delete(clientsTable).where(and(eq(clientsTable.slug, slug), isNotNull(clientsTable.deletedAt)));
+  // Mangle any pre-existing soft-deleted tombstone so the DB UNIQUE constraint allows reuse
+  await db
+    .update(clientsTable)
+    .set({ slug: `__deleted__legacy__${Date.now()}` })
+    .where(and(eq(clientsTable.slug, slug), isNotNull(clientsTable.deletedAt)));
 
   // Raw body branding preserves fields Zod strips (mode, businessDescription, etc.)
   const rawBranding = (req.body?.branding ?? {}) as Record<string, unknown>;
@@ -347,9 +350,10 @@ router.delete("/admin/clients/:id", async (req: Request, res: Response) => {
     return;
   }
 
+  // Mangle the slug on soft-delete so the unique slot is freed immediately for reuse
   await db
     .update(clientsTable)
-    .set({ deletedAt: new Date() })
+    .set({ deletedAt: new Date(), slug: `__deleted__${params.data.id}__${Date.now()}` })
     .where(eq(clientsTable.id, params.data.id));
 
   res.status(204).end();
@@ -1450,8 +1454,11 @@ router.post("/admin/clients/:id/duplicate", async (req: Request, res: Response) 
     newSlug = free;
   }
 
-  // Purge any soft-deleted tombstone with the same slug so the DB UNIQUE constraint allows reuse
-  await db.delete(clientsTable).where(and(eq(clientsTable.slug, newSlug), isNotNull(clientsTable.deletedAt)));
+  // Mangle any pre-existing soft-deleted tombstone so the DB UNIQUE constraint allows reuse
+  await db
+    .update(clientsTable)
+    .set({ slug: `__deleted__legacy__${Date.now()}` })
+    .where(and(eq(clientsTable.slug, newSlug), isNotNull(clientsTable.deletedAt)));
 
   // Copy config, update slug + force manual mode so KB shows as ready without a crawl job
   const srcCfg = (source.config ?? {}) as Record<string, unknown>;
