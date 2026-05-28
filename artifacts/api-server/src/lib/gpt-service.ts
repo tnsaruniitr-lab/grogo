@@ -269,12 +269,81 @@ Callback hours: ${callbackHours}${
 }
 
 const FALLBACK_REPLIES: Record<string, string> = {
-  de: "Darf ich Ihnen einen Rückruf von unserem Team arrangieren? Wir sind Montag–Freitag 8–18 Uhr erreichbar.",
-  tr: "Sizi ekibimizle buluşturmak ister misiniz? Pazartesi–Cuma 08–18 saatleri arasında hizmetinizdeyiz.",
-  en: "Would you like me to arrange a callback from our team? We're available Monday–Friday, 8am–6pm.",
+  de: "Entschuldigung, ich konnte Ihre Anfrage gerade nicht bearbeiten. Bitte kontaktieren Sie unser Team direkt – wir helfen Ihnen gerne weiter.",
+  tr: "Üzgünüm, şu an talebinizi işleyemedim. Lütfen doğrudan ekibimizle iletişime geçin – size yardımcı olmaktan memnuniyet duyarız.",
+  en: "I'm sorry, I wasn't able to process your request just now. Please reach out to our team directly and we'll be happy to help.",
 };
 
 const HISTORY_CAP = 8; // keep last 8 messages (~4 exchanges) — balances context vs latency
+
+/**
+ * Attempt a single GPT completion and parse/validate the structured JSON response.
+ * Returns null when the model returns empty/whitespace content (caller should retry),
+ * throws on hard API errors, returns BotResponse on success.
+ */
+async function attemptGpt(
+  params: GptCallParams,
+  messages: OpenAI.Chat.ChatCompletionMessageParam[],
+): Promise<BotResponse | null> {
+  const { language, model } = params;
+  const { client, resolvedModel } = resolveClient(model ?? "gpt-4o-mini");
+  const completion = await client.chat.completions.create({
+    model: resolvedModel,
+    max_tokens: 600,
+    messages,
+    response_format: { type: "json_object" },
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "";
+
+  // Empty or whitespace-only content means the model produced nothing usable.
+  // Return null so the caller can retry with a slimmer prompt rather than
+  // immediately serving a fallback reply.
+  if (!raw.trim()) {
+    logger.warn({ resolvedModel }, "GPT returned empty content — will retry");
+    return null;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    logger.warn({ raw: raw.slice(0, 200) }, "GPT returned non-JSON — using fallback");
+    return safeFallback(language);
+  }
+
+  // Soft-correct common GPT mistakes before Zod validation so we never discard
+  // a good reply just because a metadata field is slightly off.
+  if (parsed !== null && typeof parsed === "object") {
+    const p = parsed as Record<string, unknown>;
+
+    // 1. data: null → {} (Zod .optional() accepts undefined, not null)
+    if (p["data"] === null) p["data"] = {};
+
+    // 2. action contains an intent-only value or any other free-text invention →
+    //    coerce to "none" rather than reject the whole response.
+    const validActions = new Set(actionEnum);
+    if (typeof p["action"] === "string" && !validActions.has(p["action"] as never)) {
+      logger.warn({ original: p["action"] }, "GPT returned invalid action — coercing to 'none'");
+      p["action"] = "none";
+    }
+
+    // 3. intent contains an invented value → coerce to "info_request"
+    const validIntents = new Set(intentEnum);
+    if (typeof p["intent"] === "string" && !validIntents.has(p["intent"] as never)) {
+      logger.warn({ original: p["intent"] }, "GPT returned invalid intent — coercing to 'info_request'");
+      p["intent"] = "info_request";
+    }
+  }
+
+  const validated = BotResponseSchema.safeParse(parsed);
+  if (!validated.success) {
+    logger.warn({ parsed, issues: validated.error.issues }, "GPT JSON schema mismatch — using fallback");
+    return safeFallback(language);
+  }
+
+  return validated.data;
+}
 
 export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   const { language, clientName, callbackHours, knowledgeChunks, conversationHistory, userMessage, profile, model, mustNotClaim } =
@@ -291,54 +360,29 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   ];
 
   try {
-    const { client, resolvedModel } = resolveClient(model ?? "gpt-4o-mini");
-    const completion = await client.chat.completions.create({
-      model: resolvedModel,
-      max_tokens: 600,
-      messages,
-      response_format: { type: "json_object" },
-    });
+    const result = await attemptGpt(params, messages);
 
-    const raw = completion.choices[0]?.message?.content ?? "";
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      logger.warn({ raw }, "GPT returned non-JSON — using fallback");
-      return safeFallback(language);
-    }
+    // Non-null result: success or already-handled fallback (non-JSON / schema mismatch)
+    if (result !== null) return result;
 
-    // Soft-correct common GPT mistakes before Zod validation so we never discard
-    // a good reply just because a metadata field is slightly off.
-    if (parsed !== null && typeof parsed === "object") {
-      const p = parsed as Record<string, unknown>;
+    // Empty content — retry once with a stripped-down prompt: no conversation
+    // history and at most 2 knowledge chunks. This handles both transient API
+    // glitches and contexts that were too long for the model to produce output.
+    logger.info({ model: model ?? "gpt-4o-mini" }, "Retrying GPT with slim prompt after empty response");
+    const slimKnowledge = knowledgeChunks.slice(0, 2);
+    const slimSystemPrompt = buildSystemPrompt(language, clientName, callbackHours, slimKnowledge, profile, mustNotClaim ?? []);
+    const slimMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: "system", content: slimSystemPrompt },
+      { role: "user", content: userMessage },
+    ];
+    const retryResult = await attemptGpt(params, slimMessages);
 
-      // 1. data: null → {} (Zod .optional() accepts undefined, not null)
-      if (p["data"] === null) p["data"] = {};
+    if (retryResult !== null) return retryResult;
 
-      // 2. action contains an intent-only value or any other free-text invention →
-      //    coerce to "none" rather than reject the whole response.
-      const validActions = new Set(actionEnum);
-      if (typeof p["action"] === "string" && !validActions.has(p["action"] as never)) {
-        logger.warn({ original: p["action"] }, "GPT returned invalid action — coercing to 'none'");
-        p["action"] = "none";
-      }
+    // Both attempts returned empty — give up and use neutral fallback
+    logger.warn({ model: model ?? "gpt-4o-mini" }, "GPT retry also returned empty — using fallback");
+    return safeFallback(language);
 
-      // 3. intent contains an invented value → coerce to "info_request"
-      const validIntents = new Set(intentEnum);
-      if (typeof p["intent"] === "string" && !validIntents.has(p["intent"] as never)) {
-        logger.warn({ original: p["intent"] }, "GPT returned invalid intent — coercing to 'info_request'");
-        p["intent"] = "info_request";
-      }
-    }
-
-    const validated = BotResponseSchema.safeParse(parsed);
-    if (!validated.success) {
-      logger.warn({ parsed, issues: validated.error.issues }, "GPT JSON schema mismatch — using fallback");
-      return safeFallback(language);
-    }
-
-    return validated.data;
   } catch (err) {
     logger.error({ err }, "GPT API call failed — using fallback");
     return safeFallback(language);

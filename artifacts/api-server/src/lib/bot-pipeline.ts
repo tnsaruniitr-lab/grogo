@@ -277,7 +277,7 @@ type ResolvedAction =
  * fields. GPT's own action suggestion is advisory only; this function is the
  * authority. Same inputs always produce the same output.
  */
-function resolveAction(data: BotResponse["data"], turnCount: number): ResolvedAction {
+function resolveAction(data: BotResponse["data"], turnCount: number, intent: string): ResolvedAction {
   const d = data ?? {};
   const urgency        = d["handoffReason"] === "urgent_call_now";
   const requestedHuman = d["requestedHuman"] === true;
@@ -289,12 +289,15 @@ function resolveAction(data: BotResponse["data"], turnCount: number): ResolvedAc
     (typeof d["appointmentTime"] === "string"  && !!d["appointmentTime"]);
   const mode = d["consultationMode"]; // "online" | "walkin" | null | undefined
 
-  if (urgency)                                return "escalate_human";
-  if (requestedHuman)                         return "escalate_human";
-  if (confirmed && service && hasTiming)      return "book_service";
-  if (confirmed && mode === "online")         return "book_online_consultation";
-  if (confirmed && mode === "walkin")         return "book_walkin_consultation";
-  if (turnCount >= 3 && !service)             return "book_callback";
+  if (urgency)                                              return "escalate_human";
+  if (requestedHuman)                                       return "escalate_human";
+  if (confirmed && service && hasTiming)                    return "book_service";
+  if (confirmed && mode === "online")                       return "book_online_consultation";
+  if (confirmed && mode === "walkin")                       return "book_walkin_consultation";
+  // Only auto-escalate to callback after 6 turns, and never when the user is
+  // actively asking for information (info_request) — interrupting an info exchange
+  // with a callback push ignores what the user actually wants.
+  if (turnCount >= 6 && !service && intent !== "info_request") return "book_callback";
   return "qualify";
 }
 
@@ -629,8 +632,8 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
 
   // 6b. Deterministic rule engine — resolvedAction is the authority for all
   // downstream DB writes and Twilio sends. GPT's action field is advisory only.
-  let resolvedAction = resolveAction(botResponse.data, turnCount);
-  logger.info({ leadId, resolvedAction, gptAction: botResponse.action, turnCount }, "Action resolved by rule engine");
+  let resolvedAction = resolveAction(botResponse.data, turnCount, botResponse.intent);
+  logger.info({ leadId, resolvedAction, gptAction: botResponse.action, intent: botResponse.intent, turnCount }, "Action resolved by rule engine");
 
   // 6b-guard. If the rule engine promoted to a booking action but GPT's reply is
   // still asking a question (gathering info), suppress the action — the booking
