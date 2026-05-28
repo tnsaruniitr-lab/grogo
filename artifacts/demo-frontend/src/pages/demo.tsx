@@ -92,6 +92,9 @@ interface BrandingConfig {
   heroImageUrl?: string | null;
   twilioSender?: string | null;
   requiresPassword?: boolean;
+  mode?: string | null;
+  heroTemplate?: string | null;
+  liveChatModel?: string | null;
 }
 
 function resolveColors(branding: BrandingConfig): { primary: string; secondary: string } {
@@ -471,8 +474,8 @@ export default function DemoPage() {
         {/* transparent — nav is inside V3Hero itself */}
       </div>
 
-      {/* ── HERO ── BellaDerma gets its own multi-video crossfade hero */}
-      {branding.slug === "belladerma" ? (
+      {/* ── HERO ── BellaDerma (and any slug that starts with "belladerma") gets its own multi-video crossfade hero */}
+      {(branding.slug === "belladerma" || branding.slug?.startsWith("belladerma") || branding.heroTemplate === "belladerma") ? (
         <BellaDermaHero
           companyName={branding.companyName}
           logoUrl={branding.logoUrl}

@@ -1134,6 +1134,9 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     twilioSender: client.twilioSender ?? null,
     defaultMessage: (cfg.defaultMessage as string | null | undefined) ?? null,
     requiresPassword: !!(cfg.demoPassword as string | null | undefined),
+    mode: (cfg.mode as string | null | undefined) ?? null,
+    heroTemplate: (cfg.heroTemplate as string | null | undefined) ?? null,
+    liveChatModel: (cfg.liveChatModel as string | null | undefined) ?? null,
   };
 }
 

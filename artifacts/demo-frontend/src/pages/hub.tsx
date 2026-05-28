@@ -97,6 +97,7 @@ interface BrandingConfig {
   twilioSender?: string | null;
   defaultMessage?: string | null;
   mode?: "website" | "manual" | "individual" | null;
+  heroTemplate?: string | null;
   liveChatModel?: string | null;
 }
 
@@ -698,7 +699,7 @@ function BrandCard({
               <QRCodeSVG
                 value={waLink}
                 size={72}
-                fgColor={primary}
+                fgColor="#111827"
                 bgColor="#ffffff"
                 level="M"
               />
