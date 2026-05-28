@@ -12,14 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { getBasicAuthHeader } from "@workspace/api-client-react";
 
 interface DuplicateDialogProps {
   client: { id: number; slug: string; branding: { companyName: string } };
   onClose: () => void;
   onCreated: () => void;
 }
-
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export function DuplicateDialog({ client, onClose, onCreated }: DuplicateDialogProps) {
   const { toast } = useToast();
@@ -36,10 +35,13 @@ export function DuplicateDialog({ client, onClose, onCreated }: DuplicateDialogP
   const handleDuplicate = async () => {
     const finalSlug = slugified || defaultSlug;
     setLoading(true);
+    const auth = getBasicAuthHeader();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (auth) headers["Authorization"] = auth;
     try {
-      const res = await fetch(`${BASE}/api/admin/clients/${client.id}/duplicate`, {
+      const res = await fetch(`/api/admin/clients/${client.id}/duplicate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({ slug: finalSlug }),
       });
