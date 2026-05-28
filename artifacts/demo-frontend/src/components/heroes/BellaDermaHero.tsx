@@ -11,6 +11,7 @@ interface BellaDermaHeroProps {
   // headline / subtext kept in props interface for API compat but layout uses scene copy
   headline?: string;
   subtext?: string;
+  instagramUrl?: string | null;
 }
 
 const BASE = import.meta.env.BASE_URL;
@@ -21,7 +22,7 @@ const SCENES = [
   { tag: "PRP & Hyaluronic",    headline: "Sculpted,",   accent: "Natural Glow",     desc: "Hyaluronic fillers and PRP blood plasma therapy, visible immediately.", color: "#c07030", video: "bella-prp-filler-v2.mp4"  },
 ];
 
-export function BellaDermaHero({ companyName, logoUrl, onCtaClick }: BellaDermaHeroProps) {
+export function BellaDermaHero({ companyName, logoUrl, onCtaClick, instagramUrl }: BellaDermaHeroProps) {
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -81,10 +82,20 @@ export function BellaDermaHero({ companyName, logoUrl, onCtaClick }: BellaDermaH
               })()}
             </span>
           )}
-          <nav style={{ display: "flex", gap: 24 }}>
+          <nav style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {["Treatments", "Prices", "About", "Contact"].map(l => (
               <span key={l} style={{ fontSize: "13px", fontWeight: 500, color: "#7a4a30", cursor: "pointer" }}>{l}</span>
             ))}
+            {instagramUrl && (
+              <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: "50%", background: "rgba(192,112,48,0.10)", border: "1px solid rgba(192,112,48,0.25)", color: "#c07030", textDecoration: "none" }}>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <circle cx="12" cy="12" r="4"/>
+                  <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
+                </svg>
+              </a>
+            )}
           </nav>
         </div>
 

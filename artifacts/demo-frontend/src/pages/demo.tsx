@@ -484,6 +484,7 @@ export default function DemoPage() {
           subtext={subtext}
           phone={branding.phone}
           city={branding.city}
+          instagramUrl={branding.instagramUrl}
           onCtaClick={() =>
             document.getElementById("bot-demo")?.scrollIntoView({ behavior: "smooth" })
           }
