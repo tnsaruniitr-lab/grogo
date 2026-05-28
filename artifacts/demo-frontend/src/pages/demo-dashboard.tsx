@@ -476,7 +476,7 @@ function LeadDetailPanel({
   const { lead, conversations, appointments } = detail;
 
   return (
-    <>
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b bg-card z-10 sticky top-0">
         <h3 className="font-bold text-lg flex items-center gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor + "33", color: primaryColor }}>
@@ -606,7 +606,7 @@ function LeadDetailPanel({
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
