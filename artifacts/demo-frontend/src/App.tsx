@@ -28,6 +28,19 @@ const queryClient = new QueryClient({
   },
 });
 
+function AdminRouter() {
+  return (
+    <Switch>
+      <Route path="/admin" component={Admin} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/mockups" component={Mockups} />
+      <Route path="/" component={Hub} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
 function Router() {
   return (
     <Switch>
@@ -40,14 +53,7 @@ function Router() {
       {/* Admin / internal pages — login required (catch-all) */}
       <Route>
         <LoginGate>
-          <Switch>
-            <Route path="/admin" component={Admin} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/mockups" component={Mockups} />
-            <Route path="/" component={Hub} />
-            <Route component={NotFound} />
-          </Switch>
+          <AdminRouter />
         </LoginGate>
       </Route>
     </Switch>

@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useLayoutEffect, type ReactNode } from "react";
 import { setBasicAuth, setBasicAuthFallback } from "@workspace/api-client-react";
 import { AuthContext } from "./auth-context";
 
@@ -39,18 +39,19 @@ export function LoginGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Render-time credential integrity check.
-  // React Fast Refresh can preserve authed=true across hot reloads even when
-  // localStorage is empty (e.g. after a code migration or HMR module reset).
-  // Calling setState during render triggers an immediate re-render with the new
-  // state — React's documented pattern for synchronous derived-state correction.
-  if (authed && !localStorage.getItem(STORAGE_KEY)) {
-    setBasicAuth(null, null);
-    setAuthed(false);
-  } else if (authed) {
-    // Re-apply credentials to module state in case HMR reset _basicAuthHeader.
-    applyStoredCredentials();
-  }
+  // Credential integrity check — runs after every render, before paint.
+  // useLayoutEffect keeps this synchronous (no flash of protected content) while
+  // avoiding the setState-during-render pattern that conflicts with Wouter's
+  // Switch reconciliation and caused intermittent "insertBefore" DOM crashes.
+  useLayoutEffect(() => {
+    if (authed && !localStorage.getItem(STORAGE_KEY)) {
+      setBasicAuth(null, null);
+      setAuthed(false);
+    } else if (authed) {
+      // Re-apply credentials to module state in case HMR reset _basicAuthHeader.
+      applyStoredCredentials();
+    }
+  });
 
   useEffect(() => {
     function handleUnauth(e: CustomEvent) {
