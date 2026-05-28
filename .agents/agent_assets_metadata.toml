@@ -250,16 +250,16 @@ title = "Video Generation Guide"
 id = "Rnm_z0rKyHJv0Qekvrbe7"
 uri = "file://attached_assets/generated_videos/bella-laser-hair.mp4"
 type = "video"
-title = "Video 1 — Laser Hair Removal (new)"
+title = "Vid 1 — Laser (wide clinic shot, no leg close-up)"
 
 [[outputs]]
 id = "hbl_fonGNxbzj5nn6iemQ"
 uri = "file://attached_assets/generated_videos/bella-botox-facial.mp4"
 type = "video"
-title = "Video 2 — Facial / LED Treatment (no injection)"
+title = "Vid 2 — Facial / LED (no injection)"
 
 [[outputs]]
 id = "i-jjNexxcaMdkewlMyhJq"
 uri = "file://attached_assets/generated_videos/bella-prp-filler.mp4"
 type = "video"
-title = "Video 3 — Derma Roller / Skin Glow (no syringe)"
+title = "Vid 3 — Derma Roller / Glow (no syringe)"
