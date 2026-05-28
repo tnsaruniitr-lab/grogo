@@ -61,6 +61,7 @@ import {
   FileText,
   Package,
   Cpu,
+  CopyPlus,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +71,7 @@ import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
 import { AssetsDialog } from "@/components/assets-dialog";
 import { ModelDialog } from "@/components/model-dialog";
+import { DuplicateDialog } from "@/components/duplicate-dialog";
 
 /** Build fetch headers that always include the admin Basic Auth credential. */
 function authH(extra: Record<string, string> = {}): Record<string, string> {
@@ -126,6 +128,7 @@ export default function HubPage() {
   const [assetsSlug, setAssetsSlug] = useState<string | null>(null);
   const [installClient, setInstallClient] = useState<DemoClient | null>(null);
   const [modelClient, setModelClient] = useState<DemoClient | null>(null);
+  const [duplicateClient, setDuplicateClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -240,6 +243,7 @@ export default function HubPage() {
                     onAssets={() => setAssetsSlug(client.slug)}
                     onInstall={() => setInstallClient(client)}
                     onModel={() => setModelClient(client)}
+                    onDuplicate={() => setDuplicateClient(client)}
                   />
                 </motion.div>
               ))}
@@ -312,6 +316,17 @@ export default function HubPage() {
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
             setModelClient(null);
+          }}
+        />
+      )}
+
+      {duplicateClient && (
+        <DuplicateDialog
+          client={duplicateClient}
+          onClose={() => setDuplicateClient(null)}
+          onCreated={() => {
+            queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+            setDuplicateClient(null);
           }}
         />
       )}
@@ -567,6 +582,7 @@ function BrandCard({
   onAssets,
   onInstall,
   onModel,
+  onDuplicate,
 }: {
   client: DemoClient;
   copied: boolean;
@@ -579,6 +595,7 @@ function BrandCard({
   onAssets: () => void;
   onInstall: () => void;
   onModel: () => void;
+  onDuplicate: () => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
   const secondary = client.branding.secondaryColor || "#1a3a1a";
@@ -782,6 +799,13 @@ function BrandCard({
               title="Install / Connect — WhatsApp link, ManyChat webhook, API key"
             >
               <Cable className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={onDuplicate}
+              className="text-white/30 hover:text-blue-400 transition-colors"
+              title="Duplicate brand for A/B model testing"
+            >
+              <CopyPlus className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={onEdit}
