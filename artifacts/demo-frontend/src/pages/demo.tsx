@@ -95,6 +95,7 @@ interface BrandingConfig {
   mode?: string | null;
   heroTemplate?: string | null;
   liveChatModel?: string | null;
+  instagramUrl?: string | null;
 }
 
 function resolveColors(branding: BrandingConfig): { primary: string; secondary: string } {
@@ -503,6 +504,7 @@ export default function DemoPage() {
           previewImageUrl={getIndustryImage(branding.industry)}
           lang={lang}
           brandColor={branding.primaryColor}
+          instagramUrl={branding.instagramUrl}
         />
       )}
 

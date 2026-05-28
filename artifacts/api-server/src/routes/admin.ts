@@ -1137,6 +1137,7 @@ function buildBranding(client: typeof clientsTable.$inferSelect) {
     mode: (cfg.mode as string | null | undefined) ?? null,
     heroTemplate: (cfg.heroTemplate as string | null | undefined) ?? null,
     liveChatModel: (cfg.liveChatModel as string | null | undefined) ?? null,
+    instagramUrl: (cfg.instagramUrl as string | null | undefined) ?? null,
   };
 }
 
