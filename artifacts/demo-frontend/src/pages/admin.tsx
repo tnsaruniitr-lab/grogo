@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { AdminNav } from "@/components/layout/admin-nav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ import {
   Cpu,
   CopyPlus,
   MoreHorizontal,
+  Download,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
@@ -1021,6 +1023,7 @@ function WhatsAppLinkDialog({
   const [copied, setCopied] = useState(false);
   const [snippetTab, setSnippetTab] = useState<"raw" | "inline" | "float">("inline");
   const [copiedSnippet, setCopiedSnippet] = useState(false);
+  const qrRef = useRef<SVGSVGElement>(null);
 
   const waLink = buildWaLink(twilioSender, client.slug, message);
 
@@ -1088,6 +1091,19 @@ function WhatsAppLinkDialog({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const downloadQr = () => {
+    const svg = qrRef.current;
+    if (!svg) return;
+    const serialized = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([serialized], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${client.slug}-whatsapp-qr.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const copySnippet = async () => {
     await navigator.clipboard.writeText(snippets[snippetTab].code);
     setCopiedSnippet(true);
@@ -1150,6 +1166,37 @@ function WhatsAppLinkDialog({
             </div>
             <Input readOnly value={waLink} className="font-mono text-xs bg-muted" />
           </div>
+
+          {/* ── QR Code ── */}
+          {twilioSender.trim() ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>QR Code</Label>
+                <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={downloadQr}>
+                  <Download className="h-3 w-3" /> Download SVG
+                </Button>
+              </div>
+              <div className="flex justify-center rounded-xl border border-border bg-white p-5">
+                <QRCodeSVG
+                  ref={qrRef}
+                  value={waLink}
+                  size={200}
+                  bgColor="#ffffff"
+                  fgColor="#111827"
+                  level="M"
+                  includeMargin={false}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Scan with any phone to open WhatsApp and start a conversation with {client.branding.companyName}.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border bg-muted/40 p-5 text-center space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">QR code unavailable</p>
+              <p className="text-xs text-muted-foreground">Enter a Twilio sender number above to generate the QR code.</p>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label>Embed snippet</Label>
