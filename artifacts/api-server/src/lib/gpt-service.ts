@@ -10,6 +10,20 @@ const openai = new OpenAI({
   maxRetries: 0,
 });
 
+const groq = new OpenAI({
+  baseURL: "https://api.groq.com/openai/v1",
+  apiKey: process.env.GROQ_API_KEY ?? "placeholder",
+  timeout: 25_000,
+  maxRetries: 0,
+});
+
+function resolveClient(model: string): { client: OpenAI; resolvedModel: string } {
+  if (model.startsWith("groq/")) {
+    return { client: groq, resolvedModel: model.slice(5) };
+  }
+  return { client: openai, resolvedModel: model };
+}
+
 export const intentEnum = [
   "qualify",
   "info_request",
@@ -275,9 +289,10 @@ export async function callGpt(params: GptCallParams): Promise<BotResponse> {
   ];
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: model ?? "gpt-4o-mini",
-      max_completion_tokens: 600,
+    const { client, resolvedModel } = resolveClient(model ?? "gpt-4o-mini");
+    const completion = await client.chat.completions.create({
+      model: resolvedModel,
+      max_tokens: 600,
       messages,
       response_format: { type: "json_object" },
     });

@@ -77,6 +77,11 @@ const ALLOWED_MODELS = [
   "o4-mini-deep-research",
   "o3-deep-research",
   "computer-use-preview",
+  // Groq-hosted models (prefixed with "groq/")
+  "groq/llama-3.3-70b-versatile",
+  "groq/llama-3.1-8b-instant",
+  "groq/llama3-70b-8192",
+  "groq/mixtral-8x7b-32768",
 ] as const;
 
 export const ALLOWED_MODEL_VALUES = ALLOWED_MODELS as unknown as string[];

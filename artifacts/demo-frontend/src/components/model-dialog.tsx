@@ -12,12 +12,17 @@ import { useUpdateDemoClient } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
-export const MODEL_OPTIONS: { value: string; label: string; description: string }[] = [
+export const MODEL_OPTIONS: { value: string; label: string; description: string; group?: string }[] = [
   { value: "", label: "Global default", description: "Uses the platform-wide model setting" },
-  { value: "gpt-4o-mini", label: "GPT-4o mini", description: "Balanced speed & quality — current default" },
-  { value: "gpt-4.1-nano", label: "GPT-4.1 nano", description: "Fastest & cheapest — great for high volume" },
-  { value: "gpt-4.1-mini", label: "GPT-4.1 mini", description: "Fast with stronger reasoning" },
-  { value: "gpt-4.1", label: "GPT-4.1", description: "Highest quality — slower & more expensive" },
+  // OpenAI
+  { value: "gpt-4o-mini",  label: "GPT-4o mini",  description: "Balanced speed & quality — current default", group: "OpenAI" },
+  { value: "gpt-4.1-nano", label: "GPT-4.1 nano", description: "Fastest & cheapest — great for high volume",  group: "OpenAI" },
+  { value: "gpt-4.1-mini", label: "GPT-4.1 mini", description: "Fast with stronger reasoning",                group: "OpenAI" },
+  { value: "gpt-4.1",      label: "GPT-4.1",       description: "Highest quality — slower & more expensive",  group: "OpenAI" },
+  // Groq
+  { value: "groq/llama-3.3-70b-versatile", label: "Llama 3.3 70B",    description: "Groq — high quality, very fast inference",      group: "Groq" },
+  { value: "groq/llama-3.1-8b-instant",    label: "Llama 3.1 8B",     description: "Groq — ultra-fast, great for high volume",       group: "Groq" },
+  { value: "groq/mixtral-8x7b-32768",      label: "Mixtral 8×7B",     description: "Groq — strong multilingual, long context",       group: "Groq" },
 ];
 
 interface ModelDialogClient {
@@ -76,28 +81,38 @@ export function ModelDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2 mt-2">
-          {MODEL_OPTIONS.map(({ value, label, description }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSelected(value)}
-              className={[
-                "w-full flex items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all",
-                selected === value
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-transparent hover:border-muted-foreground/40",
-              ].join(" ")}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">{label}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
+        <div className="space-y-1 mt-2">
+          {MODEL_OPTIONS.map(({ value, label, description, group }, i) => {
+            const prevGroup = i > 0 ? MODEL_OPTIONS[i - 1]?.group : undefined;
+            const showHeader = group && group !== prevGroup;
+            return (
+              <div key={value}>
+                {showHeader && (
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-1 pt-3 pb-1">
+                    {group}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelected(value)}
+                  className={[
+                    "w-full flex items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all",
+                    selected === value
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-transparent hover:border-muted-foreground/40",
+                  ].join(" ")}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium">{label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
+                  </div>
+                  {selected === value && (
+                    <div className="h-4 w-4 rounded-full bg-primary mt-0.5 flex-shrink-0" />
+                  )}
+                </button>
               </div>
-              {selected === value && (
-                <div className="h-4 w-4 rounded-full bg-primary mt-0.5 flex-shrink-0" />
-              )}
-            </button>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
