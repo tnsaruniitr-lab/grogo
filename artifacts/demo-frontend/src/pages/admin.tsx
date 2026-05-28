@@ -28,6 +28,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,6 +70,7 @@ import {
   Settings2,
   Cpu,
   CopyPlus,
+  MoreHorizontal,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
@@ -251,7 +259,8 @@ export default function AdminPage() {
                         {new Date(client.createdAt).toLocaleDateString("de-DE")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* ── Primary actions (always visible) ── */}
                           <Button
                             size="sm"
                             variant="outline"
@@ -259,7 +268,7 @@ export default function AdminPage() {
                             onClick={() => copyLink(client.slug)}
                           >
                             {copiedSlug === client.slug ? (
-                              <><CheckCheck className="h-3 w-3" /> Kopiert</>
+                              <><CheckCheck className="h-3 w-3" /> Copied</>
                             ) : (
                               <><Copy className="h-3 w-3" /> Link</>
                             )}
@@ -270,7 +279,7 @@ export default function AdminPage() {
                             className="gap-1.5 text-xs"
                             onClick={() => window.open(`/demo/${client.slug}`, "_blank")}
                           >
-                            <ExternalLink className="h-3 w-3" /> Vorschau
+                            <ExternalLink className="h-3 w-3" /> Preview
                           </Button>
                           <Button
                             size="sm"
@@ -284,66 +293,56 @@ export default function AdminPage() {
                             size="sm"
                             variant="outline"
                             className="gap-1.5 text-xs"
-                            onClick={() => setReviewSlug(client.slug)}
-                          >
-                            <ClipboardCheck className="h-3 w-3" /> Review
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5 text-xs"
-                            onClick={() => setKnowledgeSlug(client.slug)}
-                          >
-                            <BookOpen className="h-3 w-3" /> Knowledge
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5 text-xs"
-                            onClick={() => setLanguagesClient(client)}
-                          >
-                            <Globe className="h-3 w-3" /> Languages
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5 text-xs"
                             onClick={() => setModelClient(client)}
                           >
                             <Cpu className="h-3 w-3" />
                             {client.branding.liveChatModel
-                              ? client.branding.liveChatModel.replace("gpt-", "").replace("o-mini", "o mini")
+                              ? client.branding.liveChatModel.replace("groq/", "").replace("gpt-", "").replace("llama-", "Llama ").split("-")[0]
                               : "Model"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5 text-xs text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
-                            onClick={() => setWhatsappClient(client)}
-                          >
-                            <MessageCircle className="h-3 w-3" /> WhatsApp
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             className="gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                             onClick={() => setDuplicateClient(client)}
-                            title="Duplicate brand for A/B model testing"
                           >
                             <CopyPlus className="h-3 w-3" /> Duplicate
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => {
-                              if (confirm(`Demo "${client.branding.companyName}" wirklich löschen?`)) {
-                                deleteMutation.mutate({ id: client.id });
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+
+                          {/* ── Secondary actions (⋯ dropdown) ── */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="outline" className="px-2">
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem onClick={() => setReviewSlug(client.slug)}>
+                                <ClipboardCheck className="h-3.5 w-3.5 mr-2" /> Review
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setKnowledgeSlug(client.slug)}>
+                                <BookOpen className="h-3.5 w-3.5 mr-2" /> Knowledge
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setLanguagesClient(client)}>
+                                <Globe className="h-3.5 w-3.5 mr-2" /> Languages
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setWhatsappClient(client)}>
+                                <MessageCircle className="h-3.5 w-3.5 mr-2 text-green-600" />
+                                <span className="text-green-700">WhatsApp</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  if (confirm(`Delete "${client.branding.companyName}"?`)) {
+                                    deleteMutation.mutate({ id: client.id });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
