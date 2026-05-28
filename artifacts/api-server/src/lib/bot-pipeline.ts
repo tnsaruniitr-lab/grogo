@@ -629,8 +629,23 @@ async function executePipeline(input: BotPipelineInput): Promise<void> {
 
   // 6b. Deterministic rule engine — resolvedAction is the authority for all
   // downstream DB writes and Twilio sends. GPT's action field is advisory only.
-  const resolvedAction = resolveAction(botResponse.data, turnCount);
+  let resolvedAction = resolveAction(botResponse.data, turnCount);
   logger.info({ leadId, resolvedAction, gptAction: botResponse.action, turnCount }, "Action resolved by rule engine");
+
+  // 6b-guard. If the rule engine promoted to a booking action but GPT's reply is
+  // still asking a question (gathering info), suppress the action — the booking
+  // hasn't actually been confirmed yet. This prevents the ✅ confirmation tail
+  // from being appended to a clarifying question mid-conversation.
+  const BOOKING_ACTIONS: ResolvedAction[] = ["book_service", "book_online_consultation", "book_walkin_consultation", "book_callback"];
+  if (BOOKING_ACTIONS.includes(resolvedAction)) {
+    const replyTrimmed = botResponse.reply.trimEnd();
+    const lastChar = replyTrimmed.slice(-1);
+    const endsWithQuestion = lastChar === "?" || replyTrimmed.endsWith("؟"); // Arabic question mark too
+    if (endsWithQuestion) {
+      logger.info({ leadId, resolvedAction }, "Booking action suppressed — GPT reply is still asking a question");
+      resolvedAction = "qualify";
+    }
+  }
 
   // 6c. Asset resolver — DB-driven, independent of GPT reply text.
   // If GPT signalled requestedAssetType, query approved assets directly and
