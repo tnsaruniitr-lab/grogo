@@ -1,2 +1,3 @@
 - [PATCH branding merge bug](patch-branding-merge.md) — partial PATCH used to wipe all unset config fields; fixed to base merge on existingCfg
 - [Production write pattern](prod-write-pattern.md) — prod DB is read-only via executeSql; all writes need a deployed endpoint + curl with Basic Auth
+- [Video generation guide](video-generation-guide.md) — full method for generating clinic/beauty service videos: prompts, params, crossfade CSS pattern, gotchas
