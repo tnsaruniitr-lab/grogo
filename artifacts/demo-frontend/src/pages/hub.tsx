@@ -60,6 +60,7 @@ import {
   User,
   FileText,
   Package,
+  Cpu,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +69,7 @@ import { INDUSTRY_OPTIONS } from "@/lib/industry-themes";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
 import { AssetsDialog } from "@/components/assets-dialog";
+import { ModelDialog } from "@/components/model-dialog";
 
 /** Build fetch headers that always include the admin Basic Auth credential. */
 function authH(extra: Record<string, string> = {}): Record<string, string> {
@@ -93,6 +95,7 @@ interface BrandingConfig {
   twilioSender?: string | null;
   defaultMessage?: string | null;
   mode?: "website" | "manual" | "individual" | null;
+  liveChatModel?: string | null;
 }
 
 interface DemoClient {
@@ -122,6 +125,7 @@ export default function HubPage() {
   const [reviewSlug, setReviewSlug] = useState<string | null>(null);
   const [assetsSlug, setAssetsSlug] = useState<string | null>(null);
   const [installClient, setInstallClient] = useState<DemoClient | null>(null);
+  const [modelClient, setModelClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -235,6 +239,7 @@ export default function HubPage() {
                     onReview={() => setReviewSlug(client.slug)}
                     onAssets={() => setAssetsSlug(client.slug)}
                     onInstall={() => setInstallClient(client)}
+                    onModel={() => setModelClient(client)}
                   />
                 </motion.div>
               ))}
@@ -297,6 +302,17 @@ export default function HubPage() {
         <InstallPanel
           client={installClient}
           onClose={() => setInstallClient(null)}
+        />
+      )}
+
+      {modelClient && (
+        <ModelDialog
+          client={modelClient}
+          onClose={() => setModelClient(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
+            setModelClient(null);
+          }}
         />
       )}
     </div>
@@ -550,6 +566,7 @@ function BrandCard({
   onReview,
   onAssets,
   onInstall,
+  onModel,
 }: {
   client: DemoClient;
   copied: boolean;
@@ -561,6 +578,7 @@ function BrandCard({
   onReview: () => void;
   onAssets: () => void;
   onInstall: () => void;
+  onModel: () => void;
 }) {
   const primary = client.branding.primaryColor || "#A8C334";
   const secondary = client.branding.secondaryColor || "#1a3a1a";
@@ -737,6 +755,17 @@ function BrandCard({
             title="Demo assets — Calendly, Loom, price lists, and more"
           >
             <Package className="h-3.5 w-3.5" /> Assets
+          </button>
+
+          <button
+            onClick={onModel}
+            className="flex items-center gap-1 text-[11px] font-semibold text-white/60 hover:text-[#A8C334] transition-colors"
+            title="AI model override for this brand"
+          >
+            <Cpu className="h-3.5 w-3.5" />
+            {client.branding.liveChatModel
+              ? client.branding.liveChatModel.replace("gpt-", "").replace("o-mini", "o mini")
+              : "Model"}
           </button>
 
           <div className="ml-auto flex items-center gap-2">
