@@ -209,7 +209,7 @@ router.post("/admin/clients", async (req: Request, res: Response) => {
   const existing = await db
     .select({ id: clientsTable.id })
     .from(clientsTable)
-    .where(eq(clientsTable.slug, slug))
+    .where(and(eq(clientsTable.slug, slug), isNull(clientsTable.deletedAt)))
     .limit(1);
 
   if (existing.length > 0) {
@@ -1426,39 +1426,39 @@ router.post("/admin/clients/:id/duplicate", async (req: Request, res: Response) 
 
   let newSlug: string;
   if (requestedSlug) {
-    // User supplied a slug — just check it's free
+    // User supplied a slug — just check it's free (ignore soft-deleted rows)
     const [taken] = await db
       .select({ id: clientsTable.id })
       .from(clientsTable)
-      .where(eq(clientsTable.slug, requestedSlug))
+      .where(and(eq(clientsTable.slug, requestedSlug), isNull(clientsTable.deletedAt)))
       .limit(1);
     if (taken) { res.status(409).json({ error: `Slug "${requestedSlug}" is already in use` }); return; }
     newSlug = requestedSlug;
   } else {
-    // Auto-pick: try {slug}-b … -i until one is free
+    // Auto-pick: try {slug}-b … -i until one is free (ignore soft-deleted rows)
     const candidates = ["b","c","d","e","f","g","h","i"].map((l) => `${source.slug}-${l}`);
     const taken = await db
       .select({ slug: clientsTable.slug })
       .from(clientsTable)
-      .where(inArray(clientsTable.slug, candidates));
+      .where(and(inArray(clientsTable.slug, candidates), isNull(clientsTable.deletedAt)));
     const takenSet = new Set(taken.map((r) => r.slug));
     const free = candidates.find((c) => !takenSet.has(c));
     if (!free) { res.status(409).json({ error: "Could not auto-generate a free slug — please provide one" }); return; }
     newSlug = free;
   }
 
-  // Copy config, update slug reference inside config
+  // Copy config, update slug + force manual mode so KB shows as ready without a crawl job
   const srcCfg = (source.config ?? {}) as Record<string, unknown>;
-  const newCfg: Record<string, unknown> = { ...srcCfg, slug: newSlug };
+  const newCfg: Record<string, unknown> = { ...srcCfg, slug: newSlug, mode: "manual" };
 
-  // Create duplicate client row
+  // Create duplicate client row — full copy including Twilio/WhatsApp numbers
   const [created] = await db
     .insert(clientsTable)
     .values({
       name: source.name,
       slug: newSlug,
-      whatsappNumber: "",
-      twilioSender: "",
+      whatsappNumber: source.whatsappNumber ?? "",
+      twilioSender: source.twilioSender ?? "",
       languagePrimary: source.languagePrimary,
       languageSecondary: source.languageSecondary ?? null,
       config: newCfg,
