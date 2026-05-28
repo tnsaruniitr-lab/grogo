@@ -71,15 +71,15 @@ export function BellaDermaA() {
         <div style={{ position:"absolute", inset:0, zIndex:0 }}>
           <video autoPlay muted loop playsInline className="bda-v1"
             style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}>
-            <source src="/__mockup/videos/bella-laser-hair.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/bella-laser-hair-v2.mp4" type="video/mp4" />
           </video>
           <video autoPlay muted loop playsInline className="bda-v2"
             style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}>
-            <source src="/__mockup/videos/bella-botox-facial.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/bella-botox-facial-v2.mp4" type="video/mp4" />
           </video>
           <video autoPlay muted loop playsInline className="bda-v3"
             style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}>
-            <source src="/__mockup/videos/bella-prp-filler.mp4" type="video/mp4" />
+            <source src="/__mockup/videos/bella-prp-filler-v2.mp4" type="video/mp4" />
           </video>
         </div>
 

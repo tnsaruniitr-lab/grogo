@@ -15,7 +15,7 @@ interface BellaDermaHeroProps {
 
 const SCENES = [
   {
-    video: "bella-laser-hair.mp4",
+    video: "bella-laser-hair-v2.mp4",
     tag:     "Laser Hair Removal",
     heading: "Permanently",
     accent:  "Hair-Free Skin",
@@ -23,7 +23,7 @@ const SCENES = [
     color:   "#b84060",
   },
   {
-    video: "bella-botox-facial.mp4",
+    video: "bella-botox-facial-v2.mp4",
     tag:     "Botox & Facial Care",
     heading: "Radiant,",
     accent:  "Youthful Beauty",
@@ -31,7 +31,7 @@ const SCENES = [
     color:   "#7a40b8",
   },
   {
-    video: "bella-prp-filler.mp4",
+    video: "bella-prp-filler-v2.mp4",
     tag:     "PRP & Hyaluronic",
     heading: "Sculpted,",
     accent:  "Natural Glow",
