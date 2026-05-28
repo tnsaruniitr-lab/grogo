@@ -62,10 +62,12 @@ import {
   ChevronUp,
   Settings2,
   Cpu,
+  CopyPlus,
 } from "lucide-react";
 import { KnowledgeDialog } from "@/components/knowledge-dialog";
 import { KnowledgeReviewPanel } from "@/components/knowledge-review-panel";
 import { ModelDialog } from "@/components/model-dialog";
+import { DuplicateDialog } from "@/components/duplicate-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { LANG_OPTIONS } from "@/lib/demo-i18n";
 
@@ -116,6 +118,7 @@ export default function AdminPage() {
   const [whatsappClient, setWhatsappClient] = useState<DemoClient | null>(null);
   const [languagesClient, setLanguagesClient] = useState<DemoClient | null>(null);
   const [modelClient, setModelClient] = useState<DemoClient | null>(null);
+  const [duplicateClient, setDuplicateClient] = useState<DemoClient | null>(null);
 
   const { data: clients = [], isLoading } = useListDemoClients<DemoClient[]>({
     query: {
@@ -322,6 +325,15 @@ export default function AdminPage() {
                           </Button>
                           <Button
                             size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                            onClick={() => setDuplicateClient(client)}
+                            title="Duplicate brand for A/B model testing"
+                          >
+                            <CopyPlus className="h-3 w-3" /> Duplicate
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="ghost"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => {
@@ -396,6 +408,14 @@ export default function AdminPage() {
             queryClient.invalidateQueries({ queryKey: ["demo-clients"] });
             setModelClient(null);
           }}
+        />
+      )}
+
+      {duplicateClient && (
+        <DuplicateDialog
+          client={duplicateClient}
+          onClose={() => setDuplicateClient(null)}
+          onCreated={() => setDuplicateClient(null)}
         />
       )}
     </div>

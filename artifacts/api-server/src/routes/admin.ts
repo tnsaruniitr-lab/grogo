@@ -1408,6 +1408,98 @@ router.post("/admin/seed-dosteli1-demo", async (_req: Request, res: Response) =>
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Duplicate brand ─────────────────────────────────────────────────────────
+router.post("/admin/clients/:id/duplicate", async (req: Request, res: Response) => {
+  const id = parseInt(req.params["id"] as string, 10);
+  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [source] = await db
+    .select()
+    .from(clientsTable)
+    .where(and(eq(clientsTable.id, id), isNull(clientsTable.deletedAt)))
+    .limit(1);
+
+  if (!source) { res.status(404).json({ error: "Client not found" }); return; }
+
+  // Determine new slug
+  const requestedSlug = ((req.body as Record<string, unknown>)?.slug as string | undefined)?.trim() ?? "";
+
+  let newSlug: string;
+  if (requestedSlug) {
+    // User supplied a slug — just check it's free
+    const [taken] = await db
+      .select({ id: clientsTable.id })
+      .from(clientsTable)
+      .where(eq(clientsTable.slug, requestedSlug))
+      .limit(1);
+    if (taken) { res.status(409).json({ error: `Slug "${requestedSlug}" is already in use` }); return; }
+    newSlug = requestedSlug;
+  } else {
+    // Auto-pick: try {slug}-b … -i until one is free
+    const candidates = ["b","c","d","e","f","g","h","i"].map((l) => `${source.slug}-${l}`);
+    const taken = await db
+      .select({ slug: clientsTable.slug })
+      .from(clientsTable)
+      .where(inArray(clientsTable.slug, candidates));
+    const takenSet = new Set(taken.map((r) => r.slug));
+    const free = candidates.find((c) => !takenSet.has(c));
+    if (!free) { res.status(409).json({ error: "Could not auto-generate a free slug — please provide one" }); return; }
+    newSlug = free;
+  }
+
+  // Copy config, update slug reference inside config
+  const srcCfg = (source.config ?? {}) as Record<string, unknown>;
+  const newCfg: Record<string, unknown> = { ...srcCfg, slug: newSlug };
+
+  // Create duplicate client row
+  const [created] = await db
+    .insert(clientsTable)
+    .values({
+      name: source.name,
+      slug: newSlug,
+      whatsappNumber: "",
+      twilioSender: "",
+      languagePrimary: source.languagePrimary,
+      languageSecondary: source.languageSecondary ?? null,
+      config: newCfg,
+      isActive: source.isActive,
+      demoToken: randomBytes(32).toString("hex"),
+    })
+    .returning();
+
+  // Bulk-copy all knowledge entries (keep content + embeddings, clear crawlJobId)
+  const knowledgeRows = await db
+    .select()
+    .from(companyKnowledgeTable)
+    .where(eq(companyKnowledgeTable.clientId, source.id));
+
+  if (knowledgeRows.length > 0) {
+    await db.insert(companyKnowledgeTable).values(
+      knowledgeRows.map((r) => ({
+        clientId: created.id,
+        category: r.category,
+        question: r.question,
+        answer: r.answer,
+        language: r.language,
+        priority: r.priority,
+        source: r.source,
+        sourceUrl: r.sourceUrl ?? null,
+        confidence: r.confidence ?? null,
+        embeddingJson: r.embeddingJson ?? null,
+        approvalStatus: r.approvalStatus,
+        crawlJobId: null,
+        reviewKey: r.reviewKey ?? null,
+        evidenceQuote: r.evidenceQuote ?? null,
+        sourceSection: r.sourceSection ?? null,
+        riskFlags: r.riskFlags ?? null,
+      }))
+    );
+  }
+
+  req.log.info({ sourceId: source.id, newId: created.id, newSlug, knowledgeCopied: knowledgeRows.length }, "Client duplicated");
+  res.status(201).json(toClientResponse(created));
+});
+
 function toClientResponse(client: typeof clientsTable.$inferSelect) {
   return {
     id: client.id,
